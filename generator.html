@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DHSUD NIR — DTR Print Generator</title>
+<style>
+  :root { --blue:#1f4e79; --accent:#4a90d9; }
+  * { box-sizing:border-box; font-family:system-ui,Segoe UI,Arial,sans-serif; }
+  body { margin:0; background:#eef2f7; color:#1a1a1a; }
+  header { background:var(--blue); color:#fff; padding:14px 22px; display:flex; justify-content:space-between; align-items:center; }
+  header h1 { margin:0; font-size:18px; }
+  .nav-links a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:4px; margin-left:8px; }
+  .nav-links a:hover { background:rgba(255,255,255,0.3); }
+  .wrap { max-width:680px; margin:22px auto; padding:0 16px; }
+  .card { background:#fff; border-radius:10px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:22px; }
+  h2 { margin:0 0 14px; font-size:17px; color:var(--blue); }
+  label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
+  select, input { width:100%; padding:12px; border:1px solid #ccd5e0; border-radius:6px; font-size:15px; background:#fff; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px; }
+  .primary { background:var(--accent); color:#fff; width:100%; margin-top:16px; border:0; padding:16px; font-size:16px; font-weight:600; border-radius:6px; cursor:pointer; }
+  .primary:hover { filter:brightness(.95); }
+  #dtrStatus { margin-top:14px; font-size:14px; font-weight:600; text-align:center; }
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:6px; margin:10px 0; white-space:pre-wrap; font-family:monospace; }
+
+  #print-area { display: none; }
+
+  @media print {
+    @page { size: 13in 8.5in landscape; margin: 0.3in; }
+    body { background: #fff; margin: 0; padding: 0; }
+    header, .wrap, #fatal { display: none !important; }
+    
+    #print-area { 
+      display: flex; 
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: stretch;
+      width: 100%; 
+      gap: 10px;
+      font-family: Arial, sans-serif;
+      color: #000;
+    }
+
+    .dtr-copy {
+      flex: 1;
+      font-size: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .dtr-header { text-align: center; margin-bottom: 5px; line-height: 1.1; }
+    .dtr-header h3 { margin: 0; font-size: 9px; font-weight: normal; }
+    .dtr-header h2 { margin: 0; font-size: 10px; font-weight: bold; }
+    .dtr-header h4 { margin: 0; font-size: 9px; font-weight: normal; }
+
+    .form-title { font-size: 9px; margin-bottom: 2px; }
+    .info-row { display: flex; margin-bottom: 2px; font-size: 8px; }
+    .info-col { flex: 1; }
+    
+    .dtr-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+    .dtr-table th, .dtr-table td { border: 1px solid #000; text-align: center; padding: 1px 2px; font-size: 8px; }
+    .dtr-table th { font-weight: bold; }
+    .dtr-table .day-col { width: 5%; }
+    .dtr-table .time-col { width: 14%; }
+    .dtr-table .ut-col { width: 9%; }
+    
+    .dtr-footer { margin-top: 10px; font-size: 8px; }
+    .certify-text { margin-bottom: 15px; text-align: justify; line-height: 1.2; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-name { font-weight: bold; text-decoration: underline; margin-bottom: 2px; font-size: 8px; }
+    .signature-title { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DHSUD NIR — Admin</h1>
+  <div class="nav-links">
+    <a href="kiosk.html">⬅ Kiosk</a>
+    <a href="admin.html">Admin Panel ➔</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="fatal"></div>
+  <div class="card">
+    <h2>Generate & Print DTR (CSC Form No. 48)</h2>
+    <label for="dtrEmp">Employee</label>
+    <select id="dtrEmp"><option value="">— Select Employee —</option></select>
+    <label for="period">Period Text (appears on form)</label>
+    <input type="text" id="period" value="August 16-31, 2026">
+    <div class="row" style="margin-top:12px">
+      <div><label for="startDate">Start date</label><input type="date" id="startDate" value="2026-08-16"></div>
+      <div><label for="endDate">End date</label><input type="date" id="endDate" value="2026-08-31"></div>
+    </div>
+    <button type="button" class="primary" id="btn-print">🖨️ Generate & Print DTR</button>
+    <div id="dtrStatus" style="color:#6b7a8d; font-size:12px; margin-top:10px;">
+      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+
+<script>
+// ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+var API_URL = "https://script.google.com/macros/s/AKfycbxx7pKaPzYH_4vu3du88yFRCAc9pCEidwX6n7Y48DQe9pr9caO5jIe2lYbSa-b9oo5K/exec";
+
+var EMPLOYEES = [
+  { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
+  { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
+  { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
+  { code:"07", name:"Katrina S. Amonares" }, { code:"08", name:"Lorie Ann A. Bantayan" },
+  { code:"09", name:"Daisy Mae T. Batuigas" }, { code:"10", name:"Marla Beth C. Deocadez" },
+  { code:"11", name:"Kimberly M. Enim" }, { code:"12", name:"Arnie Rose N. Famoso" },
+  { code:"13", name:"Debbie H. Felomira" }, { code:"14", name:"Philjoe M. Maghanoy" },
+  { code:"15", name:"Paul Ryan B. Pacardo" }, { code:"16", name:"Shaira June Rubia" },
+  { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
+  { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
+];
+
+function parseMins(t) {
+  if (!t) return null;
+  var match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return null;
+  var h = parseInt(match[1], 10), m = parseInt(match[2], 10), ap = match[3].toUpperCase();
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
+  var inM = parseMins(amIn), outM = parseMins(amOut), pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
+  var total = 0;
+  if (inM === null && pmInM !== null && pmOutM !== null) return Math.max(0, pmOutM - pmInM);
+  if (inM === null) return 0;
+  if (outM !== null && outM <= 749) return Math.max(0, outM - inM);
+  if (outM !== null && outM >= 750 && outM <= 779) {
+    total += Math.max(0, 720 - inM);
+    if (pmOutM !== null) total += Math.max(0, pmOutM - outM);
+    return total;
+  }
+  if (outM !== null) total += Math.max(0, Math.min(720, outM) - inM);
+  if (pmInM !== null && pmOutM !== null) total += Math.max(0, pmOutM - Math.max(780, pmInM));
+  return total;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  var sel = document.getElementById("dtrEmp");
+  EMPLOYEES.forEach(function(e){
+    var o = document.createElement("option");
+    o.value = e.code; o.textContent = e.code + " — " + e.name;
+    sel.appendChild(o);
+  });
+
+  document.getElementById("btn-print").addEventListener("click", function(){
+    var code = sel.value;
+    var startV = document.getElementById("startDate").value;
+    var endV = document.getElementById("endDate").value;
+    var msg = document.getElementById("dtrStatus");
+
+    if (!code || !startV || !endV) { msg.textContent = "⚠ Please fill all fields."; msg.style.color = "#9b1c1c"; return; }
+    if (new Date(endV) < new Date(startV)) { msg.textContent = "⚠ End date must be after start date."; msg.style.color = "#9b1c1c"; return; }
+
+    msg.textContent = "⏳ Downloading data... Please wait (this takes a few seconds).";
+    msg.style.color = "#1f4e79";
+
+    var start = new Date(startV + "T00:00:00");
+    var end = new Date(endV + "T00:00:00");
+    
+    buildDTR(code, start, end);
+  });
+
+  function buildDTR(code, start, end) {
+    var emp = EMPLOYEES.find(function(e){ return e.code === code; });
+    var days = Math.round((end - start) / 86400000) + 1;
+    var totalUT = 0;
+    var rowsHTML = "";
+    
+    var fetchPromises = [];
+    var dates = [];
+
+    for (var i = 0; i < 31; i++) {
+      if (i < days) {
+        var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        var dStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+        dates.push(dStr);
+        
+        // JSONP Promise wrapper
+        fetchPromises.push(new Promise((resolve) => {
+          var cb = "jsonp_dtr_" + Math.round(1000000 * Math.random());
+          window[cb] = function(data) { resolve(data); document.body.removeChild(script); delete window[cb]; };
+          var script = document.createElement("script");
+          script.src = API_URL + "?action=getLogs&date=" + dStr + "&callback=" + cb;
+          document.body.appendChild(script);
+        }));
+        
+      } else {
+        fetchPromises.push(Promise.resolve({ success: true, data: {} }));
+        dates.push(null);
+      }
+    }
+
+    Promise.all(fetchPromises).then(results => {
+      for (var i = 0; i < 31; i++) {
+        var dayNum = i + 1;
+        var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
+
+        if (dates[i] && results[i].success) {
+          var dayData = results[i].data[code];
+          if (dayData) {
+            amIn = dayData.am_in || "";
+            amOut = dayData.am_out || "";
+            pmIn = dayData.pm_in || "";
+            pmOut = dayData.pm_out || "";
+
+            var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
+            var ut = Math.max(0, 480 - worked);
+            totalUT += ut;
+            utH = Math.floor(ut / 60);
+            utM = ut % 60;
+          }
+        }
+
+        rowsHTML += `<tr><td>${dayNum}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
+      }
+      generatePrint(emp, rowsHTML, totalUT);
+    }).catch(err => {
+      document.getElementById("dtrStatus").textContent = "⚠ Error loading data.";
+      document.getElementById("dtrStatus").style.color = "#9b1c1c";
+      console.error(err);
+    });
+  }
+
+  function generatePrint(emp, rowsHTML, totalUT) {
+    var period = document.getElementById("period").value.trim();
+    var totalUTH = Math.floor(totalUT / 60);
+    var totalUTM = totalUT % 60;
+
+    var singleCopyHTML = `
+      <div class="dtr-copy">
+        <div>
+          <div class="dtr-header">
+            <h3>Republic of the Philippines</h3>
+            <h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>
+            <h4>Negros Island Region</h4>
+            <h4>(Robinsons Supermarket Villamonte) 2/F East 3 Center,</h4>
+            <h4>Narra Extension, Burgos Avenue, Brgy. Villamonte, Bacolod City</h4>
+          </div>
+          <div class="form-title">CSC Form No. 48</div>
+          <div class="form-title" style="text-align:center; font-weight:bold;">DAILY TIME RECORD</div>
+          <div class="info-row" style="margin-top:5px;">
+            <div class="info-col" style="text-align:left;"><b>Name:</b> <span style="text-decoration:underline;">${emp.name}</span></div>
+          </div>
+          <div class="info-row">
+            <div class="info-col" style="text-align:left;"><b>For the period:</b> <span style="text-decoration:underline;">${period}</span></div>
+          </div>
+          <div class="info-row">
+            <div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">Compressed/8:00 A.M. - 5:00 P.M / DO No. 2026-015</span></div>
+          </div>
+          <div class="info-row" style="margin-bottom: 5px;">
+            <div class="info-col" style="text-align:left;"><b>Arrival:</b> 8 A.M. / 1 P.M.</div>
+            <div class="info-col" style="text-align:right;"><b>Departure:</b> 12 N / 5 P.M.</div>
+          </div>
+          <table class="dtr-table">
+            <thead>
+              <tr><th rowspan="2" class="day-col">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th></tr>
+              <tr><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="ut-col">Hours</th><th class="ut-col">Mins.</th></tr>
+            </thead>
+            <tbody>${rowsHTML}</tbody>
+            <tfoot>
+              <tr><td colspan="5" style="text-align:right; font-weight:bold; padding-right:5px;">TOTAL UNDERTIME</td><td style="font-weight:bold;">${totalUTH}</td><td style="font-weight:bold;">${totalUTM}</td></tr>
+              <tr><td colspan="7" style="text-align:left; font-size:7px; padding:3px;"><b>Leave:</b> &nbsp; VL - _____ &nbsp; SL - _____ &nbsp; SpL - _____ &nbsp; UT - _____</td></tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="dtr-footer">
+          <div class="certify-text">I certify on my honor that the above is correct of the hours of work performed. Record of which was made daily at the time of arrival and departure from the office.</div>
+          <div style="display:flex; justify-content:space-between; margin-top:10px;">
+            <div class="signature-block"><div class="signature-name">${emp.name}</div><div class="signature-title">Employee Signature</div></div>
+            <div class="signature-block"><div class="signature-name">ELENITA PAULINA R. CAÑETE</div><div class="signature-title">OIC-REGIONAL DIRECTOR</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
+    document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
+    document.getElementById("dtrStatus").style.color = "#1c6b32";
+    
+    setTimeout(function() { window.print(); }, 200);
+  }
+});
+</script>
+</body>
+</html>
