@@ -13,8 +13,6 @@
   .nav-links a:hover { background:rgba(255,255,255,0.3); }
   .wrap { max-width:680px; margin:22px auto; padding:0 16px; }
   .card { background:#fff; border-radius:10px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:22px; }
-  
-  /* Header with refresh button */
   .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:14px; }
   .card-header h2 { margin:0; font-size:17px; color:var(--blue); }
   .btn-refresh { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:4px; }
@@ -22,7 +20,6 @@
   .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
   .btn-refresh.loading span { display: inline-block; animation: spin 1s linear infinite; }
   @keyframes spin { 100% { transform: rotate(360deg); } }
-
   label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
   select { width:100%; padding:14px; border:1px solid #ccd5e0; border-radius:6px; font-size:16px; background:#fff; }
   .clock { font-size:48px; font-weight:700; color:var(--blue); font-variant-numeric:tabular-nums; text-align:center; margin:6px 0 4px; }
@@ -121,10 +118,19 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
+// Custom function to guarantee YYYY-MM-DD
 function getTodayString() {
   var d = new Date();
-  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  var month = '' + (d.getMonth() + 1);
+  var day = '' + d.getDate();
+  var year = d.getFullYear();
+
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
+
+  return [year, month, day].join('-');
 }
+
 function getCurrentTimeString() {
   var d = new Date();
   return d.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -152,7 +158,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var cachedLogs = {};
 
-  // JSONP FETCH
   window.fetchLogsJSONP = function() {
     var todayStr = getTodayString();
     document.getElementById("todayLabel").textContent = todayStr;
