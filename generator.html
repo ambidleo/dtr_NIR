@@ -105,7 +105,7 @@
 
 <script>
 // ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-var API_URL = "https://script.google.com/macros/s/AKfycbwDFbmsh5spLNf3ZOxvk2tYqTd_zxBFMcutDk5brICnv0RV1gskdDWIO2Ab-6vYemN_/exec";
+var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -196,7 +196,15 @@ document.addEventListener("DOMContentLoaded", function () {
     for (var i = 0; i < 31; i++) {
       if (i < days) {
         var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-        var dStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+        
+        // Ensure YYYY-MM-DD format for the API
+        var month = '' + (d.getMonth() + 1);
+        var day = '' + d.getDate();
+        var year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        var dStr = [year, month, day].join('-');
+        
         var data = await fetchDateDataJSONP(dStr);
         results.push(data);
       } else {
