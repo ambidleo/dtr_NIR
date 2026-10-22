@@ -34,7 +34,7 @@
 </head>
 <body>
 
-<form id="adminForm" method="POST" target="hidden_admin_iframe" class="hidden-iframe">
+<form id="adminForm" method="POST" target="hidden_admin_post" class="hidden-iframe">
   <input type="hidden" name="action" id="af_action">
   <input type="hidden" name="date" id="af_date">
   <input type="hidden" name="code" id="af_code">
@@ -44,7 +44,7 @@
   <input type="hidden" name="pm_in" id="af_pm_in">
   <input type="hidden" name="pm_out" id="af_pm_out">
 </form>
-<iframe name="hidden_admin_iframe" id="hidden_admin_iframe" class="hidden-iframe"></iframe>
+<iframe name="hidden_admin_post" id="hidden_admin_post" class="hidden-iframe"></iframe>
 
 <header>
   <h1>DHSUD NIR — Admin Panel</h1>
@@ -83,7 +83,7 @@
 
 <script>
 // ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-var API_URL = "https://script.google.com/macros/s/AKfycbxx7pKaPzYH_4vu3du88yFRCAc9pCEidwX6n7Y48DQe9pr9caO5jIe2lYbSa-b9oo5K/exec";
+var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -107,11 +107,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
   dateInput.addEventListener("change", loadData);
 
-  document.getElementById("hidden_admin_iframe").onload = function() {
+  document.getElementById("hidden_admin_post").onload = function() {
     setTimeout(loadData, 800);
   };
 
-  // JSONP FETCH
   function loadData() {
     var dateStr = dateInput.value;
     if (!dateStr) return;
@@ -126,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function() {
       } else {
         tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading data.</td></tr>';
       }
-      document.body.removeChild(script);
+      if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
     };
 
