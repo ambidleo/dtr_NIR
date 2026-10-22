@@ -16,6 +16,7 @@
   
   .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:14px; }
   .card-header h2 { margin:0; font-size:17px; color:var(--blue); }
+  
   .btn-refresh { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:4px; }
   .btn-refresh:hover { background:#f0f8ff; }
   .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
@@ -26,6 +27,10 @@
   .filter-row > div { flex:1; }
   label { display:block; font-size:13px; font-weight:600; margin-bottom:4px; }
   input[type="date"] { width:100%; padding:10px; border:1px solid #ccd5e0; border-radius:6px; font-size:15px; }
+  
+  .btn-load { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:10px 20px; font-size:15px; font-weight:600; cursor:pointer; height:42px; }
+  .btn-load:hover { filter:brightness(.95); }
+
   table { width:100%; border-collapse:collapse; font-size:14px; }
   th, td { border:1px solid #d9e1ea; padding:8px; text-align:center; }
   th { background:#f3f6fa; font-weight:600; color:var(--blue); }
@@ -70,12 +75,18 @@
         <span>🔄</span> Refresh
       </button>
     </div>
+    
     <div class="filter-row">
       <div>
         <label for="filterDate">Select Date to View / Edit</label>
         <input type="date" id="filterDate">
       </div>
+      <div style="flex: 0 0 auto;">
+        <label>&nbsp;</label>
+        <button class="btn-load" id="btn-load" onclick="loadData()">📥 Load Data</button>
+      </div>
     </div>
+
     <table>
       <thead>
         <tr>
@@ -88,7 +99,7 @@
         </tr>
       </thead>
       <tbody id="logTableBody">
-        <tr><td colspan="6" class="empty-state">Select a date to load records.</td></tr>
+        <tr><td colspan="6" class="empty-state">Select a date and click "Load Data".</td></tr>
       </tbody>
     </table>
   </div>
@@ -115,10 +126,14 @@ document.addEventListener("DOMContentLoaded", function() {
   var dateInput = document.getElementById("filterDate");
   var tbody = document.getElementById("logTableBody");
   
+  // Set today's date by default
   var today = new Date();
   dateInput.value = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
 
-  dateInput.addEventListener("change", loadData);
+  // Allow pressing Enter in date field to load
+  dateInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") loadData();
+  });
 
   document.getElementById("hidden_admin_post").onload = function() {
     setTimeout(loadData, 800);
@@ -126,7 +141,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
   window.loadData = function() {
     var dateStr = dateInput.value;
-    if (!dateStr) return;
+    if (!dateStr) {
+      alert("Please select a date first.");
+      return;
+    }
     
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading records...</td></tr>';
     
@@ -207,6 +225,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   };
 
+  // Optional: Load data automatically on page load for convenience
   loadData();
 });
 </script>
