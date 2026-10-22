@@ -78,7 +78,7 @@
   <h1>DHSUD NIR — Admin</h1>
   <div class="nav-links">
     <a href="kiosk.html">⬅ Kiosk</a>
-    <a href="index.html">Admin Panel ➔</a>
+    <a href="admin.html">Admin Panel ➔</a>
   </div>
 </header>
 
@@ -105,7 +105,7 @@
 
 <script>
 // ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-var API_URL = "https://script.google.com/macros/s/AKfycbxx7pKaPzYH_4vu3du88yFRCAc9pCEidwX6n7Y48DQe9pr9caO5jIe2lYbSa-b9oo5K/exec";
+var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!code || !startV || !endV) { msg.textContent = "⚠ Please fill all fields."; msg.style.color = "#9b1c1c"; return; }
     if (new Date(endV) < new Date(startV)) { msg.textContent = "⚠ End date must be after start date."; msg.style.color = "#9b1c1c"; return; }
 
-    msg.textContent = "⏳ Downloading data... Please wait (this takes a few seconds).";
+    msg.textContent = "⏳ Downloading data... Please wait.";
     msg.style.color = "#1f4e79";
 
     var start = new Date(startV + "T00:00:00");
@@ -172,65 +172,60 @@ document.addEventListener("DOMContentLoaded", function () {
     buildDTR(code, start, end);
   });
 
-  function buildDTR(code, start, end) {
+  function fetchDateDataJSONP(dateStr) {
+    return new Promise((resolve) => {
+      var callbackName = "jsonp_dtr_" + Math.round(1000000 * Math.random());
+      window[callbackName] = function(data) {
+        resolve(data);
+        if (script.parentNode) script.parentNode.removeChild(script);
+        delete window[callbackName];
+      };
+      var script = document.createElement("script");
+      script.src = API_URL + "?action=getLogs&date=" + dateStr + "&callback=" + callbackName;
+      document.body.appendChild(script);
+    });
+  }
+
+  async function buildDTR(code, start, end) {
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
     var days = Math.round((end - start) / 86400000) + 1;
     var totalUT = 0;
     var rowsHTML = "";
-    
-    var fetchPromises = [];
-    var dates = [];
+    var results = [];
 
     for (var i = 0; i < 31; i++) {
       if (i < days) {
         var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
         var dStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-        dates.push(dStr);
-        
-        // JSONP Promise wrapper
-        fetchPromises.push(new Promise((resolve) => {
-          var cb = "jsonp_dtr_" + Math.round(1000000 * Math.random());
-          window[cb] = function(data) { resolve(data); document.body.removeChild(script); delete window[cb]; };
-          var script = document.createElement("script");
-          script.src = API_URL + "?action=getLogs&date=" + dStr + "&callback=" + cb;
-          document.body.appendChild(script);
-        }));
-        
+        var data = await fetchDateDataJSONP(dStr);
+        results.push(data);
       } else {
-        fetchPromises.push(Promise.resolve({ success: true, data: {} }));
-        dates.push(null);
+        results.push({ success: true, data: {} });
       }
     }
 
-    Promise.all(fetchPromises).then(results => {
-      for (var i = 0; i < 31; i++) {
-        var dayNum = i + 1;
-        var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
+    for (var i = 0; i < 31; i++) {
+      var dayNum = i + 1;
+      var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
 
-        if (dates[i] && results[i].success) {
-          var dayData = results[i].data[code];
-          if (dayData) {
-            amIn = dayData.am_in || "";
-            amOut = dayData.am_out || "";
-            pmIn = dayData.pm_in || "";
-            pmOut = dayData.pm_out || "";
+      if (results[i].success && results[i].data[code]) {
+        var dayData = results[i].data[code];
+        amIn = dayData.am_in || "";
+        amOut = dayData.am_out || "";
+        pmIn = dayData.pm_in || "";
+        pmOut = dayData.pm_out || "";
 
-            var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
-            var ut = Math.max(0, 480 - worked);
-            totalUT += ut;
-            utH = Math.floor(ut / 60);
-            utM = ut % 60;
-          }
-        }
-
-        rowsHTML += `<tr><td>${dayNum}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
+        var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
+        var ut = Math.max(0, 480 - worked);
+        totalUT += ut;
+        utH = Math.floor(ut / 60);
+        utM = ut % 60;
       }
-      generatePrint(emp, rowsHTML, totalUT);
-    }).catch(err => {
-      document.getElementById("dtrStatus").textContent = "⚠ Error loading data.";
-      document.getElementById("dtrStatus").style.color = "#9b1c1c";
-      console.error(err);
-    });
+
+      rowsHTML += `<tr><td>${dayNum}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
+    }
+    
+    generatePrint(emp, rowsHTML, totalUT);
   }
 
   function generatePrint(emp, rowsHTML, totalUT) {
