@@ -13,7 +13,16 @@
   .nav-links a:hover { background:rgba(255,255,255,0.3); }
   .wrap { max-width:680px; margin:22px auto; padding:0 16px; }
   .card { background:#fff; border-radius:10px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:22px; }
-  h2 { margin:0 0 14px; font-size:17px; color:var(--blue); }
+  
+  /* Header with refresh button */
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:14px; }
+  .card-header h2 { margin:0; font-size:17px; color:var(--blue); }
+  .btn-refresh { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:4px; }
+  .btn-refresh:hover { background:#f0f8ff; }
+  .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
+  .btn-refresh.loading span { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
   label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
   select { width:100%; padding:14px; border:1px solid #ccd5e0; border-radius:6px; font-size:16px; background:#fff; }
   .clock { font-size:48px; font-weight:700; color:var(--blue); font-variant-numeric:tabular-nums; text-align:center; margin:6px 0 4px; }
@@ -80,8 +89,14 @@
     <div id="status"></div>
     <div class="muted">Timestamps are taken automatically from this computer's clock.<br>Office hours: <b>7:00 AM – 6:00 PM</b>.</div>
   </div>
+  
   <div class="card">
-    <h2>Today's Log — <span id="todayLabel"></span></h2>
+    <div class="card-header">
+      <h2>Today's Log — <span id="todayLabel"></span></h2>
+      <button class="btn-refresh" id="btn-refresh" onclick="fetchLogsJSONP()">
+        <span>🔄</span> Refresh
+      </button>
+    </div>
     <table id="todayTable">
       <thead><tr><th>Employee</th><th>AM In</th><th>AM Out</th><th>PM In</th><th>PM Out</th></tr></thead>
       <tbody></tbody>
@@ -91,7 +106,7 @@
 
 <script>
 // ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-var API_URL = "https://script.google.com/macros/s/AKfycbwDFbmsh5spLNf3ZOxvk2tYqTd_zxBFMcutDk5brICnv0RV1gskdDWIO2Ab-6vYemN_/exec";
+var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -137,11 +152,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var cachedLogs = {};
 
-  // JSONP FETCH (Bypasses CORS completely)
-  function fetchLogsJSONP() {
+  // JSONP FETCH
+  window.fetchLogsJSONP = function() {
     var todayStr = getTodayString();
     document.getElementById("todayLabel").textContent = todayStr;
     document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="muted">Loading records...</td></tr>';
+    
+    var btn = document.getElementById("btn-refresh");
+    btn.classList.add("loading");
 
     var callbackName = "jsonp_" + Math.round(100000 * Math.random());
     
@@ -155,6 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
+      btn.classList.remove("loading");
     };
 
     var script = document.createElement("script");
@@ -163,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   document.getElementById("hidden_post_iframe").onload = function() {
-    setTimeout(fetchLogsJSONP, 800); 
+    setTimeout(window.fetchLogsJSONP, 800); 
   };
 
   function punch(slot){
@@ -265,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   document.getElementById("halfDay").addEventListener("change", refreshButtons);
 
-  fetchLogsJSONP();
+  window.fetchLogsJSONP();
 });
 </script>
 </body>
