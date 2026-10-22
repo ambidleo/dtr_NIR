@@ -2,7 +2,293 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>DHSUD NIR — Kiosk</title><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <title>DHSUD NIR — Kiosk</title>
+<style>
+  :root { --blue:#1f4e79; --accent:#4a90d9; }
+  * { box-sizing:border-box; font-family:system-ui,Segoe UI,Arial,sans-serif; }
+  body { margin:0; background:#eef2f7; color:#1a1a1a; }
+  header { background:var(--blue); color:#fff; padding:14px 22px; display:flex; justify-content:space-between; align-items:center; }
+  header h1 { margin:0; font-size:18px; }
+  .nav-links a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:4px; margin-left:8px; }
+  .nav-links a:hover { background:rgba(255,255,255,0.3); }
+  .wrap { max-width:680px; margin:22px auto; padding:0 16px; }
+  .card { background:#fff; border-radius:10px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:22px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:14px; }
+  .card-header h2 { margin:0; font-size:17px; color:var(--blue); }
+  .btn-refresh { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:4px; }
+  .btn-refresh:hover { background:#f0f8ff; }
+  .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
+  .btn-refresh.loading span { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
+  select { width:100%; padding:14px; border:1px solid #ccd5e0; border-radius:6px; font-size:16px; background:#fff; }
+  .clock { font-size:48px; font-weight:700; color:var(--blue); font-variant-numeric:tabular-nums; text-align:center; margin:6px 0 4px; }
+  .date { text-align:center; color:#5a6b80; margin-bottom:16px; font-size:14px; }
+  .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px; }
+  button { cursor:pointer; border:0; border-radius:6px; padding:16px; font-size:16px; font-weight:600; }
+  .btn-am { background:#cfe4ff; color:#0b3d75; }
+  .btn-pm { background:#ffe0b3; color:#7a4a00; }
+  button:hover:not(:disabled) { filter:brightness(.95); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  #status { margin-top:16px; padding:14px; border-radius:6px; font-size:15px; display:none; text-align:center; font-weight:600; }
+  .ok { background:#e3f6e8; color:#1c6b32; display:block!important; }
+  .err { background:#fde7e7; color:#9b1c1c; display:block!important; }
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:6px; margin:10px 0; white-space:pre-wrap; font-family:monospace; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:10px; }
+  th,td { border:1px solid #d9e1ea; padding:8px; text-align:center; }
+  th { background:#f3f6fa; }
+  .muted { color:#6b7a8d; font-size:13px; text-align:center; margin-top:14px; }
+  .override-box { margin-top: 15px; background: #fff3cd; padding: 12px; border-radius: 6px; border: 1px solid #ffe08a; display: flex; align-items: center; gap: 10px; }
+  .override-box input { width: 20px; height: 20px; cursor: pointer; }
+  .override-box label { margin: 0; font-size: 14px; color: #664d03; cursor: pointer; }
+  .hidden-iframe { display:none; }
+</style>
+</head>
+<body>
+
+<form id="saveForm" method="POST" target="hidden_post_iframe" class="hidden-iframe">
+  <input type="hidden" name="action" value="saveLog">
+  <input type="hidden" name="date" id="f_date">
+  <input type="hidden" name="code" id="f_code">
+  <input type="hidden" name="name" id="f_name">
+  <input type="hidden" name="am_in" id="f_am_in">
+  <input type="hidden" name="am_out" id="f_am_out">
+  <input type="hidden" name="pm_in" id="f_pm_in">
+  <input type="hidden" name="pm_out" id="f_pm_out">
+</form>
+<iframe name="hidden_post_iframe" id="hidden_post_iframe" class="hidden-iframe"></iframe>
+
+<header>
+  <h1>DHSUD NIR — Time Kiosk</h1>
+  <div class="nav-links">
+    <a href="generator.html">Print DTR ➔</a>
+    <a href="admin.html">Admin Panel ➔</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="fatal"></div>
+  <div class="card">
+    <div class="clock" id="liveClock">--:--:--</div>
+    <div class="date" id="liveDate">—</div>
+    <label for="employee">Select Employee</label>
+    <select id="employee"><option value="">— Tap here to select your name —</option></select>
+    <div class="override-box">
+      <input type="checkbox" id="halfDay">
+      <label for="halfDay">Check this box for Half-Day (skip AM)</label>
+    </div>
+    <div class="grid4">
+      <button type="button" class="btn-am" id="btn-am-in">🟦 AM — Time In</button>
+      <button type="button" class="btn-am" id="btn-am-out">🟦 AM — Time Out</button>
+      <button type="button" class="btn-pm" id="btn-pm-in">🟧 PM — Time In</button>
+      <button type="button" class="btn-pm" id="btn-pm-out">🟧 PM — Time Out</button>
+    </div>
+    <div id="status"></div>
+    <div class="muted">Timestamps are taken automatically from this computer's clock.<br>Office hours: <b>7:00 AM – 6:00 PM</b>.</div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <h2>Today's Log — <span id="todayLabel"></span></h2>
+      <button class="btn-refresh" id="btn-refresh" onclick="fetchLogsJSONP()">
+        <span>🔄</span> Refresh
+      </button>
+    </div>
+    <table id="todayTable">
+      <thead><tr><th>Employee</th><th>AM In</th><th>AM Out</th><th>PM In</th><th>PM Out</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+var API_URL = "https://script.google.com/macros/s/AKfycbw_PrbP4J1LLxqa1JdwCBT2MVItB2GaJXTdncCWbG8xdGnB8A8M9yFtn5FcAuNuY_qg/exec";
+
+var EMPLOYEES = [
+  { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
+  { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
+  { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
+  { code:"07", name:"Katrina S. Amonares" }, { code:"08", name:"Lorie Ann A. Bantayan" },
+  { code:"09", name:"Daisy Mae T. Batuigas" }, { code:"10", name:"Marla Beth C. Deocadez" },
+  { code:"11", name:"Kimberly M. Enim" }, { code:"12", name:"Arnie Rose N. Famoso" },
+  { code:"13", name:"Debbie H. Felomira" }, { code:"14", name:"Philjoe M. Maghanoy" },
+  { code:"15", name:"Paul Ryan B. Pacardo" }, { code:"16", name:"Shaira June Rubia" },
+  { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
+  { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
+];
+
+function getTodayString() {
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+}
+
+function getCurrentTimeString() {
+  var d = new Date();
+  return d.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  function tickClock(){
+    var now = new Date();
+    document.getElementById("liveClock").textContent = now.toLocaleTimeString("en-US");
+    document.getElementById("liveDate").textContent = now.toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  }
+  setInterval(tickClock, 1000); tickClock();
+
+  var sel = document.getElementById("employee");
+  EMPLOYEES.forEach(function(e){
+    var o = document.createElement("option");
+    o.value = e.code; o.textContent = e.code + " — " + e.name;
+    sel.appendChild(o);
+  });
+
+  function showMsg(cls, text){
+    var box = document.getElementById("status");
+    box.className = cls; box.textContent = text;
+  }
+
+  var cachedLogs = {};
+
+  window.fetchLogsJSONP = function() {
+    var todayStr = getTodayString();
+    document.getElementById("todayLabel").textContent = todayStr;
+    document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="muted">Loading records...</td></tr>';
+    
+    var btn = document.getElementById("btn-refresh");
+    btn.classList.add("loading");
+
+    var callbackName = "jsonp_" + Math.round(100000 * Math.random());
+    
+    window[callbackName] = function(data) {
+      if(data.success) {
+        cachedLogs = data.data;
+        renderToday();
+        refreshButtons();
+      } else {
+        document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="err">Error loading data.</td></tr>';
+      }
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[callbackName];
+      btn.classList.remove("loading");
+    };
+
+    var script = document.createElement("script");
+    script.src = API_URL + "?action=getLogs&date=" + todayStr + "&callback=" + callbackName;
+    document.body.appendChild(script);
+  }
+
+  document.getElementById("hidden_post_iframe").onload = function() {
+    setTimeout(window.fetchLogsJSONP, 800); 
+  };
+
+  function punch(slot){
+    var code = sel.value;
+    var isHalfDay = document.getElementById("halfDay").checked;
+
+    if (!code){ showMsg("err","Please select an employee first."); return; }
+
+    var todayStr = getTodayString();
+    var currentTimeStr = getCurrentTimeString();
+    var rec = cachedLogs[code] || {};
+
+    var label = "";
+    if (slot === "am_in") {
+      if (isHalfDay) return showMsg("err", "AM is blocked for Half-Day.");
+      if (rec.am_in) return showMsg("err", "AM Time In already recorded.");
+      label = "AM Time In";
+    } 
+    else if (slot === "am_out") {
+      if (isHalfDay) return showMsg("err", "AM is blocked for Half-Day.");
+      if (!rec.am_in) return showMsg("err", "Please log AM Time In first.");
+      if (rec.am_out) return showMsg("err", "AM Time Out already recorded.");
+      label = "AM Time Out";
+    } 
+    else if (slot === "pm_in") {
+      if (rec.pm_in) return showMsg("err", "PM Time In already recorded.");
+      if (!isHalfDay && !rec.am_out) return showMsg("err", "Please log AM Time Out first (or check Half-Day).");
+      label = "PM Time In";
+    } 
+    else if (slot === "pm_out") {
+      if (!rec.pm_in) return showMsg("err", "Please log PM Time In first.");
+      if (rec.pm_out) return showMsg("err", "PM Time Out already recorded.");
+      label = "PM Time Out";
+    }
+
+    rec[slot] = currentTimeStr;
+    cachedLogs[code] = rec;
+
+    var emp = EMPLOYEES.find(function(e){ return e.code === code; });
+
+    document.getElementById("f_date").value = todayStr;
+    document.getElementById("f_code").value = code;
+    document.getElementById("f_name").value = emp.name;
+    document.getElementById("f_am_in").value = rec.am_in || "";
+    document.getElementById("f_am_out").value = rec.am_out || "";
+    document.getElementById("f_pm_in").value = rec.pm_in || "";
+    document.getElementById("f_pm_out").value = rec.pm_out || "";
+
+    showMsg("ok", "⏳ Saving to Google Sheets...");
+    document.getElementById("saveForm").action = API_URL;
+    document.getElementById("saveForm").submit();
+
+    showMsg("ok", "✅ " + emp.name + " — " + label + " at " + currentTimeStr);
+    if (slot === "pm_in") document.getElementById("halfDay").checked = false;
+    refreshButtons();
+    renderToday();
+  }
+
+  function refreshButtons(){
+    var code = sel.value;
+    var isHalfDay = document.getElementById("halfDay").checked;
+    var rec = cachedLogs[code] || {};
+
+    document.getElementById("btn-am-in").disabled  = isHalfDay || !!rec.am_in;
+    document.getElementById("btn-am-out").disabled = isHalfDay || !rec.am_in || !!rec.am_out;
+    document.getElementById("btn-pm-in").disabled  = !!rec.pm_in || (!isHalfDay && !rec.am_out);
+    document.getElementById("btn-pm-out").disabled = !rec.pm_in || !!rec.pm_out;
+  }
+
+  function renderToday(){
+    var tbody = document.querySelector("#todayTable tbody");
+    tbody.innerHTML = "";
+    var rows = 0;
+
+    EMPLOYEES.forEach(function(e){
+      var r = cachedLogs[e.code];
+      if (!r) return;
+      if (!r.am_in && !r.am_out && !r.pm_in && !r.pm_out) return;
+
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td style="text-align:left">' + e.name + '</td>' +
+        '<td>' + (r.am_in || "-") + '</td><td>' + (r.am_out || "-") + '</td>' +
+        '<td>' + (r.pm_in || "-") + '</td><td>' + (r.pm_out || "-") + '</td>';
+      tbody.appendChild(tr);
+      rows++;
+    });
+
+    if (!rows) tbody.innerHTML = '<tr><td colspan="5" class="muted">No entries yet today.</td></tr>';
+  }
+
+  document.getElementById("btn-am-in").addEventListener("click",  function(){ punch("am_in");  });
+  document.getElementById("btn-am-out").addEventListener("click", function(){ punch("am_out"); });
+  document.getElementById("btn-pm-in").addEventListener("click",  function(){ punch("pm_in");  });
+  document.getElementById("btn-pm-out").addEventListener("click", function(){ punch("pm_out"); });
+
+  sel.addEventListener("change", function(){
+    refreshButtons();
+    document.getElementById("status").className = "";
+  });
+  document.getElementById("halfDay").addEventListener("change", refreshButtons);
+
+  window.fetchLogsJSONP();
+});
+</script>
+</body>
+</html>
 <style>
   :root { --blue:#1f4e79; --accent:#4a90d9; }
   * { box-sizing:border-box; font-family:system-ui,Segoe UI,Arial,sans-serif; }
