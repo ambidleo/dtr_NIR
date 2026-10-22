@@ -40,7 +40,7 @@
 </head>
 <body>
 
-<form id="saveForm" method="POST" target="hidden_iframe" class="hidden-iframe">
+<form id="saveForm" method="POST" target="hidden_post_iframe" class="hidden-iframe">
   <input type="hidden" name="action" value="saveLog">
   <input type="hidden" name="date" id="f_date">
   <input type="hidden" name="code" id="f_code">
@@ -50,7 +50,7 @@
   <input type="hidden" name="pm_in" id="f_pm_in">
   <input type="hidden" name="pm_out" id="f_pm_out">
 </form>
-<iframe name="hidden_iframe" id="hidden_iframe" class="hidden-iframe"></iframe>
+<iframe name="hidden_post_iframe" id="hidden_post_iframe" class="hidden-iframe"></iframe>
 
 <header>
   <h1>DHSUD NIR — Time Kiosk</h1>
@@ -91,7 +91,7 @@
 
 <script>
 // ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-var API_URL = "https://script.google.com/macros/s/AKfycbxx7pKaPzYH_4vu3du88yFRCAc9pCEidwX6n7Y48DQe9pr9caO5jIe2lYbSa-b9oo5K/exec";
+var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -141,8 +141,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function fetchLogsJSONP() {
     var todayStr = getTodayString();
     document.getElementById("todayLabel").textContent = todayStr;
-    var tbody = document.querySelector("#todayTable tbody");
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading records...</td></tr>';
+    document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="muted">Loading records...</td></tr>';
 
     var callbackName = "jsonp_" + Math.round(100000 * Math.random());
     
@@ -152,9 +151,9 @@ document.addEventListener("DOMContentLoaded", function () {
         renderToday();
         refreshButtons();
       } else {
-        tbody.innerHTML = '<tr><td colspan="5" class="err">Error loading data.</td></tr>';
+        document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="err">Error loading data.</td></tr>';
       }
-      document.body.removeChild(script);
+      if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
     };
 
@@ -163,9 +162,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.appendChild(script);
   }
 
-  // When the hidden iframe finishes submitting, we reload the data
-  document.getElementById("hidden_iframe").onload = function() {
-    setTimeout(fetchLogsJSONP, 800); // Wait for Google to process
+  document.getElementById("hidden_post_iframe").onload = function() {
+    setTimeout(fetchLogsJSONP, 800); 
   };
 
   function punch(slot){
@@ -206,7 +204,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
 
-    // Populate the hidden form
     document.getElementById("f_date").value = todayStr;
     document.getElementById("f_code").value = code;
     document.getElementById("f_name").value = emp.name;
@@ -217,9 +214,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     showMsg("ok", "⏳ Saving to Google Sheets...");
     document.getElementById("saveForm").action = API_URL;
-    document.getElementById("saveForm").submit(); // Submits silently via iframe
+    document.getElementById("saveForm").submit();
 
-    // Update UI immediately for the user
     showMsg("ok", "✅ " + emp.name + " — " + label + " at " + currentTimeStr);
     if (slot === "pm_in") document.getElementById("halfDay").checked = false;
     refreshButtons();
