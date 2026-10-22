@@ -107,7 +107,7 @@
 
 <script>
 // ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-var API_URL = "https://script.google.com/macros/s/AKfycbwRMi19QVq4LuS7nZapPwzKC7ggXwDXnFDoUExhCLZwa7o0EjXsTRm_egbuOAiXFNSI/exec";
+var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -128,12 +128,10 @@ document.addEventListener("DOMContentLoaded", function() {
   
   // Set today's date by default
   var today = new Date();
-  var month = '' + (today.getMonth() + 1);
-  var day = '' + today.getDate();
+  var month = String(today.getMonth() + 1).padStart(2, '0');
+  var day = String(today.getDate()).padStart(2, '0');
   var year = today.getFullYear();
-  if (month.length < 2) month = '0' + month;
-  if (day.length < 2) day = '0' + day;
-  dateInput.value = [year, month, day].join('-');
+  dateInput.value = year + "-" + month + "-" + day;
 
   // Allow pressing Enter in date field to load
   dateInput.addEventListener("keypress", function(e) {
@@ -230,6 +228,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   };
 
+  // Load data immediately on page load
   loadData();
 });
 </script>
