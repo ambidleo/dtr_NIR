@@ -21,8 +21,6 @@
       radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%),
       var(--bg);
   }
-
-  /* Header */
   header {
     background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
     color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
@@ -102,7 +100,6 @@
     .nav-links a { padding:7px 12px; font-size:12px; }
   }
 
-  /* ─── PRINT STYLES (unchanged from working version) ─── */
   @media print {
     @page { size: 13in 8.5in landscape; margin: 0.3in; }
     body { background: #fff; margin: 0; padding: 0; }
@@ -191,6 +188,7 @@
 
     <div id="dtrStatus">
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.
+      The Day column always shows the day of the month (1–31); days outside the chosen period are left blank.
     </div>
   </div>
 </div>
@@ -256,11 +254,20 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!code || !startV || !endV) { msg.textContent = "⚠ Please fill all fields."; msg.style.color = "#9b1c1c"; return; }
     if (new Date(endV) < new Date(startV)) { msg.textContent = "⚠ End date must be after start date."; msg.style.color = "#9b1c1c"; return; }
 
-    msg.textContent = "⏳ Downloading data... Please wait.";
-    msg.style.color = "#1f4e79";
-
     var start = new Date(startV + "T00:00:00");
     var end   = new Date(endV   + "T00:00:00");
+
+    // CSC Form No. 48 is a per-month form. Guard against multi-month ranges
+    // (e.g. Aug 16 – Sep 15) because a single Day 1–31 column can't represent
+    // two different months unambiguously.
+    if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) {
+      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b> CSC Form No. 48 is a per‑month form.<br>Print one DTR per month.";
+      msg.style.color = "#9b1c1c";
+      return;
+    }
+
+    msg.textContent = "⏳ Downloading data... Please wait.";
+    msg.style.color = "#1f4e79";
 
     buildDTR(code, start, end);
   });
@@ -297,45 +304,49 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function buildDTR(code, start, end) {
-    var emp    = EMPLOYEES.find(function(e){ return e.code === code; });
-    var days   = Math.round((end - start) / 86400000) + 1;
+    var emp = EMPLOYEES.find(function(e){ return e.code === code; });
     var totalUT = 0;
     var rowsHTML = "";
-    var results  = [];
+    var byDay = {};               // ← keyed by DAY-OF-MONTH (1..31)
     var failedDates = [];
 
-    for (var i = 0; i < 31; i++) {
-      if (i < days) {
-        var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-        var month = String(d.getMonth() + 1).padStart(2, '0');
-        var day   = String(d.getDate()).padStart(2, '0');
-        var year  = d.getFullYear();
-        var dStr  = year + "-" + month + "-" + day;
+    var year  = start.getFullYear();
+    var month = start.getMonth();           // 0-based
+    var startDay = start.getDate();
+    var endDay   = end.getDate();
 
-        var data = await fetchDateDataJSONP(dStr);
-        if (!data || !data.success) failedDates.push(dStr);
-        results.push(data || { success: false, data: {} });
+    // Fetch every day in the period, keyed by the day-of-month
+    for (var d = startDay; d <= endDay; d++) {
+      var dStr = year + "-" +
+                 String(month + 1).padStart(2, '0') + "-" +
+                 String(d).padStart(2, '0');
+
+      var data = await fetchDateDataJSONP(dStr);
+      if (!data || !data.success) {
+        failedDates.push(dStr);
+        byDay[d] = { success: false, data: {} };
       } else {
-        results.push({ success: true, data: {} });
+        byDay[d] = data;
       }
     }
 
     if (failedDates.length) {
-      var msg = document.getElementById("dtrStatus");
-      msg.style.color = "#9b1c1c";
-      msg.textContent = "⚠ " + failedDates.length + " date(s) failed to load (" + failedDates.join(", ") + "). Generating with partial data.";
+      var m = document.getElementById("dtrStatus");
+      m.style.color = "#9b1c1c";
+      m.textContent = "⚠ " + failedDates.length + " date(s) failed to load (" + failedDates.join(", ") + "). Generating with partial data.";
     }
 
-    for (var j = 0; j < 31; j++) {
-      var dayNum = j + 1;
+    // Render Day 1..31. Only days inside the chosen period will have data.
+    for (var j = 1; j <= 31; j++) {
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
 
-      if (results[j].success && results[j].data[code]) {
-        var dayData = results[j].data[code];
-        amIn  = dayData.am_in  || "";
-        amOut = dayData.am_out || "";
-        pmIn  = dayData.pm_in  || "";
-        pmOut = dayData.pm_out || "";
+      var rec = byDay[j];
+      if (rec && rec.success && rec.data && rec.data[code]) {
+        var dd = rec.data[code];
+        amIn  = dd.am_in  || "";
+        amOut = dd.am_out || "";
+        pmIn  = dd.pm_in  || "";
+        pmOut = dd.pm_out || "";
 
         var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
         var ut = Math.max(0, 480 - worked);
@@ -344,8 +355,12 @@ document.addEventListener("DOMContentLoaded", function () {
         utM = ut % 60;
       }
 
-      rowsHTML += `<tr><td>${dayNum}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
+      rowsHTML += `<tr><td>${j}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
     }
+
+    // Handy diagnostic while verifying — open DevTools Console to inspect.
+    console.log("DTR build — employee:", code, "| month:", month + 1, year,
+                "| period:", startDay + "-" + endDay, "| byDay:", byDay);
 
     generatePrint(emp, rowsHTML, totalUT);
   }
