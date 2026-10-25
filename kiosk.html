@@ -2,46 +2,214 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DHSUD NIR — Kiosk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4e79">
+<title>DHSUD NIR — Time Kiosk</title>
 <style>
-  :root { --blue:#1f4e79; --accent:#4a90d9; }
-  * { box-sizing:border-box; font-family:system-ui,Segoe UI,Arial,sans-serif; }
-  body { margin:0; background:#eef2f7; color:#1a1a1a; }
-  header { background:var(--blue); color:#fff; padding:14px 22px; display:flex; justify-content:space-between; align-items:center; }
-  header h1 { margin:0; font-size:18px; }
-  .nav-links a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:4px; margin-left:8px; }
-  .nav-links a:hover { background:rgba(255,255,255,0.3); }
-  .wrap { max-width:680px; margin:22px auto; padding:0 16px; }
-  .card { background:#fff; border-radius:10px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:22px; }
-  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:14px; }
-  .card-header h2 { margin:0; font-size:17px; color:var(--blue); }
-  .btn-refresh { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:4px; }
-  .btn-refresh:hover { background:#f0f8ff; }
-  .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
-  .btn-refresh.loading span { display: inline-block; animation: spin 1s linear infinite; }
-  @keyframes spin { 100% { transform: rotate(360deg); } }
-  label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
-  select { width:100%; padding:14px; border:1px solid #ccd5e0; border-radius:6px; font-size:16px; background:#fff; }
-  .clock { font-size:48px; font-weight:700; color:var(--blue); font-variant-numeric:tabular-nums; text-align:center; margin:6px 0 4px; }
-  .date { text-align:center; color:#5a6b80; margin-bottom:16px; font-size:14px; }
-  .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px; }
-  button { cursor:pointer; border:0; border-radius:6px; padding:16px; font-size:16px; font-weight:600; }
-  .btn-am { background:#cfe4ff; color:#0b3d75; }
-  .btn-pm { background:#ffe0b3; color:#7a4a00; }
-  button:hover:not(:disabled) { filter:brightness(.95); }
-  button:disabled { opacity:.45; cursor:not-allowed; }
-  #status { margin-top:16px; padding:14px; border-radius:6px; font-size:15px; display:none; text-align:center; font-weight:600; }
-  .ok { background:#e3f6e8; color:#1c6b32; display:block!important; }
-  .err { background:#fde7e7; color:#9b1c1c; display:block!important; }
-  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:6px; margin:10px 0; white-space:pre-wrap; font-family:monospace; }
-  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:10px; }
-  th,td { border:1px solid #d9e1ea; padding:8px; text-align:center; }
-  th { background:#f3f6fa; }
-  .muted { color:#6b7a8d; font-size:13px; text-align:center; margin-top:14px; }
-  .override-box { margin-top: 15px; background: #fff3cd; padding: 12px; border-radius: 6px; border: 1px solid #ffe08a; display: flex; align-items: center; gap: 10px; }
-  .override-box input { width: 20px; height: 20px; cursor: pointer; }
-  .override-box label { margin: 0; font-size: 14px; color: #664d03; cursor: pointer; }
+  :root {
+    --blue-900:#0f2a47; --blue-800:#163a5f; --blue-700:#1f4e79;
+    --blue-600:#2a6299; --blue-500:#4a90d9; --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --amber-500:#e08a00; --amber-100:#fff4e0;
+    --green-600:#1c8a4b; --green-100:#e3f6e8;
+    --red-600:#c23b3b; --red-100:#fde7e7;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80; --ink-300:#95a3b6;
+    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
+    --shadow-sm:0 1px 2px rgba(15,42,71,.06),0 1px 3px rgba(15,42,71,.04);
+    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
+    --shadow-lg:0 10px 30px rgba(15,42,71,.12),0 4px 10px rgba(15,42,71,.06);
+    --radius:16px; --radius-sm:12px;
+  }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; -webkit-tap-highlight-color:transparent; }
+  body {
+    margin:0; color:var(--ink-900); min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%),
+      var(--bg);
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  header {
+    background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
+    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 12px rgba(15,42,71,.18);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
+    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  }
+  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
+  .nav-links { display:flex; gap:8px; }
+  .nav-links a {
+    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+  }
+  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+
+  /* ── Layout ─────────────────────────────────────── */
+  .wrap { max-width:820px; margin:26px auto 40px; padding:0 18px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:26px;
+    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
+    margin-bottom:22px; animation:fadeUp .4s ease both;
+  }
+  .card + .card { animation-delay:.05s; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .card-header h2 { margin:0; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
+  .card-header h2 span { color:var(--ink-500); font-weight:600; font-size:14px; }
+
+  /* ── Clock panel ────────────────────────────────── */
+  .clock-panel {
+    background:linear-gradient(180deg, #f4f8fd 0%, #e9f2fc 100%);
+    border:1px solid #d5e6f7; border-radius:var(--radius-sm);
+    padding:18px 20px 14px; text-align:center; margin-bottom:22px;
+    position:relative; overflow:hidden;
+  }
+  .clock-panel::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(circle at 50% 130%, rgba(74,144,217,.20), transparent 60%);
+  }
+  .live-badge {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; font-weight:800; letter-spacing:.8px;
+    color:var(--green-600); background:rgba(28,138,75,.10);
+    padding:4px 10px; border-radius:999px; margin-bottom:6px;
+  }
+  .live-dot {
+    width:7px; height:7px; border-radius:50%; background:#21c064;
+    box-shadow:0 0 0 0 rgba(33,192,100,.55); animation:pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow:0 0 0 0 rgba(33,192,100,.55); }
+    70%  { box-shadow:0 0 0 8px rgba(33,192,100,0); }
+    100% { box-shadow:0 0 0 0 rgba(33,192,100,0); }
+  }
+  .clock {
+    font-size:54px; font-weight:800; letter-spacing:-1.5px;
+    font-variant-numeric:tabular-nums; line-height:1.05;
+    background:linear-gradient(180deg, var(--blue-700), var(--blue-500));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    position:relative; z-index:1;
+  }
+  .date { text-align:center; color:var(--ink-500); font-size:14px; font-weight:600; margin-top:2px; position:relative; z-index:1; }
+
+  /* ── Form controls ──────────────────────────────── */
+  label { display:block; font-size:13px; font-weight:700; margin:0 0 6px; color:var(--ink-700); }
+  select {
+    width:100%; padding:15px 48px 15px 16px; font-size:16px; font-weight:600;
+    border:1.5px solid #ccd9e8; border-radius:var(--radius-sm); background-color:#fff; color:var(--ink-900);
+    appearance:none; cursor:pointer; transition:border-color .15s ease, box-shadow .15s ease;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231f4e79' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 16px center; background-size:18px;
+  }
+  select:hover { border-color:#a9c2df; }
+  select:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
+
+  /* ── Half-day toggle card ───────────────────────── */
+  .override-box {
+    display:flex; align-items:center; gap:14px; margin-top:16px; padding:14px 16px;
+    background:linear-gradient(180deg, #fffbf0 0%, #fff5e0 100%);
+    border:1px solid #ffe0a3; border-radius:var(--radius-sm);
+    cursor:pointer; transition:box-shadow .15s ease;
+  }
+  .override-box:hover { box-shadow:0 0 0 4px rgba(224,138,0,.08); }
+  .override-box input { width:22px; height:22px; margin:0; cursor:pointer; accent-color:var(--amber-500); flex-shrink:0; }
+  .override-box label { margin:0; font-size:14px; color:#7a4a00; cursor:pointer; font-weight:600; }
+
+  /* ── Punch buttons ──────────────────────────────── */
+  .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px; }
+  button {
+    cursor:pointer; border:0; border-radius:var(--radius-sm); padding:20px 14px;
+    font-size:16px; font-weight:700; letter-spacing:.1px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:transform .08s ease, filter .15s ease, box-shadow .15s ease;
+  }
+  .btn-am {
+    background:linear-gradient(180deg, #e6f2ff 0%, #cfe4ff 100%);
+    color:#0b3d75; border:1.5px solid #b3d4f5;
+    box-shadow:0 2px 0 rgba(11,61,117,.06), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .btn-am:hover:not(:disabled) {
+    background:linear-gradient(180deg, #d8ebff 0%, #bcd9ff 100%);
+    box-shadow:0 4px 10px rgba(11,61,117,.12), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .btn-pm {
+    background:linear-gradient(180deg, #fff1dd 0%, #ffe0b3 100%);
+    color:#7a4a00; border:1.5px solid #f5c68a;
+    box-shadow:0 2px 0 rgba(122,74,0,.06), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .btn-pm:hover:not(:disabled) {
+    background:linear-gradient(180deg, #ffe8c9 0%, #ffd59a 100%);
+    box-shadow:0 4px 10px rgba(122,74,0,.12), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  button:active:not(:disabled) { transform:translateY(1px); }
+  button:disabled {
+    opacity:.4; cursor:not-allowed; filter:grayscale(.35);
+    box-shadow:none;
+  }
+
+  /* ── Status ─────────────────────────────────────── */
+  #status {
+    display:none; margin-top:18px; padding:14px 18px; border-radius:var(--radius-sm);
+    font-size:15px; font-weight:700; text-align:center;
+  }
+  #status.ok  { display:block; background:linear-gradient(180deg,#e8f8ec,#d9f1e1); color:#176a3b; border:1px solid #b8e5c6; animation:slideIn .25s ease both; }
+  #status.err { display:block; background:linear-gradient(180deg,#fdecec,#fbe0e0); color:#a92424; border:1px solid #f3bcbc; animation:slideIn .25s ease both; }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-4px);} to { opacity:1; transform:none;} }
+
+  .muted { color:var(--ink-500); font-size:13px; text-align:center; margin-top:16px; line-height:1.5; }
+  .muted b { color:var(--ink-700); }
+
+  /* ── Refresh button ─────────────────────────────── */
+  .btn-refresh {
+    background:var(--blue-50); border:1px solid #d5e3f3; color:var(--blue-700);
+    font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    padding:8px 14px; border-radius:999px; transition:background .15s ease;
+  }
+  .btn-refresh:hover { background:var(--blue-100); }
+  .btn-refresh.loading { opacity:.55; pointer-events:none; }
+  .btn-refresh.loading span { display:inline-block; animation:spin 1s linear infinite; }
+  @keyframes spin { 100% { transform:rotate(360deg); } }
+
+  /* ── Table ──────────────────────────────────────── */
+  table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; margin-top:6px; }
+  thead th {
+    background:linear-gradient(180deg,#f7fafd,#eef4fb);
+    color:var(--ink-500); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    padding:11px 10px; text-align:center;
+    border-bottom:1.5px solid var(--line);
+  }
+  thead th:first-child { border-top-left-radius:10px; }
+  thead th:last-child  { border-top-right-radius:10px; }
+  tbody td { padding:11px 10px; text-align:center; border-bottom:1px solid #eef2f7; }
+  tbody td:first-child { text-align:left; font-weight:600; color:var(--ink-900); }
+  tbody tr:nth-child(even) td { background:#fafcff; }
+  tbody tr:hover td { background:var(--blue-50); }
+  tbody tr:last-child td { border-bottom:0; }
+
+  /* ── Fatal banner ───────────────────────────────── */
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; }
+
   .hidden-iframe { display:none; }
+
+  /* ── Responsive ─────────────────────────────────── */
+  @media (max-width:560px) {
+    .clock { font-size:40px; }
+    .grid4 { grid-template-columns:1fr; }
+    .brand-sub { display:none; }
+    .card { padding:20px; }
+    header { padding:12px 16px; }
+    .nav-links a { padding:7px 12px; font-size:12px; }
+  }
 </style>
 </head>
 <body>
@@ -59,32 +227,49 @@
 <iframe name="hidden_post_iframe" id="hidden_post_iframe" class="hidden-iframe"></iframe>
 
 <header>
-  <h1>DHSUD NIR — Time Kiosk</h1>
-  <div class="nav-links">
-    <a href="generator.html">Print DTR ➔</a>
-    <a href="index.html">Admin Panel ➔</a>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <span class="brand-title">DHSUD NIR</span>
+      <span class="brand-sub">Time Kiosk</span>
+    </div>
   </div>
+  <nav class="nav-links">
+    <a href="generator.html">🖨️ Print DTR</a>
+    <a href="index.html">⚙️ Admin</a>
+  </nav>
 </header>
 
 <div class="wrap">
   <div id="fatal"></div>
+
   <div class="card">
-    <div class="clock" id="liveClock">--:--:--</div>
-    <div class="date" id="liveDate">—</div>
+    <div class="clock-panel">
+      <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+      <div class="clock" id="liveClock">--:--:--</div>
+      <div class="date" id="liveDate">—</div>
+    </div>
+
     <label for="employee">Select Employee</label>
     <select id="employee"><option value="">— Tap here to select your name —</option></select>
+
     <div class="override-box">
       <input type="checkbox" id="halfDay">
-      <label for="halfDay">Check this box for Half-Day (skip AM)</label>
+      <label for="halfDay">Half-Day — skip AM session</label>
     </div>
+
     <div class="grid4">
-      <button type="button" class="btn-am" id="btn-am-in">🟦 AM — Time In</button>
-      <button type="button" class="btn-am" id="btn-am-out">🟦 AM — Time Out</button>
-      <button type="button" class="btn-pm" id="btn-pm-in">🟧 PM — Time In</button>
-      <button type="button" class="btn-pm" id="btn-pm-out">🟧 PM — Time Out</button>
+      <button type="button" class="btn-am" id="btn-am-in">☀️ AM · Time In</button>
+      <button type="button" class="btn-am" id="btn-am-out">☀️ AM · Time Out</button>
+      <button type="button" class="btn-pm" id="btn-pm-in">🌙 PM · Time In</button>
+      <button type="button" class="btn-pm" id="btn-pm-out">🌙 PM · Time Out</button>
     </div>
+
     <div id="status"></div>
-    <div class="muted">Timestamps are taken automatically from this computer's clock.<br>Office hours: <b>7:00 AM – 6:00 PM</b>.</div>
+    <div class="muted">
+      Timestamps are taken automatically from this computer's clock.<br>
+      Office hours: <b>7:00 AM – 6:00 PM</b>.
+    </div>
   </div>
 
   <div class="card">
@@ -102,7 +287,7 @@
 </div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbyb-FV2-lV_DKEVDmXJ6JmII-hxfQza-ewMRA7ICihi7wY3P0Ppvd4DjKwwu3NGzu8I/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbxbm3rgbes2I5u9xR_FBMpD_ZXn5mQGTMD5C2vWDyPB_XY_sdu3TO-RXQxyFS93gwA/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -144,7 +329,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var SLOT_LABELS = { am_in:"AM Time In", am_out:"AM Time Out", pm_in:"PM Time In", pm_out:"PM Time Out" };
   var cachedLogs = {};
-  var pending = null;   // { slot, code, time, name } while a save is being confirmed
+  var pending = null;
 
   function showMsg(cls, text){
     var box = document.getElementById("status");
@@ -157,7 +342,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return c;
   }
 
-  // Raw server data + pending overlay = what the user sees during the save
   function applyPendingOverlay(raw){
     var display = shallowClone(raw || {});
     if (pending) {
@@ -169,8 +353,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return display;
   }
 
-  // onDone(rawServerData) is called when the fetch finishes
-  // silent=true skips the "Loading..." row + spinner (used during save-confirmation)
   window.fetchLogsJSONP = function(onDone, silent){
     var todayStr = getTodayString();
     document.getElementById("todayLabel").textContent = todayStr;
@@ -189,7 +371,7 @@ document.addEventListener("DOMContentLoaded", function () {
       done = true;
       clearTimeout(timer);
       if (errMsg && !silent) {
-        tbody.innerHTML = '<tr><td colspan="5" class="err">Error: ' + errMsg + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="muted" style="color:#a92424; font-weight:600;">Error: ' + errMsg + '</td></tr>';
       }
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
@@ -220,12 +402,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.appendChild(script);
   };
 
-  // Iframe load == POST finished. Wait a moment, then verify the save landed.
   document.getElementById("hidden_post_iframe").onload = function(){
-    if (!pending) return;                 // initial blank-frame load — ignore
+    if (!pending) return;
 
     var saved = pending;
-    var attemptsLeft = 2;                 // 1 initial + 1 retry
+    var attemptsLeft = 2;
 
     function verify(){
       window.fetchLogsJSONP(function(rawData){
@@ -244,9 +425,9 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
           pending = null;
           showMsg("err", "⚠ Save was not confirmed by the server. Please refresh and try again.");
-          window.fetchLogsJSONP();       // reload real state → reverts optimistic row
+          window.fetchLogsJSONP();
         }
-      }, true);                          // silent
+      }, true);
     }
 
     setTimeout(verify, 1200);
@@ -296,7 +477,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     pending = { slot: slot, code: code, time: currentTimeStr, name: emp.name };
 
-    // Optimistic local update — keeps the row/buttons correct while saving
     var optimistic = shallowClone(rec);
     optimistic[slot] = currentTimeStr;
     if (!optimistic.name) optimistic.name = emp.name;
@@ -332,9 +512,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!r.am_in && !r.am_out && !r.pm_in && !r.pm_out) return;
 
       var tr = document.createElement("tr");
-      tr.innerHTML = '<td style="text-align:left">' + e.name + '</td>' +
-        '<td>' + (r.am_in || "-") + '</td><td>' + (r.am_out || "-") + '</td>' +
-        '<td>' + (r.pm_in || "-") + '</td><td>' + (r.pm_out || "-") + '</td>';
+      tr.innerHTML = '<td>' + e.name + '</td>' +
+        '<td>' + (r.am_in || "—") + '</td><td>' + (r.am_out || "—") + '</td>' +
+        '<td>' + (r.pm_in || "—") + '</td><td>' + (r.pm_out || "—") + '</td>';
       tbody.appendChild(tr);
       rows++;
     });
