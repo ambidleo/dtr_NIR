@@ -2,47 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4e79">
 <title>DHSUD NIR — Admin Panel</title>
 <style>
-  :root { --blue:#1f4e79; --accent:#4a90d9; --danger:#d9534f; --success:#5cb85c; }
-  * { box-sizing:border-box; font-family:system-ui,Segoe UI,Arial,sans-serif; }
-  body { margin:0; background:#eef2f7; color:#1a1a1a; }
-  header { background:var(--blue); color:#fff; padding:14px 22px; display:flex; justify-content:space-between; align-items:center; }
-  header h1 { margin:0; font-size:18px; }
-  .nav-links a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:4px; margin-left:8px; }
-  .nav-links a:hover { background:rgba(255,255,255,0.3); }
-  .wrap { max-width:1100px; margin:22px auto; padding:0 16px; }
-  .card { background:#fff; border-radius:10px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.08); margin-bottom:22px; }
+  :root {
+    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
+    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --green-600:#1c8a4b; --green-500:#22a35a;
+    --red-600:#c23b3b; --red-500:#d9534f;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
+    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
+    --shadow-sm:0 1px 2px rgba(15,42,71,.06),0 1px 3px rgba(15,42,71,.04);
+    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
+    --radius:16px; --radius-sm:12px;
+  }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  body {
+    margin:0; color:var(--ink-900); min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%),
+      var(--bg);
+  }
 
-  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom:14px; }
-  .card-header h2 { margin:0; font-size:17px; color:var(--blue); }
+  /* Header */
+  header {
+    background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
+    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
+    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  }
+  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
+  .nav-links { display:flex; gap:8px; }
+  .nav-links a {
+    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+  }
+  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
 
-  .btn-refresh { background:none; border:none; color:var(--blue); font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:4px; }
-  .btn-refresh:hover { background:#f0f8ff; }
-  .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
-  .btn-refresh.loading span { display: inline-block; animation: spin 1s linear infinite; }
-  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .wrap { max-width:1140px; margin:26px auto 40px; padding:0 18px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:26px;
+    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
+    margin-bottom:22px; animation:fadeUp .35s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
 
-  .filter-row { display:flex; gap:15px; align-items:flex-end; margin-bottom:20px; }
-  .filter-row > div { flex:1; }
-  label { display:block; font-size:13px; font-weight:600; margin-bottom:4px; }
-  input[type="date"] { width:100%; padding:10px; border:1px solid #ccd5e0; border-radius:6px; font-size:15px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .card-header h2 { margin:0; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
 
-  .btn-load { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:10px 20px; font-size:15px; font-weight:600; cursor:pointer; height:42px; }
-  .btn-load:hover { filter:brightness(.95); }
+  .btn-refresh {
+    background:var(--blue-50); border:1px solid #d5e3f3; color:var(--blue-700);
+    font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    padding:8px 14px; border-radius:999px; transition:background .15s ease;
+  }
+  .btn-refresh:hover { background:var(--blue-100); }
+  .btn-refresh.loading { opacity:.55; pointer-events:none; }
+  .btn-refresh.loading span { display:inline-block; animation:spin 1s linear infinite; }
+  @keyframes spin { 100% { transform:rotate(360deg); } }
 
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { border:1px solid #d9e1ea; padding:8px; text-align:center; }
-  th { background:#f3f6fa; font-weight:600; color:var(--blue); }
-  td { vertical-align: middle; }
-  input[type="text"] { width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:13px; text-align:center; }
-  input[type="text"]:focus { border-color:var(--accent); outline:none; background:#f0f8ff; }
-  button { cursor:pointer; border:0; border-radius:4px; padding:8px 12px; font-size:13px; font-weight:600; }
-  .btn-save { background:var(--success); color:#fff; }
-  .btn-del { background:var(--danger); color:#fff; }
-  .btn-save:hover, .btn-del:hover { filter:brightness(0.9); }
-  .empty-state { text-align:center; color:#6b7a8d; padding:30px; font-style:italic; }
+  /* Filter row */
+  .filter-row { display:flex; gap:16px; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; }
+  .filter-row > div { flex:1; min-width:180px; }
+  label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
+  input[type="date"] {
+    width:100%; padding:12px 14px; border:1.5px solid #ccd9e8; border-radius:var(--radius-sm);
+    font-size:15px; font-weight:600; color:var(--ink-900); background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="date"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
+
+  .btn-load {
+    background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
+    color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
+    font-size:14px; font-weight:700; cursor:pointer; height:46px; white-space:nowrap;
+    box-shadow:0 4px 10px rgba(42,98,153,.25);
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .btn-load:hover { filter:brightness(1.06); }
+  .btn-load:active { transform:translateY(1px); }
+
+  /* Table */
+  .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
+  table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; min-width:760px; }
+  thead th {
+    background:linear-gradient(180deg,#f7fafd,#eef4fb);
+    color:var(--ink-500); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    padding:13px 10px; text-align:center; border-bottom:1.5px solid var(--line);
+    position:sticky; top:0;
+  }
+  tbody td { padding:9px 8px; text-align:center; border-bottom:1px solid #eef2f7; }
+  tbody td:first-child { text-align:left; font-weight:600; color:var(--ink-900); padding-left:16px; }
+  tbody tr:nth-child(even) td { background:#fafcff; }
+  tbody tr:hover td { background:var(--blue-50); }
+  tbody tr:last-child td { border-bottom:0; }
+
+  input[type="text"] {
+    width:100%; padding:8px 10px; border:1.5px solid #dbe3ee; border-radius:8px;
+    font-size:13px; font-weight:600; text-align:center; color:var(--ink-900); background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="text"]:hover { border-color:#b8cbe3; }
+  input[type="text"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(74,144,217,.15); background:#fbfdff; }
+  input[type="text"]::placeholder { color:#a6b3c4; font-weight:500; }
+
+  button { cursor:pointer; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; transition:filter .15s ease, transform .08s ease; }
+  button:active { transform:translateY(1px); }
+  .btn-save { background:linear-gradient(180deg,#25a35c 0%, var(--green-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(28,138,75,.25); }
+  .btn-save:hover { filter:brightness(1.07); }
+  .btn-del  { background:linear-gradient(180deg,#e05e5e 0%, var(--red-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(194,59,59,.22); }
+  .btn-del:hover { filter:brightness(1.07); }
+  td:last-child { white-space:nowrap; }
+  td:last-child button + button { margin-left:6px; }
+
+  .empty-state { text-align:center; color:var(--ink-500); padding:44px 20px; font-style:italic; font-size:14px; }
+
+  /* Toast */
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
+    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
+    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+    z-index:100; max-width:calc(100vw - 48px);
+  }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
+  .toast.error   { background:linear-gradient(135deg,#b02a2a,#d9534f); }
+
   .hidden-iframe { display:none; }
+
+  @media (max-width:640px) {
+    .brand-sub { display:none; }
+    .card { padding:18px; }
+    header { padding:12px 16px; }
+    .nav-links a { padding:7px 12px; font-size:12px; }
+  }
 </style>
 </head>
 <body>
@@ -59,12 +163,20 @@
 </form>
 <iframe name="hidden_admin_post" id="hidden_admin_post" class="hidden-iframe"></iframe>
 
+<div id="toast" class="toast"></div>
+
 <header>
-  <h1>DHSUD NIR — Admin Panel</h1>
-  <div class="nav-links">
-    <a href="kiosk.html">Kiosk</a>
-    <a href="generator.html">Print DTR</a>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <span class="brand-title">DHSUD NIR</span>
+      <span class="brand-sub">Admin Panel</span>
+    </div>
   </div>
+  <nav class="nav-links">
+    <a href="kiosk.html">🏠 Kiosk</a>
+    <a href="generator.html">🖨️ Print DTR</a>
+  </nav>
 </header>
 
 <div class="wrap">
@@ -78,35 +190,36 @@
 
     <div class="filter-row">
       <div>
-        <label for="filterDate">Select Date to View / Edit</label>
+        <label for="filterDate">Date to View / Edit</label>
         <input type="date" id="filterDate">
       </div>
-      <div style="flex: 0 0 auto;">
-        <label>&nbsp;</label>
+      <div style="flex:0 0 auto; min-width:0;">
         <button class="btn-load" id="btn-load" onclick="loadData()">📥 Load Data</button>
       </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th style="width:25%;">Employee</th>
-          <th style="width:15%;">AM In</th>
-          <th style="width:15%;">AM Out</th>
-          <th style="width:15%;">PM In</th>
-          <th style="width:15%;">PM Out</th>
-          <th style="width:15%;">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="logTableBody">
-        <tr><td colspan="6" class="empty-state">Select a date and click "Load Data".</td></tr>
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:26%;">Employee</th>
+            <th style="width:15%;">AM In</th>
+            <th style="width:15%;">AM Out</th>
+            <th style="width:15%;">PM In</th>
+            <th style="width:15%;">PM Out</th>
+            <th style="width:14%;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="logTableBody">
+          <tr><td colspan="6" class="empty-state">Select a date and click "Load Data".</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbyb-FV2-lV_DKEVDmXJ6JmII-hxfQza-ewMRA7ICihi7wY3P0Ppvd4DjKwwu3NGzu8I/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbxbm3rgbes2I5u9xR_FBMpD_ZXn5mQGTMD5C2vWDyPB_XY_sdu3TO-RXQxyFS93gwA/exec";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -120,6 +233,14 @@ var EMPLOYEES = [
   { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
+
+function showToast(msg, type) {
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + (type || "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 3200);
+}
 
 document.addEventListener("DOMContentLoaded", function() {
   var dateInput = document.getElementById("filterDate");
@@ -141,7 +262,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   window.loadData = function() {
     var dateStr = dateInput.value;
-    if (!dateStr) { alert("Please select a date first."); return; }
+    if (!dateStr) { showToast("Please select a date first.", "error"); return; }
 
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading records...</td></tr>';
     var btn = document.getElementById("btn-refresh");
@@ -156,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
       done = true;
       clearTimeout(timer);
       if (errMsg) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="color:#9b1c1c; font-style:normal;">Error: ' + errMsg + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="color:#a92424; font-style:normal;">Error: ' + errMsg + '</td></tr>';
       }
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
@@ -193,11 +314,11 @@ document.addEventListener("DOMContentLoaded", function() {
         hasRecords = true;
         var tr = document.createElement("tr");
         tr.innerHTML = `
-          <td style="text-align:left; font-weight:bold;">${emp.name}</td>
-          <td><input type="text" id="amin-${emp.code}" value="${rec.am_in || ''}" placeholder="e.g. 8:00 AM"></td>
-          <td><input type="text" id="amout-${emp.code}" value="${rec.am_out || ''}" placeholder="e.g. 12:00 PM"></td>
-          <td><input type="text" id="pmin-${emp.code}" value="${rec.pm_in || ''}" placeholder="e.g. 1:00 PM"></td>
-          <td><input type="text" id="pmout-${emp.code}" value="${rec.pm_out || ''}" placeholder="e.g. 5:00 PM"></td>
+          <td>${emp.name}</td>
+          <td><input type="text" id="amin-${emp.code}" value="${rec.am_in || ''}" placeholder="8:00 AM"></td>
+          <td><input type="text" id="amout-${emp.code}" value="${rec.am_out || ''}" placeholder="12:00 PM"></td>
+          <td><input type="text" id="pmin-${emp.code}" value="${rec.pm_in || ''}" placeholder="1:00 PM"></td>
+          <td><input type="text" id="pmout-${emp.code}" value="${rec.pm_out || ''}" placeholder="5:00 PM"></td>
           <td>
             <button class="btn-save" onclick="saveRow('${emp.code}', '${emp.name}', '${dateStr}')">Save</button>
             <button class="btn-del" onclick="deleteRow('${emp.code}', '${dateStr}')">Delete</button>
@@ -224,7 +345,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.getElementById("adminForm").action = API_URL;
     document.getElementById("adminForm").submit();
-    alert("✅ Sent to Google Sheets! (Refreshing...)");
+    showToast("✅ Sent to Google Sheets — refreshing...", "success");
   };
 
   window.deleteRow = function(code, dateStr) {
@@ -234,6 +355,7 @@ document.addEventListener("DOMContentLoaded", function() {
       document.getElementById("af_code").value   = code;
       document.getElementById("adminForm").action = API_URL;
       document.getElementById("adminForm").submit();
+      showToast("🗑️ Deleting record...", "error");
     }
   };
 
