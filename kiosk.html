@@ -2,10 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DHSUD NIR — Kiosk</title><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
 <title>DHSUD NIR — Kiosk</title>
 <style>
   :root { --blue:#1f4e79; --accent:#4a90d9; }
@@ -90,7 +86,7 @@
     <div id="status"></div>
     <div class="muted">Timestamps are taken automatically from this computer's clock.<br>Office hours: <b>7:00 AM – 6:00 PM</b>.</div>
   </div>
-  
+
   <div class="card">
     <div class="card-header">
       <h2>Today's Log — <span id="todayLabel"></span></h2>
@@ -146,99 +142,172 @@ document.addEventListener("DOMContentLoaded", function () {
     sel.appendChild(o);
   });
 
+  var SLOT_LABELS = { am_in:"AM Time In", am_out:"AM Time Out", pm_in:"PM Time In", pm_out:"PM Time Out" };
+  var cachedLogs = {};
+  var pending = null;   // { slot, code, time, name } while a save is being confirmed
+
   function showMsg(cls, text){
     var box = document.getElementById("status");
     box.className = cls; box.textContent = text;
   }
 
-  var cachedLogs = {};
+  function shallowClone(o){
+    var c = {};
+    for (var k in o) if (o.hasOwnProperty(k)) c[k] = o[k];
+    return c;
+  }
 
-  window.fetchLogsJSONP = function() {
+  // Raw server data + pending overlay = what the user sees during the save
+  function applyPendingOverlay(raw){
+    var display = shallowClone(raw || {});
+    if (pending) {
+      var cur = display[pending.code] ? shallowClone(display[pending.code]) : { name: pending.name };
+      if (!cur[pending.slot]) cur[pending.slot] = pending.time;
+      if (!cur.name) cur.name = pending.name;
+      display[pending.code] = cur;
+    }
+    return display;
+  }
+
+  // onDone(rawServerData) is called when the fetch finishes
+  // silent=true skips the "Loading..." row + spinner (used during save-confirmation)
+  window.fetchLogsJSONP = function(onDone, silent){
     var todayStr = getTodayString();
     document.getElementById("todayLabel").textContent = todayStr;
-    document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="muted">Loading records...</td></tr>';
-    
+    var tbody = document.querySelector("#todayTable tbody");
+    if (!silent) tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading records...</td></tr>';
+
     var btn = document.getElementById("btn-refresh");
-    btn.classList.add("loading");
+    if (!silent) btn.classList.add("loading");
 
     var callbackName = "jsonp_" + Math.round(100000 * Math.random());
-    
-    window[callbackName] = function(data) {
-      if(data.success) {
-        cachedLogs = data.data;
-        renderToday();
-        refreshButtons();
-      } else {
-        document.querySelector("#todayTable tbody").innerHTML = '<tr><td colspan="5" class="err">Error loading data.</td></tr>';
+    var script = document.createElement("script");
+    var done = false;
+
+    function finish(errMsg, rawData){
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (errMsg && !silent) {
+        tbody.innerHTML = '<tr><td colspan="5" class="err">Error: ' + errMsg + '</td></tr>';
       }
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
-      btn.classList.remove("loading");
+      if (!silent) btn.classList.remove("loading");
+      if (typeof onDone === "function") onDone(rawData);
+    }
+
+    window[callbackName] = function(data){
+      if (data && data.success) {
+        var raw = data.data || {};
+        cachedLogs = applyPendingOverlay(raw);
+        renderToday();
+        refreshButtons();
+        finish(null, raw);
+      } else {
+        finish((data && data.error) || "Backend returned an error");
+      }
     };
 
-    var script = document.createElement("script");
-    script.src = API_URL + "?action=getLogs&date=" + todayStr + "&callback=" + callbackName;
-    document.body.appendChild(script);
-  }
+    script.onerror = function(){
+      finish("Could not load backend. Verify the /exec URL and that the Web App is deployed as 'Anyone, even anonymous'.");
+    };
+    var timer = setTimeout(function(){
+      finish("Backend did not respond within 12s.");
+    }, 12000);
 
-  document.getElementById("hidden_post_iframe").onload = function() {
-    setTimeout(window.fetchLogsJSONP, 800); 
+    script.src = API_URL + "?action=getLogs&date=" + encodeURIComponent(todayStr) + "&callback=" + callbackName;
+    document.body.appendChild(script);
+  };
+
+  // Iframe load == POST finished. Wait a moment, then verify the save landed.
+  document.getElementById("hidden_post_iframe").onload = function(){
+    if (!pending) return;                 // initial blank-frame load — ignore
+
+    var saved = pending;
+    var attemptsLeft = 2;                 // 1 initial + 1 retry
+
+    function verify(){
+      window.fetchLogsJSONP(function(rawData){
+        var raw = rawData || {};
+        var rec = raw[saved.code] || {};
+        if (rec[saved.slot] === saved.time) {
+          showMsg("ok", "✅ " + saved.name + " — " + SLOT_LABELS[saved.slot] + " at " + saved.time);
+          pending = null;
+          if (saved.slot === "pm_in") document.getElementById("halfDay").checked = false;
+          refreshButtons();
+          return;
+        }
+        attemptsLeft--;
+        if (attemptsLeft > 0) {
+          setTimeout(verify, 1500);
+        } else {
+          pending = null;
+          showMsg("err", "⚠ Save was not confirmed by the server. Please refresh and try again.");
+          window.fetchLogsJSONP();       // reload real state → reverts optimistic row
+        }
+      }, true);                          // silent
+    }
+
+    setTimeout(verify, 1200);
   };
 
   function punch(slot){
+    if (pending) return showMsg("err", "Please wait — the previous save is being confirmed.");
+
     var code = sel.value;
     var isHalfDay = document.getElementById("halfDay").checked;
-
-    if (!code){ showMsg("err","Please select an employee first."); return; }
+    if (!code) return showMsg("err", "Please select an employee first.");
 
     var todayStr = getTodayString();
     var currentTimeStr = getCurrentTimeString();
     var rec = cachedLogs[code] || {};
 
-    var label = "";
     if (slot === "am_in") {
       if (isHalfDay) return showMsg("err", "AM is blocked for Half-Day.");
       if (rec.am_in) return showMsg("err", "AM Time In already recorded.");
-      label = "AM Time In";
-    } 
-    else if (slot === "am_out") {
+    } else if (slot === "am_out") {
       if (isHalfDay) return showMsg("err", "AM is blocked for Half-Day.");
       if (!rec.am_in) return showMsg("err", "Please log AM Time In first.");
       if (rec.am_out) return showMsg("err", "AM Time Out already recorded.");
-      label = "AM Time Out";
-    } 
-    else if (slot === "pm_in") {
+    } else if (slot === "pm_in") {
       if (rec.pm_in) return showMsg("err", "PM Time In already recorded.");
       if (!isHalfDay && !rec.am_out) return showMsg("err", "Please log AM Time Out first (or check Half-Day).");
-      label = "PM Time In";
-    } 
-    else if (slot === "pm_out") {
+    } else if (slot === "pm_out") {
       if (!rec.pm_in) return showMsg("err", "Please log PM Time In first.");
       if (rec.pm_out) return showMsg("err", "PM Time Out already recorded.");
-      label = "PM Time Out";
     }
-
-    rec[slot] = currentTimeStr;
-    cachedLogs[code] = rec;
 
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
 
-    document.getElementById("f_date").value = todayStr;
-    document.getElementById("f_code").value = code;
-    document.getElementById("f_name").value = emp.name;
-    document.getElementById("f_am_in").value = rec.am_in || "";
-    document.getElementById("f_am_out").value = rec.am_out || "";
-    document.getElementById("f_pm_in").value = rec.pm_in || "";
-    document.getElementById("f_pm_out").value = rec.pm_out || "";
+    var toSave = {
+      am_in: rec.am_in || "", am_out: rec.am_out || "",
+      pm_in: rec.pm_in || "", pm_out: rec.pm_out || ""
+    };
+    toSave[slot] = currentTimeStr;
 
-    showMsg("ok", "⏳ Saving to Google Sheets...");
+    document.getElementById("f_date").value   = todayStr;
+    document.getElementById("f_code").value   = code;
+    document.getElementById("f_name").value   = emp.name;
+    document.getElementById("f_am_in").value  = toSave.am_in;
+    document.getElementById("f_am_out").value = toSave.am_out;
+    document.getElementById("f_pm_in").value  = toSave.pm_in;
+    document.getElementById("f_pm_out").value = toSave.pm_out;
+
+    pending = { slot: slot, code: code, time: currentTimeStr, name: emp.name };
+
+    // Optimistic local update — keeps the row/buttons correct while saving
+    var optimistic = shallowClone(rec);
+    optimistic[slot] = currentTimeStr;
+    if (!optimistic.name) optimistic.name = emp.name;
+    cachedLogs[code] = optimistic;
+
+    showMsg("ok", "⏳ Saving " + emp.name + " — " + SLOT_LABELS[slot] + "...");
+    renderToday();
+    refreshButtons();
+
     document.getElementById("saveForm").action = API_URL;
     document.getElementById("saveForm").submit();
-
-    showMsg("ok", "✅ " + emp.name + " — " + label + " at " + currentTimeStr);
-    if (slot === "pm_in") document.getElementById("halfDay").checked = false;
-    refreshButtons();
-    renderToday();
   }
 
   function refreshButtons(){
