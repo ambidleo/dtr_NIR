@@ -28,13 +28,13 @@
     @page { size: 13in 8.5in landscape; margin: 0.3in; }
     body { background: #fff; margin: 0; padding: 0; }
     header, .wrap, #fatal { display: none !important; }
-    
-    #print-area { 
-      display: flex; 
+
+    #print-area {
+      display: flex;
       flex-direction: row;
       justify-content: space-between;
       align-items: stretch;
-      width: 100%; 
+      width: 100%;
       gap: 10px;
       font-family: Arial, sans-serif;
       color: #000;
@@ -56,14 +56,14 @@
     .form-title { font-size: 9px; margin-bottom: 2px; }
     .info-row { display: flex; margin-bottom: 2px; font-size: 8px; }
     .info-col { flex: 1; }
-    
+
     .dtr-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
     .dtr-table th, .dtr-table td { border: 1px solid #000; text-align: center; padding: 1px 2px; font-size: 8px; }
     .dtr-table th { font-weight: bold; }
     .dtr-table .day-col { width: 5%; }
     .dtr-table .time-col { width: 14%; }
     .dtr-table .ut-col { width: 9%; }
-    
+
     .dtr-footer { margin-top: 10px; font-size: 8px; }
     .certify-text { margin-bottom: 15px; text-align: justify; line-height: 1.2; }
     .signature-block { text-align: center; width: 45%; }
@@ -104,7 +104,6 @@
 <div id="print-area"></div>
 
 <script>
-// ⚠️ REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
 var API_URL = "https://script.google.com/macros/s/AKfycbxbm3rgbes2I5u9xR_FBMpD_ZXn5mQGTMD5C2vWDyPB_XY_sdu3TO-RXQxyFS93gwA/exec";
 
 var EMPLOYEES = [
@@ -155,10 +154,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   document.getElementById("btn-print").addEventListener("click", function(){
-    var code = sel.value;
+    var code   = sel.value;
     var startV = document.getElementById("startDate").value;
-    var endV = document.getElementById("endDate").value;
-    var msg = document.getElementById("dtrStatus");
+    var endV   = document.getElementById("endDate").value;
+    var msg    = document.getElementById("dtrStatus");
 
     if (!code || !startV || !endV) { msg.textContent = "⚠ Please fill all fields."; msg.style.color = "#9b1c1c"; return; }
     if (new Date(endV) < new Date(startV)) { msg.textContent = "⚠ End date must be after start date."; msg.style.color = "#9b1c1c"; return; }
@@ -167,58 +166,82 @@ document.addEventListener("DOMContentLoaded", function () {
     msg.style.color = "#1f4e79";
 
     var start = new Date(startV + "T00:00:00");
-    var end = new Date(endV + "T00:00:00");
-    
+    var end   = new Date(endV   + "T00:00:00");
+
     buildDTR(code, start, end);
   });
 
+  // Promise wrapper around JSONP with error handling + 12s timeout
   function fetchDateDataJSONP(dateStr) {
-    return new Promise((resolve) => {
+    return new Promise(function(resolve) {
       var callbackName = "jsonp_dtr_" + Math.round(1000000 * Math.random());
-      window[callbackName] = function(data) {
-        resolve(data);
+      var script = document.createElement("script");
+      var done = false;
+
+      function finish(result) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
         if (script.parentNode) script.parentNode.removeChild(script);
         delete window[callbackName];
+        resolve(result);
+      }
+
+      window[callbackName] = function(data) {
+        finish(data || { success: false, error: "Empty response for " + dateStr });
       };
-      var script = document.createElement("script");
-      script.src = API_URL + "?action=getLogs&date=" + dateStr + "&callback=" + callbackName;
+
+      script.onerror = function() {
+        finish({ success: false, error: "Network error loading " + dateStr });
+      };
+      var timer = setTimeout(function() {
+        finish({ success: false, error: "Timeout loading " + dateStr });
+      }, 12000);
+
+      script.src = API_URL + "?action=getLogs&date=" + encodeURIComponent(dateStr) + "&callback=" + callbackName;
       document.body.appendChild(script);
     });
   }
 
   async function buildDTR(code, start, end) {
-    var emp = EMPLOYEES.find(function(e){ return e.code === code; });
-    var days = Math.round((end - start) / 86400000) + 1;
+    var emp    = EMPLOYEES.find(function(e){ return e.code === code; });
+    var days   = Math.round((end - start) / 86400000) + 1;
     var totalUT = 0;
     var rowsHTML = "";
-    var results = [];
+    var results  = [];
+    var failedDates = [];
 
     for (var i = 0; i < 31; i++) {
       if (i < days) {
         var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-        
-        // Strict YYYY-MM-DD
         var month = String(d.getMonth() + 1).padStart(2, '0');
-        var day = String(d.getDate()).padStart(2, '0');
-        var year = d.getFullYear();
-        var dStr = year + "-" + month + "-" + day;
-        
+        var day   = String(d.getDate()).padStart(2, '0');
+        var year  = d.getFullYear();
+        var dStr  = year + "-" + month + "-" + day;
+
         var data = await fetchDateDataJSONP(dStr);
-        results.push(data);
+        if (!data || !data.success) failedDates.push(dStr);
+        results.push(data || { success: false, data: {} });
       } else {
         results.push({ success: true, data: {} });
       }
     }
 
-    for (var i = 0; i < 31; i++) {
-      var dayNum = i + 1;
+    if (failedDates.length) {
+      var msg = document.getElementById("dtrStatus");
+      msg.style.color = "#9b1c1c";
+      msg.textContent = "⚠ " + failedDates.length + " date(s) failed to load (" + failedDates.join(", ") + "). Generating with partial data.";
+    }
+
+    for (var j = 0; j < 31; j++) {
+      var dayNum = j + 1;
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
 
-      if (results[i].success && results[i].data[code]) {
-        var dayData = results[i].data[code];
-        amIn = dayData.am_in || "";
+      if (results[j].success && results[j].data[code]) {
+        var dayData = results[j].data[code];
+        amIn  = dayData.am_in  || "";
         amOut = dayData.am_out || "";
-        pmIn = dayData.pm_in || "";
+        pmIn  = dayData.pm_in  || "";
         pmOut = dayData.pm_out || "";
 
         var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
@@ -230,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       rowsHTML += `<tr><td>${dayNum}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
     }
-    
+
     generatePrint(emp, rowsHTML, totalUT);
   }
 
@@ -289,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
     document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
     document.getElementById("dtrStatus").style.color = "#1c6b32";
-    
+
     setTimeout(function() { window.print(); }, 200);
   }
 });
