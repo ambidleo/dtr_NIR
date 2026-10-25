@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4e79">
+<title>DHSUD NIR — Skeletal Workforce</title>
+<style>
+  :root {
+    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
+    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --green-600:#1c8a4b;
+    --amber-500:#e08a00; --amber-100:#fff4e0;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
+    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
+    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
+    --radius:16px; --radius-sm:12px;
+  }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  body {
+    margin:0; color:var(--ink-900); min-height:100vh;
+    background:radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%), var(--bg);
+  }
+
+  header {
+    background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
+    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
+    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  }
+  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
+  .nav-links { display:flex; gap:8px; }
+  .nav-links a {
+    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+  }
+  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+
+  .wrap { max-width:920px; margin:26px auto 40px; padding:0 18px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:26px;
+    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
+    margin-bottom:22px; animation:fadeUp .35s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+  h2 { margin:0 0 16px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
+
+  /* Schedule reference */
+  .sched-card {
+    background:linear-gradient(180deg, #f4f8fd 0%, #e9f2fc 100%);
+    border:1px solid #d5e6f7; border-radius:var(--radius-sm); padding:20px;
+  }
+  .sched-ref {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; font-weight:800; letter-spacing:.5px;
+    color:var(--amber-500); background:var(--amber-100);
+    border:1px solid #ffe0a3;
+    padding:5px 12px; border-radius:999px; margin-bottom:14px;
+  }
+  .sched-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .sched-col {
+    background:#fff; border:1px solid #d5e6f7; border-radius:10px; padding:14px 16px;
+  }
+  .sched-col h4 {
+    margin:0 0 8px; font-size:12px; color:var(--ink-500);
+    text-transform:uppercase; letter-spacing:.06em; font-weight:800;
+  }
+  .sched-col .time { font-size:15px; font-weight:700; color:var(--blue-700); margin-bottom:2px; }
+  .sched-col .days { font-size:12px; color:var(--ink-500); font-weight:600; }
+  .sched-note {
+    margin-top:14px; padding:10px 14px;
+    background:rgba(224,138,0,.08); border:1px solid #ffe0a3;
+    border-radius:8px; font-size:12px; color:#7a4a00; font-weight:600; line-height:1.5;
+  }
+
+  /* Employee list */
+  .emp-list { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .emp-item {
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    background:#fff; border:1.5px solid #dbe3ee; border-radius:10px;
+    cursor:pointer; transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .emp-item:hover { border-color:#a9c2df; background:#fbfdff; }
+  .emp-item.selected {
+    border-color:var(--blue-500); background:linear-gradient(180deg,#f4f9ff,#e9f2fc);
+    box-shadow:0 0 0 3px rgba(74,144,217,.12);
+  }
+  .emp-item input[type="checkbox"] {
+    width:20px; height:20px; margin:0; cursor:pointer; accent-color:var(--blue-600); flex-shrink:0;
+  }
+  .emp-info { display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+  .emp-code { font-size:11px; font-weight:800; color:var(--blue-700); letter-spacing:.05em; }
+  .emp-name { font-size:13px; font-weight:600; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* Toolbar */
+  .toolbar {
+    display:flex; justify-content:space-between; align-items:center;
+    gap:12px; margin-top:20px; padding-top:16px;
+    border-top:1px solid #eef2f7; flex-wrap:wrap;
+  }
+  .summary { font-size:13px; color:var(--ink-500); font-weight:600; }
+  .summary b { color:var(--blue-700); }
+  .summary .changed { color:var(--amber-500); margin-left:8px; font-weight:700; }
+
+  .btn-primary {
+    background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
+    color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
+    font-size:14px; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 12px rgba(42,98,153,.28);
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .btn-primary:hover { filter:brightness(1.06); }
+  .btn-primary:active { transform:translateY(1px); }
+
+  .btn-ghost {
+    background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700);
+    border-radius:var(--radius-sm); padding:12px 18px; font-size:14px; font-weight:700; cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+    margin-right:8px;
+  }
+  .btn-ghost:hover { background:#f7fafd; border-color:#b8cbe3; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
+    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
+    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+    z-index:100; max-width:calc(100vw - 48px);
+  }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
+
+  @media (max-width:640px) {
+    .sched-grid { grid-template-columns:1fr; }
+    .emp-list { grid-template-columns:1fr; }
+    .brand-sub { display:none; }
+    .card { padding:18px; }
+    header { padding:12px 16px; }
+    .nav-links a { padding:7px 12px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <span class="brand-title">DHSUD NIR</span>
+      <span class="brand-sub">Skeletal Workforce</span>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="kiosk.html">🏠 Kiosk</a>
+    <a href="generator.html">🖨️ Print DTR</a>
+    <a href="index.html">⚙️ Admin</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <!-- Reference schedule -->
+  <div class="card">
+    <h2>Friday Skeletal Workforce Schedule</h2>
+    <div class="sched-card">
+      <span class="sched-ref">📋 DO No. 2026-015</span>
+      <div class="sched-grid">
+        <div class="sched-col">
+          <h4>Regular Compressed Schedule</h4>
+          <div class="time">7:00 AM – 6:00 PM</div>
+          <div class="days">Monday – Thursday · <b>No work on Fridays</b></div>
+        </div>
+        <div class="sched-col">
+          <h4>Friday Skeletal Schedule</h4>
+          <div class="time">8:00 AM – 5:00 PM</div>
+          <div class="days">Friday only · Skeletal workforce only</div>
+        </div>
+      </div>
+      <div class="sched-note">
+        ⚠️ <b>Non‑skeletal employees have no work on Fridays</b> — their Friday DTR rows will be left blank.
+        Skeletal employees appear on Friday with an <b>8:00 AM – 5:00 PM</b> schedule.
+        Some teams may observe an alternative Mon–Thu window (7:00 AM – 5:00 PM) under a separate memo; this page assumes the 7:00 AM – 6:00 PM compressed schedule for Friday‑blanking purposes.
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee selection -->
+  <div class="card">
+    <h2>Mark Skeletal Workforce (Friday)</h2>
+    <p style="margin:-8px 0 0; color:var(--ink-500); font-size:13px;">
+      Check the employees who are <b>required to report on Fridays</b> under the skeletal workforce.
+      This list is used automatically by the <em>Print DTR</em> page.
+    </p>
+
+    <div class="emp-list" id="empList"></div>
+
+    <div class="toolbar">
+      <div class="summary">
+        <b id="skeletalCount">0</b> of 21 marked as skeletal
+        <span class="changed" id="changedBadge" style="display:none;">● Unsaved changes</span>
+      </div>
+      <div>
+        <button class="btn-ghost" id="btn-reset" type="button">Reset</button>
+        <button class="btn-primary" id="btn-save" type="button">💾 Save Skeletal List</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var EMPLOYEES = [
+  { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
+  { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
+  { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
+  { code:"07", name:"Katrina S. Amonares" }, { code:"08", name:"Lorie Ann A. Bantayan" },
+  { code:"09", name:"Daisy Mae T. Batuigas" }, { code:"10", name:"Marla Beth C. Deocadez" },
+  { code:"11", name:"Kimberly M. Enim" }, { code:"12", name:"Arnie Rose N. Famoso" },
+  { code:"13", name:"Debbie H. Felomira" }, { code:"14", name:"Philjoe M. Maghanoy" },
+  { code:"15", name:"Paul Ryan B. Pacardo" }, { code:"16", name:"Shaira June Rubia" },
+  { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
+  { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
+];
+
+var STORAGE_KEY = "dhsud_skeletal_workforce";
+
+function loadSkeletal() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    var arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch(e) { return []; }
+}
+
+function saveSkeletal(codes) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(codes));
+    return true;
+  } catch(e) { return false; }
+}
+
+function showToast(msg, type) {
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + (type || "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 2600);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  var container = document.getElementById("empList");
+  var saved = loadSkeletal();
+  var current = {};
+  saved.forEach(function(c){ current[c] = true; });
+
+  var dirty = false;
+
+  function markChanged() {
+    if (dirty) return;
+    dirty = true;
+    document.getElementById("changedBadge").style.display = "inline";
+  }
+
+  function renderList() {
+    container.innerHTML = "";
+    var count = 0;
+
+    EMPLOYEES.forEach(function(emp) {
+      var checked = !!current[emp.code];
+      if (checked) count++;
+
+      var lbl = document.createElement("label");
+      lbl.className = "emp-item" + (checked ? " selected" : "");
+      lbl.innerHTML =
+        '<input type="checkbox" data-code="' + emp.code + '"' + (checked ? ' checked' : '') + '>' +
+        '<div class="emp-info">' +
+          '<span class="emp-code">' + emp.code + '</span>' +
+          '<span class="emp-name">' + emp.name + '</span>' +
+        '</div>';
+
+      lbl.querySelector("input").addEventListener("change", function(e){
+        current[emp.code] = e.target.checked;
+        renderList();
+        markChanged();
+      });
+
+      container.appendChild(lbl);
+    });
+
+    document.getElementById("skeletalCount").textContent = count;
+  }
+
+  function getSelected() {
+    var arr = [];
+    EMPLOYEES.forEach(function(emp) {
+      if (current[emp.code]) arr.push(emp.code);
+    });
+    return arr;
+  }
+
+  document.getElementById("btn-save").addEventListener("click", function(){
+    var codes = getSelected();
+    if (saveSkeletal(codes)) {
+      dirty = false;
+      document.getElementById("changedBadge").style.display = "none";
+      showToast("✅ Saved " + codes.length + " skeletal worker" + (codes.length !== 1 ? "s" : ""), "success");
+    } else {
+      showToast("⚠ Could not save — browser storage is blocked", "");
+    }
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    if (!confirm("Clear all skeletal selections?")) return;
+    current = {};
+    renderList();
+    markChanged();
+    showToast("Selections cleared — remember to Save", "");
+  });
+
+  renderList();
+});
+</script>
+</body>
+</html>
