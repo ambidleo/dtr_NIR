@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4e79">
+<title>DHSUD NIR — Enroll Faces</title>
+<style>
+  :root {
+    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
+    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --green-600:#1c8a4b; --green-100:#e3f6e8;
+    --red-600:#c23b3b; --red-100:#fde7e7;
+    --amber-500:#e08a00; --amber-100:#fff4e0;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
+    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
+    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
+    --radius:16px; --radius-sm:12px;
+  }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  body {
+    margin:0; color:var(--ink-900); min-height:100vh;
+    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
+  }
+  header {
+    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
+    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
+    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  }
+  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
+  .nav-links { display:flex; gap:8px; }
+  .nav-links a {
+    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+  }
+  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+
+  .wrap { max-width:1100px; margin:26px auto 40px; padding:0 18px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:26px;
+    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
+    margin-bottom:22px; animation:fadeUp .35s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+  h2 { margin:0 0 16px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
+
+  .cam-layout { display:grid; grid-template-columns:360px 1fr; gap:24px; align-items:start; }
+  .video-wrap {
+    position:relative; border-radius:14px; overflow:hidden; background:#000;
+    aspect-ratio:4/3; box-shadow:0 6px 20px rgba(15,42,71,.18);
+  }
+  #cam { width:100%; height:100%; object-fit:cover; display:block; transform:scaleX(-1); }
+  .video-guide {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .video-guide::before {
+    content:''; width:200px; height:260px;
+    border:3px dashed rgba(255,255,255,.7);
+    border-radius:50%;
+  }
+  .cam-status {
+    margin-top:12px; padding:12px 14px; border-radius:10px;
+    font-size:13px; font-weight:700; text-align:center;
+    background:var(--blue-50); color:var(--blue-700);
+    border:1px solid #d5e3f3;
+  }
+  .cam-status.err  { background:var(--red-100); color:var(--red-600); border-color:#f3bcbc; }
+  .cam-status.ok   { background:var(--green-100); color:var(--green-600); border-color:#b8e5c6; }
+  .cam-status.busy { background:var(--amber-100); color:#7a4a00; border-color:#ffe0a3; }
+
+  .emp-list {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:10px; max-height:600px; overflow-y:auto; padding-right:4px;
+  }
+  .emp-item {
+    display:flex; align-items:center; gap:12px; padding:12px 14px;
+    background:#fff; border:1.5px solid #dbe3ee; border-radius:10px;
+    cursor:pointer; transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    user-select:none;
+  }
+  .emp-item:hover { border-color:#a9c2df; background:#fbfdff; }
+  .emp-item.busy  { pointer-events:none; opacity:.7; }
+  .emp-item.enrolled { border-color:#8fce9f; background:linear-gradient(180deg,#f2faf5,#e9f6ee); }
+  .emp-avatar {
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800;
+    background:var(--blue-100); color:var(--blue-700);
+  }
+  .emp-item.enrolled .emp-avatar { background:#c8ecd2; color:var(--green-600); }
+  .emp-info { display:flex; flex-direction:column; line-height:1.25; min-width:0; flex:1; }
+  .emp-code { font-size:11px; font-weight:800; color:var(--blue-700); letter-spacing:.05em; }
+  .emp-name { font-size:13px; font-weight:600; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .emp-badge {
+    font-size:11px; font-weight:700; padding:3px 8px; border-radius:999px;
+    background:#eef2f7; color:var(--ink-500);
+  }
+  .emp-item.enrolled .emp-badge { background:#c8ecd2; color:var(--green-600); }
+
+  .toolbar {
+    display:flex; justify-content:space-between; align-items:center;
+    gap:12px; margin-top:16px; flex-wrap:wrap;
+  }
+  .summary { font-size:13px; color:var(--ink-500); font-weight:600; }
+  .summary b { color:var(--blue-700); }
+
+  .btn-primary {
+    background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
+    color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
+    font-size:14px; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 12px rgba(42,98,153,.28); transition:filter .15s ease;
+  }
+  .btn-primary:hover { filter:brightness(1.06); }
+  .btn-danger {
+    background:linear-gradient(135deg,#d9534f,var(--red-600));
+    color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 18px;
+    font-size:14px; font-weight:800; cursor:pointer;
+  }
+  .btn-danger:hover { filter:brightness(1.06); }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
+    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
+    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+    z-index:100; max-width:calc(100vw - 48px);
+  }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
+  .toast.error   { background:linear-gradient(135deg,#b02a2a,#d9534f); }
+
+  @media (max-width:860px) {
+    .cam-layout { grid-template-columns:1fr; }
+    .brand-sub { display:none; }
+    .nav-links a { padding:7px 12px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <span class="brand-title">DHSUD NIR</span>
+      <span class="brand-sub">Enroll Faces</span>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="kiosk.html">🏠 Kiosk</a>
+    <a href="skeletal.html">👥 Skeletal</a>
+    <a href="generator.html">🖨️ Print DTR</a>
+    <a href="index.html">⚙️ Admin</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Employee Face Enrollment</h2>
+    <p style="margin:-8px 0 18px; color:var(--ink-500); font-size:13px; line-height:1.5;">
+      Position your face inside the oval, then click an employee below.
+      The camera captures 3 frames automatically and stores them on this device only.
+      Click an already‑enrolled employee to re‑capture or delete.
+    </p>
+
+    <div class="cam-layout">
+      <div>
+        <div class="video-wrap">
+          <video id="cam" autoplay playsinline muted></video>
+          <div class="video-guide"></div>
+        </div>
+        <div class="cam-status" id="camStatus">Starting camera…</div>
+      </div>
+
+      <div>
+        <div class="emp-list" id="empList"></div>
+        <div class="toolbar">
+          <div class="summary"><b id="enrolledCount">0</b> of 21 enrolled</div>
+          <button class="btn-danger" id="btn-clear-all" type="button">Clear All Enrollments</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+var EMPLOYEES = [
+  { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
+  { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
+  { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
+  { code:"07", name:"Katrina S. Amonares" }, { code:"08", name:"Lorie Ann A. Bantayan" },
+  { code:"09", name:"Daisy Mae T. Batuigas" }, { code:"10", name:"Marla Beth C. Deocadez" },
+  { code:"11", name:"Kimberly M. Enim" }, { code:"12", name:"Arnie Rose N. Famoso" },
+  { code:"13", name:"Debbie H. Felomira" }, { code:"14", name:"Philjoe M. Maghanoy" },
+  { code:"15", name:"Paul Ryan B. Pacardo" }, { code:"16", name:"Shaira June Rubia" },
+  { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
+  { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
+];
+
+var FACES_KEY = "dhsud_face_descriptors";
+var MODEL_URL = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights";
+
+function showToast(msg, type) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast show " + (type || "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 3000);
+}
+
+function setStatus(text, cls) {
+  var s = document.getElementById("camStatus");
+  s.textContent = text;
+  s.className = "cam-status" + (cls ? " " + cls : "");
+}
+
+function getFaces() {
+  try { return JSON.parse(localStorage.getItem(FACES_KEY) || "{}"); }
+  catch(e) { return {}; }
+}
+
+function saveFaces(faces) {
+  localStorage.setItem(FACES_KEY, JSON.stringify(faces));
+}
+
+document.addEventListener("DOMContentLoaded", async function() {
+  var cam = document.getElementById("cam");
+  var listEl = document.getElementById("empList");
+  var modelsReady = false;
+  var stream = null;
+
+  function renderList() {
+    var faces = getFaces();
+    listEl.innerHTML = "";
+    var enrolled = 0;
+
+    EMPLOYEES.forEach(function(emp) {
+      var hasFace = !!(faces[emp.code] && faces[emp.code].length);
+      if (hasFace) enrolled++;
+
+      var el = document.createElement("div");
+      el.className = "emp-item" + (hasFace ? " enrolled" : "");
+      el.dataset.code = emp.code;
+      el.innerHTML =
+        '<div class="emp-avatar">' + (hasFace ? "✓" : emp.code) + '</div>' +
+        '<div class="emp-info">' +
+          '<span class="emp-code">' + emp.code + '</span>' +
+          '<span class="emp-name">' + emp.name + '</span>' +
+        '</div>' +
+        '<span class="emp-badge">' + (hasFace ? "Enrolled" : "Not set") + '</span>';
+
+      el.addEventListener("click", function(){ handleEmployeeClick(emp.code, el); });
+      listEl.appendChild(el);
+    });
+
+    document.getElementById("enrolledCount").textContent = enrolled;
+  }
+
+  async function handleEmployeeClick(code, el) {
+    if (!modelsReady) return showToast("Models still loading — wait a moment.", "error");
+    if (!stream) return showToast("Camera not ready.", "error");
+
+    var faces = getFaces();
+    if (faces[code] && faces[code].length) {
+      if (confirm("This employee is already enrolled. Delete their face data?")) {
+        delete faces[code];
+        saveFaces(faces);
+        renderList();
+        showToast("Deleted enrollment.", "success");
+        return;
+      }
+      return;
+    }
+
+    el.classList.add("busy");
+    setStatus("Hold still — capturing in 1…", "busy");
+
+    await new Promise(r => setTimeout(r, 700));
+    setStatus("Capturing 3 frames — please look at the camera", "busy");
+
+    var descriptors = [];
+    for (var i = 0; i < 3; i++) {
+      var det = await faceapi
+        .detectSingleFace(cam, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      if (det) descriptors.push(Array.from(det.descriptor));
+      await new Promise(r => setTimeout(r, 250));
+    }
+
+    el.classList.remove("busy");
+
+    if (descriptors.length === 0) {
+      setStatus("No face detected — try again with better lighting", "err");
+      return showToast("Capture failed — no face found.", "error");
+    }
+
+    faces = getFaces();
+    faces[code] = descriptors;
+    saveFaces(faces);
+    renderList();
+    setStatus("✅ Saved " + descriptors.length + " face samples", "ok");
+    showToast("✅ Enrolled successfully.", "success");
+  }
+
+  // Start camera first
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: "user" }
+    });
+    cam.srcObject = stream;
+    await cam.play();
+    setStatus("Loading face models…", "busy");
+  } catch (e) {
+    setStatus("Camera error: " + e.message + " — camera needs HTTPS or localhost", "err");
+    return;
+  }
+
+  // Load models
+  try {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+    ]);
+    modelsReady = true;
+    setStatus("✅ Camera ready — click an employee to enroll", "ok");
+  } catch (e) {
+    setStatus("Could not load models: " + e.message + " (check internet)", "err");
+    return;
+  }
+
+  renderList();
+
+  document.getElementById("btn-clear-all").addEventListener("click", function() {
+    if (!confirm("Delete ALL face enrollments on this device?")) return;
+    localStorage.removeItem(FACES_KEY);
+    renderList();
+    showToast("All enrollments cleared.", "success");
+  });
+});
+</script>
+</body>
+</html>
