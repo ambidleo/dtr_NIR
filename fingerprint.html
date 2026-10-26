@@ -1,0 +1,47 @@
+async function tryFingerprint() {
+  var creds = JSON.parse(localStorage.getItem("dhsud_fingerprint_credentials") || "{}");
+  var codes = Object.keys(creds);
+  if (codes.length === 0) {
+    setFaceStatus("No fingerprints enrolled — use Manual Punch.", "err");
+    return;
+  }
+
+  // Ask the sensor to verify ANY enrolled fingerprint
+  // (the browser will return whichever credential matches the finger)
+  var challenge = new Uint8Array(32);
+  crypto.getRandomValues(challenge);
+
+  var allow = codes.map(function(code) {
+    // base64 decode
+    var binary = atob(creds[code].id);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return { type: "public-key", id: bytes.buffer, transports: ["internal"] };
+  });
+
+  try {
+    var assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: challenge,
+        rpId: location.hostname || "localhost",
+        allowCredentials: allow,
+        userVerification: "required",
+        timeout: 60000
+      }
+    });
+
+    if (assertion) {
+      var matchedId = bufferToBase64(assertion.rawId);
+      var matchedCode = codes.find(function(c) { return creds[c].id === matchedId; });
+      if (matchedCode) {
+        // → auto-punch logic here (same next-slot sequence as face recognition)
+        var rec = cachedLogs[matchedCode] || {};
+        var next = rec.am_in ? (rec.am_out ? (rec.pm_in ? (rec.pm_out ? null : "pm_out") : "pm_in") : "am_out") : "am_in";
+        if (next) punch(next, matchedCode);
+        else setFaceStatus("ℹ️ All punches complete for today.", "info");
+      }
+    }
+  } catch(e) {
+    setFaceStatus("Fingerprint not recognized — try face or manual punch.", "err");
+  }
+}
