@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f4e79">
-<title>DHSUD NIR — Skeletal Workforce (Per Week)</title>
+<title>DHSUD NIR — Skeletal Workforce</title>
 <style>
   :root {
     --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
@@ -22,7 +22,6 @@
     margin:0; color:var(--ink-900); min-height:100vh;
     background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
   }
-
   header {
     background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
     color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
@@ -32,7 +31,7 @@
   .brand-mark {
     width:40px; height:40px; border-radius:11px;
     background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
-    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
+    color:var(--blue-700); font-weight:800; font-size:15px;
     display:flex; align-items:center; justify-content:center;
     box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
   }
@@ -45,9 +44,9 @@
     background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
     padding:8px 14px; border-radius:999px;
   }
-  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+  .nav-links a:hover { background:rgba(255,255,255,.22); }
 
-  .wrap { max-width:960px; margin:26px auto 40px; padding:0 18px; }
+  .wrap { max-width:1000px; margin:26px auto 40px; padding:0 18px; }
   .card {
     background:var(--white); border-radius:var(--radius); padding:26px;
     box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
@@ -55,6 +54,7 @@
   }
   h2 { margin:0 0 16px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
 
+  /* Schedule reference */
   .sched-card {
     background:linear-gradient(180deg,#f4f8fd 0%,#e9f2fc 100%);
     border:1px solid #d5e6f7; border-radius:var(--radius-sm); padding:20px;
@@ -66,72 +66,92 @@
     border:1px solid #ffe0a3; padding:5px 12px; border-radius:999px; margin-bottom:14px;
   }
   .sched-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .sched-col {
-    background:#fff; border:1px solid #d5e6f7; border-radius:10px; padding:14px 16px;
-  }
-  .sched-col h4 {
-    margin:0 0 8px; font-size:12px; color:var(--ink-500);
-    text-transform:uppercase; letter-spacing:.06em; font-weight:800;
-  }
+  .sched-col { background:#fff; border:1px solid #d5e6f7; border-radius:10px; padding:14px 16px; }
+  .sched-col h4 { margin:0 0 8px; font-size:12px; color:var(--ink-500); text-transform:uppercase; letter-spacing:.06em; font-weight:800; }
   .sched-col .time { font-size:15px; font-weight:700; color:var(--blue-700); margin-bottom:2px; }
   .sched-col .days { font-size:12px; color:var(--ink-500); font-weight:600; margin-top:2px; }
-  .sched-note {
-    margin-top:14px; padding:10px 14px;
-    background:rgba(224,138,0,.08); border:1px solid #ffe0a3;
-    border-radius:8px; font-size:12px; color:#7a4a00; font-weight:600; line-height:1.5;
-  }
 
-  .week-selector {
-    display:grid;
-    grid-template-columns:minmax(220px, 1fr) auto;
-    gap:16px; align-items:center;
-    padding:18px;
-    background:linear-gradient(180deg,#f4f8fd,#e9f2fc);
+  /* Month nav */
+  .month-nav {
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    padding:18px; background:linear-gradient(180deg,#f4f8fd,#e9f2fc);
     border:1px solid #d5e6f7; border-radius:12px;
   }
-  .week-selector .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .week-selector label {
-    margin:0; font-size:12px; font-weight:800; color:var(--ink-500);
+  .month-nav label {
+    font-size:12px; font-weight:800; color:var(--ink-500);
     text-transform:uppercase; letter-spacing:.05em;
   }
-  .week-selector input[type="date"] {
-    padding:10px 12px; border:1.5px solid #ccd9e8; border-radius:8px;
-    font-size:15px; font-weight:700; color:var(--ink-900);
-    background:#fff; cursor:pointer;
+  .month-nav input[type="month"] {
+    padding:10px 14px; border:1.5px solid #ccd9e8; border-radius:8px;
+    font-size:15px; font-weight:700; color:var(--ink-900); background:#fff;
+    cursor:pointer; min-width:200px;
   }
-  .week-selector input[type="date"]:focus {
+  .month-nav input[type="month"]:focus {
     outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18);
   }
-  .week-info {
-    display:flex; flex-direction:column; gap:4px;
-    text-align:right; min-width:180px;
+  .month-nav button {
+    padding:10px 16px; border-radius:8px; font-size:13px; font-weight:700;
+    background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700); cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
   }
-  .week-badge {
-    display:inline-block;
-    font-size:16px; font-weight:800; color:var(--blue-700);
-    background:#fff; padding:6px 14px; border-radius:999px;
-    border:1px solid #d5e6f7;
+  .month-nav button:hover { background:#f7fafd; border-color:#b8cbe3; }
+  .month-nav .month-label {
+    margin-left:auto; font-size:15px; font-weight:800; color:var(--blue-700);
   }
-  .week-range { font-size:12px; color:var(--ink-500); font-weight:600; }
-  .week-nav { grid-column:1 / -1; display:flex; gap:6px; flex-wrap:wrap; padding-top:4px; }
-  .week-nav button {
-    padding:9px 16px; border-radius:999px; font-size:12px; font-weight:700;
-    background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700);
-    cursor:pointer; transition:background .15s ease, border-color .15s ease;
-  }
-  .week-nav button:hover { background:#f7fafd; border-color:#b8cbe3; }
-  .week-nav button.primary {
-    background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
-    color:#fff; border-color:transparent;
-  }
-  .week-nav button.primary:hover { filter:brightness(1.06); background:linear-gradient(135deg,var(--blue-600),var(--blue-500)); }
 
-  .emp-list { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  /* Week tabs */
+  .week-tabs {
+    display:flex; gap:8px; overflow-x:auto; padding:4px 0 12px;
+    border-bottom:1px solid var(--line); margin-bottom:20px;
+  }
+  .week-tab {
+    flex-shrink:0; min-width:120px; padding:12px 14px;
+    background:#fafcff; border:1.5px solid #dbe3ee; border-radius:10px;
+    cursor:pointer; transition:all .15s ease;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .week-tab:hover { background:#f4f9ff; border-color:#b8cbe3; }
+  .week-tab.active {
+    background:linear-gradient(180deg,#eaf4ff,#dbeafe);
+    border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(74,144,217,.15);
+  }
+  .week-tab .wk-num {
+    font-size:13px; font-weight:800; color:var(--blue-700);
+  }
+  .week-tab .wk-range { font-size:11px; color:var(--ink-500); font-weight:600; }
+  .week-tab .wk-count {
+    font-size:11px; font-weight:800; color:var(--green-600);
+    margin-top:3px;
+  }
+  .week-tab .wk-count.empty { color:var(--ink-500); }
+
+  /* Week content */
+  .week-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 18px; margin-bottom:16px;
+    background:#f4f8fd; border:1px solid #d5e6f7; border-radius:10px;
+    flex-wrap:wrap; gap:10px;
+  }
+  .week-header h3 { margin:0; font-size:15px; color:var(--blue-700); }
+  .week-header h3 span { color:var(--ink-500); font-weight:600; font-size:13px; margin-left:8px; }
+  .week-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .week-actions button {
+    padding:8px 14px; border-radius:8px; font-size:12px; font-weight:700;
+    background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700); cursor:pointer;
+    transition:background .15s ease;
+  }
+  .week-actions button:hover { background:#f7fafd; }
+  .week-actions button.danger { color:var(--red-600); border-color:#f3bcbc; }
+  .week-actions button.danger:hover { background:var(--red-100); }
+
+  /* Employee grid */
+  .emp-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  }
   .emp-item {
-    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    display:flex; align-items:center; gap:12px; padding:12px 14px;
     background:#fff; border:1.5px solid #dbe3ee; border-radius:10px;
-    cursor:pointer; transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
-    user-select:none;
+    cursor:pointer; transition:all .15s ease; user-select:none;
   }
   .emp-item:hover { border-color:#a9c2df; background:#fbfdff; }
   .emp-item.selected {
@@ -145,101 +165,117 @@
   .emp-code { font-size:11px; font-weight:800; color:var(--blue-700); letter-spacing:.05em; }
   .emp-name { font-size:13px; font-weight:600; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  .toolbar {
+  /* Save bar */
+  .save-bar {
+    position:sticky; bottom:16px; z-index:30;
     display:flex; justify-content:space-between; align-items:center;
-    gap:12px; margin-top:20px; padding-top:16px;
-    border-top:1px solid #eef2f7; flex-wrap:wrap;
+    gap:14px; padding:16px 22px;
+    background:#fff; border:1.5px solid var(--line); border-radius:14px;
+    box-shadow:0 10px 30px rgba(15,42,71,.16);
+    margin-bottom:6px;
   }
-  .summary { font-size:13px; color:var(--ink-500); font-weight:600; }
-  .summary b { color:var(--blue-700); }
-  .saved-badge {
-    margin-left:8px; font-size:11px; font-weight:800;
-    color:var(--green-600); background:var(--green-100);
-    padding:3px 10px; border-radius:999px;
-    opacity:0; transition:opacity .25s ease;
+  .save-bar .save-status {
+    font-size:13px; font-weight:700; color:var(--ink-500);
   }
-  .saved-badge.show { opacity:1; }
+  .save-bar .save-status.dirty { color:var(--amber-500); }
+  .save-bar .save-status.saved { color:var(--green-600); }
+  .save-bar .save-status.error { color:var(--red-600); }
+  .save-bar button {
+    padding:12px 24px; border-radius:10px; border:0; font-size:14px; font-weight:800;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .save-bar .btn-save {
+    background:linear-gradient(135deg,var(--blue-600),var(--blue-500)); color:#fff;
+    box-shadow:0 4px 12px rgba(42,98,153,.28);
+  }
+  .save-bar .btn-save:hover:not(:disabled) { filter:brightness(1.06); }
+  .save-bar .btn-save:disabled {
+    background:#cbd5e0; color:#7a8697; cursor:not-allowed;
+    box-shadow:none;
+  }
 
-  .btn-danger {
-    background:linear-gradient(135deg,#d9534f,var(--red-600));
-    color:#fff; border:0; border-radius:var(--radius-sm); padding:11px 18px;
-    font-size:13px; font-weight:800; cursor:pointer;
+  /* Loading overlay */
+  .loading-overlay {
+    position:fixed; inset:0; background:rgba(15,42,71,.5);
+    display:none; align-items:center; justify-content:center; z-index:200;
+    backdrop-filter:blur(4px);
   }
-  .btn-danger:hover { filter:brightness(1.06); }
+  .loading-overlay.show { display:flex; }
+  .loading-card {
+    background:#fff; padding:24px 32px; border-radius:14px;
+    display:flex; align-items:center; gap:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .loading-spinner {
+    width:32px; height:32px; border:3px solid #dbe3ee;
+    border-top-color:var(--blue-600); border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin { 100% { transform:rotate(360deg); } }
+  .loading-text { font-size:14px; font-weight:700; color:var(--ink-700); }
 
-  .week-list-table {
-    width:100%; border-collapse:separate; border-spacing:0;
-    font-size:13px; border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  .toast {
+    position:fixed; bottom:100px; left:50%; transform:translate(-50%, 20px);
+    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
+    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
+    opacity:0; pointer-events:none; transition:all .25s ease; z-index:100;
+    max-width:calc(100vw - 48px);
   }
-  .week-list-table thead th {
-    background:linear-gradient(180deg,#f7fafd,#eef4fb);
-    color:var(--ink-500); font-size:11px; font-weight:800;
-    letter-spacing:.06em; text-transform:uppercase;
-    padding:11px 14px; text-align:left; border-bottom:1.5px solid var(--line);
-  }
-  .week-list-table tbody td { padding:11px 14px; border-bottom:1px solid #eef2f7; }
-  .week-list-table tbody tr:last-child td { border-bottom:0; }
-  .week-list-table tbody tr:hover td { background:var(--blue-50); }
-  .week-list-table tbody tr.current td { background:#f0f8ff; }
-  .week-list-table tbody tr.current td:first-child { font-weight:800; color:var(--blue-700); }
-  .week-list-table .num { text-align:center; font-weight:700; }
-  .week-list-table button {
-    background:none; border:1px solid var(--line); border-radius:6px;
-    padding:5px 10px; font-size:12px; font-weight:700; cursor:pointer;
-    color:var(--ink-700); transition:background .15s ease;
-  }
-  .week-list-table button:hover { background:#f7fafd; }
-  .week-list-table button.danger { color:var(--red-600); border-color:#f3bcbc; }
-  .week-list-table button.danger:hover { background:var(--red-100); }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
+  .toast.error   { background:linear-gradient(135deg,#b02a2a,#d9534f); }
 
-  .empty-state { text-align:center; color:var(--ink-500); padding:32px 20px; font-style:italic; font-size:13px; }
-
-  .legacy-note {
-    margin-top:16px; padding:12px 16px; border-radius:10px;
+  .legacy-banner {
+    display:none; padding:12px 16px; border-radius:10px;
     background:var(--amber-100); border:1px solid #ffe0a3;
     color:#7a4a00; font-size:13px; font-weight:600; line-height:1.5;
-    display:none;
+    margin-bottom:16px;
   }
-  .legacy-note.show { display:block; }
-  .legacy-note b { color:#5a3400; }
-  .legacy-note button {
+  .legacy-banner.show { display:block; }
+  .legacy-banner button {
     background:#fff; border:1px solid #e0b070; color:#7a4a00;
     border-radius:6px; padding:6px 12px; font-size:12px; font-weight:800;
     cursor:pointer; margin-left:8px;
   }
 
-  .toast {
-    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
-    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
-    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
-    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
-    z-index:100; max-width:calc(100vw - 48px);
-  }
-  .toast.show { opacity:1; transform:translate(-50%, 0); }
-  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
+  .hidden-iframe { display:none; }
 
   @media (max-width:640px) {
     .sched-grid { grid-template-columns:1fr; }
-    .emp-list { grid-template-columns:1fr; }
-    .week-selector { grid-template-columns:1fr; }
-    .week-info { text-align:left; }
+    .emp-grid { grid-template-columns:1fr; }
     .brand-sub { display:none; }
     .card { padding:18px; }
     header { padding:12px 16px; }
     .nav-links a { padding:7px 12px; font-size:12px; }
+    .save-bar { flex-direction:column; align-items:stretch; }
+    .save-bar button { width:100%; }
   }
 </style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
+<form id="saveForm" method="POST" target="saveIframe" class="hidden-iframe">
+  <input type="hidden" name="action" value="saveSkeletalMonth">
+  <input type="hidden" name="month" id="f_month">
+  <input type="hidden" name="payload" id="f_payload">
+</form>
+<iframe name="saveIframe" id="saveIframe" class="hidden-iframe"></iframe>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Loading…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <header>
   <div class="brand">
     <div class="brand-mark">DH</div>
     <div class="brand-text">
       <span class="brand-title">DHSUD NIR</span>
-      <span class="brand-sub">Skeletal Workforce · Per Week</span>
+      <span class="brand-sub">Skeletal Workforce</span>
     </div>
   </div>
   <nav class="nav-links">
@@ -274,72 +310,56 @@
           </div>
         </div>
       </div>
-      <div class="sched-note">
-        ⚠️ Assign skeletal employees <b>per week</b>. When printing a DTR, each Friday uses the
-        skeletal list from its ISO week (e.g. Aug 7 = Week 32, Aug 14 = Week 33). Weeks that are
-        <b>not configured</b> fall back to the older flat list so nothing breaks.
-      </div>
     </div>
   </div>
 
-  <!-- Week selector -->
+  <!-- Month selector -->
   <div class="card">
-    <h2>Select Week to Encode</h2>
-    <div class="week-selector">
-      <div class="row">
-        <label for="weekPicker">Pick any date in the week</label>
-        <input type="date" id="weekPicker">
-      </div>
-      <div class="week-info">
-        <div class="week-badge" id="weekBadge">—</div>
-        <div class="week-range" id="weekRange">—</div>
-      </div>
-      <div class="week-nav">
-        <button id="btnPrevWeek" type="button">← Prev week</button>
-        <button id="btnToday" type="button">Today</button>
-        <button id="btnNextWeek" type="button">Next week →</button>
-        <button id="btnCopyPrev" type="button">⤵ Copy from prev</button>
-        <button id="btnCopyNext" type="button">⤴ Copy from next</button>
-      </div>
+    <h2>Select Month</h2>
+    <div class="month-nav">
+      <label for="monthPicker">Month</label>
+      <input type="month" id="monthPicker">
+      <button id="btnPrevMonth" type="button">◀ Prev</button>
+      <button id="btnThisMonth" type="button">This Month</button>
+      <button id="btnNextMonth" type="button">Next ▶</button>
+      <div class="month-label" id="monthLabel">—</div>
     </div>
   </div>
 
-  <!-- Employee selection -->
+  <!-- Week tabs + employee list -->
   <div class="card">
-    <h2>Employees Skeletal for <span id="weekLabelForList">—</span></h2>
-    <p style="margin:-8px 0 0; color:var(--ink-500); font-size:13px;">
-      Check the employees who are <b>required to report on Friday</b> this week.
-      Changes save automatically.
-    </p>
+    <h2>Weekly Assignments for <span id="monthLabelInList">—</span></h2>
 
-    <div class="emp-list" id="empList"></div>
+    <div class="legacy-banner" id="legacyBanner">
+      <b>Older local skeletal data detected on this browser.</b>
+      Import it into the currently selected week?
+      <button id="btnImportLegacy" type="button">Import into this week</button>
+    </div>
 
-    <div class="toolbar">
-      <div class="summary">
-        <b id="weekCount">0</b> of 21 skeletal this week
-        <span class="saved-badge" id="savedBadge">✓ Saved</span>
+    <div class="week-tabs" id="weekTabs"></div>
+
+    <div class="week-header">
+      <h3 id="weekHeaderLabel">—</h3>
+      <div class="week-actions">
+        <button id="btnCopyPrevWeek" type="button">⤵ Copy from prev week</button>
+        <button id="btnClearWeek" type="button" class="danger">Clear this week</button>
       </div>
-      <button class="btn-danger" id="btnClearWeek" type="button">Clear This Week</button>
     </div>
 
-    <div class="legacy-note" id="legacyNote">
-      <b>Older flat skeletal list detected.</b>
-      Weeks without their own list currently fall back to it.
-      <button id="btnImportLegacy" type="button">Copy legacy list into this week</button>
-    </div>
-  </div>
+    <div class="emp-grid" id="empGrid"></div>
 
-  <!-- All configured weeks -->
-  <div class="card">
-    <h2>Configured Weeks</h2>
-    <div id="weekListContainer">
-      <div class="empty-state">No weeks configured yet. Pick a week above and start checking employees.</div>
+    <div class="save-bar">
+      <div class="save-status" id="saveStatus">Loading…</div>
+      <button class="btn-save" id="btnSaveAll" type="button" disabled>💾 Save All Changes</button>
     </div>
   </div>
 
 </div>
 
 <script>
+var API_URL = "https://script.google.com/macros/s/AKfycbxbm3rgbes2I5u9xR_FBMpD_ZXn5mQGTMD5C2vWDyPB_XY_sdu3TO-RXQxyFS93gwA/exec";
+var LEGACY_KEY = "dhsud_skeletal_workforce";  // old flat list, used only for one-time import
+
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
   { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
@@ -353,8 +373,14 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
-var BY_WEEK_KEY   = "dhsud_skeletal_by_week";
-var LEGACY_KEY    = "dhsud_skeletal_workforce";
+/* ── State ─────────────────────────────────────────────── */
+var serverData  = {};              // { weekKey: [codes] }  as saved in backend
+var monthData   = {};              // { weekKey: [codes] }  working copy for current month
+var currentMonth = "";             // "2026-08"
+var currentWeek  = "";             // "2026-W32"
+var currentWeeks = [];             // all week keys in current month
+var saveInProgress = false;
+var initialLoadDone = false;
 
 /* ── ISO week helpers ──────────────────────────────────── */
 function isoWeekKey(date) {
@@ -374,11 +400,11 @@ function parseWeekKey(key) {
 function mondayOfIsoWeek(year, week) {
   var jan4 = new Date(year, 0, 4);
   var jan4Day = (jan4.getDay() + 6) % 7;
-  var week1Monday = new Date(jan4.getTime());
-  week1Monday.setDate(jan4.getDate() - jan4Day);
-  var target = new Date(week1Monday.getTime());
-  target.setDate(week1Monday.getDate() + (week - 1) * 7);
-  return target;
+  var week1Mon = new Date(jan4.getTime());
+  week1Mon.setDate(jan4.getDate() - jan4Day);
+  var mon = new Date(week1Mon.getTime());
+  mon.setDate(week1Mon.getDate() + (week - 1) * 7);
+  return mon;
 }
 function weekInfo(key) {
   var p = parseWeekKey(key);
@@ -388,70 +414,171 @@ function weekInfo(key) {
   sun.setDate(mon.getDate() + 6);
   return { key: key, year: p.year, week: p.week, monday: mon, sunday: sun };
 }
-function formatRange(mon, sun) {
+function formatShortRange(mon, sun) {
   var mMonth = mon.toLocaleDateString("en-US", { month: "short" });
   var sMonth = sun.toLocaleDateString("en-US", { month: "short" });
-  var mYear  = mon.getFullYear();
-  var sYear  = sun.getFullYear();
-  if (mYear === sYear && mMonth === sMonth) {
-    return mon.getDate() + " – " + sun.getDate() + " " + mMonth + " " + mYear;
+  if (mon.getFullYear() === sun.getFullYear() && mMonth === sMonth) {
+    return mon.getDate() + "–" + sun.getDate() + " " + mMonth;
   }
-  if (mYear === sYear) {
-    return mon.getDate() + " " + mMonth + " – " + sun.getDate() + " " + sMonth + " " + mYear;
-  }
+  return mon.getDate() + " " + mMonth + " – " + sun.getDate() + " " + sMonth;
+}
+function formatLongRange(mon, sun) {
   return mon.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
        + " – "
        + sun.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-/* ── Storage ──────────────────────────────────────────── */
-function loadByWeek() {
-  try { return JSON.parse(localStorage.getItem(BY_WEEK_KEY) || "{}"); }
-  catch(e) { return {}; }
-}
-function saveByWeek(obj) {
-  try { localStorage.setItem(BY_WEEK_KEY, JSON.stringify(obj)); return true; }
-  catch(e) { return false; }
-}
-function loadLegacy() {
-  try {
-    var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
-    return Array.isArray(arr) ? arr : [];
-  } catch(e) { return []; }
+/** Weeks whose any day overlaps [year, monthIdx]. Returns sorted week keys. */
+function getWeeksInMonth(year, monthIdx) {
+  var first = new Date(year, monthIdx, 1);
+  var lastExclusive = new Date(year, monthIdx + 1, 1);
+  var d = new Date(first);
+  var dow = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - dow);
+
+  var weeks = [], seen = {};
+  while (d < lastExclusive) {
+    var sun = new Date(d.getTime());
+    sun.setDate(d.getDate() + 6);
+    if (sun >= first) {
+      var wk = isoWeekKey(new Date(d));
+      if (!seen[wk]) {
+        weeks.push(wk);
+        seen[wk] = true;
+      }
+    }
+    d.setDate(d.getDate() + 7);
+  }
+  return weeks;
 }
 
-/* ── State ────────────────────────────────────────────── */
-var currentWeekKey = null;
-var byWeek         = loadByWeek();
-
-/* ── UI helpers ───────────────────────────────────────── */
+/* ── UI helpers ────────────────────────────────────────── */
 function showToast(msg, type) {
   var t = document.getElementById("toast");
   t.textContent = msg;
   t.className = "toast show " + (type || "");
   clearTimeout(t._timer);
-  t._timer = setTimeout(function(){ t.className = "toast"; }, 2000);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 3000);
 }
-function flashSaved() {
-  var b = document.getElementById("savedBadge");
-  b.classList.add("show");
-  clearTimeout(b._timer);
-  b._timer = setTimeout(function(){ b.classList.remove("show"); }, 1600);
+function showLoading(text) {
+  document.getElementById("loadingText").textContent = text || "Loading…";
+  document.getElementById("loadingOverlay").classList.add("show");
+}
+function hideLoading() {
+  document.getElementById("loadingOverlay").classList.remove("show");
 }
 
-function renderEmployeeList() {
-  var list = byWeek[currentWeekKey] || [];
-  var set  = {};
-  list.forEach(function(c){ set[c] = true; });
+/* ── Backend fetch ─────────────────────────────────────── */
+function fetchSkeletalJSONP() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_skel_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
 
-  var el = document.getElementById("empList");
-  el.innerHTML = "";
-  var count = 0;
+    function finish(result) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(result);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && data.data) finish(data.data);
+      else finish(null);
+    };
+    script.onerror = function() { finish(null); };
+    var timer = setTimeout(function() { finish(null); }, 12000);
+
+    script.src = API_URL + "?action=getSkeletal&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+/* ── Dirty tracking ────────────────────────────────────── */
+function isDirty() {
+  for (var i = 0; i < currentWeeks.length; i++) {
+    var wk = currentWeeks[i];
+    var cur = (monthData[wk] || []).slice().sort().join(",");
+    var srv = (serverData[wk] || []).slice().sort().join(",");
+    if (cur !== srv) return true;
+  }
+  return false;
+}
+
+function updateSaveStatus() {
+  var status = document.getElementById("saveStatus");
+  var btn = document.getElementById("btnSaveAll");
+  if (saveInProgress) {
+    status.textContent = "Saving to Google Sheets…";
+    status.className = "save-status";
+    btn.disabled = true;
+    return;
+  }
+  if (isDirty()) {
+    var total = 0;
+    currentWeeks.forEach(function(wk) { total += (monthData[wk] || []).length; });
+    status.textContent = "Unsaved changes · " + total + " employee" + (total !== 1 ? "s" : "") + " across " + currentWeeks.length + " week" + (currentWeeks.length !== 1 ? "s" : "");
+    status.className = "save-status dirty";
+    btn.disabled = false;
+  } else {
+    status.textContent = "All changes saved";
+    status.className = "save-status saved";
+    btn.disabled = true;
+  }
+}
+
+/* ── Render week tabs ──────────────────────────────────── */
+function renderWeekTabs() {
+  var container = document.getElementById("weekTabs");
+  container.innerHTML = "";
+
+  currentWeeks.forEach(function(wk) {
+    var info = weekInfo(wk);
+    if (!info) return;
+    var count = (monthData[wk] || []).length;
+    var isActive = (wk === currentWeek);
+
+    var tab = document.createElement("div");
+    tab.className = "week-tab" + (isActive ? " active" : "");
+    tab.innerHTML =
+      '<div class="wk-num">Week ' + info.week + '</div>' +
+      '<div class="wk-range">' + formatShortRange(info.monday, info.sunday) + '</div>' +
+      '<div class="wk-count' + (count === 0 ? ' empty' : '') + '">' +
+        (count === 0 ? '— none' : count + ' skeletal') +
+      '</div>';
+    tab.addEventListener("click", function() { selectWeek(wk); });
+    container.appendChild(tab);
+  });
+}
+
+/* ── Select a week to edit ─────────────────────────────── */
+function selectWeek(wk) {
+  if (wk === currentWeek) return;
+  currentWeek = wk;
+  renderWeekTabs();
+  renderWeekContent();
+  updateSaveStatus();
+}
+
+/* ── Render week header + employee checkboxes ──────────── */
+function renderWeekContent() {
+  var info = weekInfo(currentWeek);
+  if (!info) return;
+
+  document.getElementById("weekHeaderLabel").innerHTML =
+    "Week " + info.week + " · " + info.year +
+    '<span>' + formatLongRange(info.monday, info.sunday) + '</span>';
+
+  var codes = monthData[currentWeek] || [];
+  var set = {};
+  codes.forEach(function(c){ set[c] = true; });
+
+  var grid = document.getElementById("empGrid");
+  grid.innerHTML = "";
 
   EMPLOYEES.forEach(function(emp) {
     var checked = !!set[emp.code];
-    if (checked) count++;
-
     var lbl = document.createElement("label");
     lbl.className = "emp-item" + (checked ? " selected" : "");
     lbl.innerHTML =
@@ -462,205 +589,240 @@ function renderEmployeeList() {
       '</div>';
 
     lbl.querySelector("input").addEventListener("change", function(e) {
-      var code = emp.code;
-      var arr  = (byWeek[currentWeekKey] || []).slice();
-      if (e.target.checked) {
-        if (arr.indexOf(code) === -1) arr.push(code);
-      } else {
-        arr = arr.filter(function(c){ return c !== code; });
-      }
-      setWeekList(currentWeekKey, arr);
-      renderEmployeeList();
-      renderWeekList();
+      toggleEmployee(emp.code, e.target.checked);
     });
-
-    el.appendChild(lbl);
+    grid.appendChild(lbl);
   });
 
-  document.getElementById("weekCount").textContent = count;
+  updateLegacyBanner();
 }
 
-function setWeekList(weekKey, codes) {
-  if (codes.length === 0) {
-    delete byWeek[weekKey];
+function toggleEmployee(code, isChecked) {
+  var arr = (monthData[currentWeek] || []).slice();
+  if (isChecked) {
+    if (arr.indexOf(code) === -1) arr.push(code);
   } else {
-    byWeek[weekKey] = codes.sort();
+    arr = arr.filter(function(c){ return c !== code; });
   }
-  saveByWeek(byWeek);
-  flashSaved();
+  monthData[currentWeek] = arr.sort();
+  renderWeekTabs();
+  renderWeekContent();
+  updateSaveStatus();
 }
 
-function renderWeekList() {
-  var container = document.getElementById("weekListContainer");
-  var keys = Object.keys(byWeek).sort();
-
-  if (keys.length === 0) {
-    container.innerHTML = '<div class="empty-state">No weeks configured yet. Pick a week above and start checking employees.</div>';
-    return;
-  }
-
-  var html = '<table class="week-list-table"><thead><tr>' +
-    '<th>Week</th>' +
-    '<th>Date range</th>' +
-    '<th style="text-align:center;">Skeletal</th>' +
-    '<th style="text-align:right;">Actions</th>' +
-    '</tr></thead><tbody>';
-
-  keys.forEach(function(k) {
-    var info = weekInfo(k);
-    if (!info) return;
-    var count = (byWeek[k] || []).length;
-    var isCurrent = (k === currentWeekKey);
-    html += '<tr class="' + (isCurrent ? 'current' : '') + '">' +
-      '<td><b>Week ' + info.week + '</b> · ' + info.year + '</td>' +
-      '<td>' + formatRange(info.monday, info.sunday) + '</td>' +
-      '<td class="num">' + count + '</td>' +
-      '<td style="text-align:right;">' +
-        '<button data-action="open" data-key="' + k + '">Open</button> ' +
-        '<button data-action="delete" data-key="' + k + '" class="danger">Delete</button>' +
-      '</td></tr>';
-  });
-
-  html += '</tbody></table>';
-  container.innerHTML = html;
-
-  container.querySelectorAll("button[data-action]").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      var action = btn.dataset.action;
-      var key = btn.dataset.key;
-
-      if (action === "open") {
-        jumpToWeek(key);
-      } else if (action === "delete") {
-        if (!confirm("Delete all skeletal assignments for " + key + "?")) return;
-        delete byWeek[key];
-        saveByWeek(byWeek);
-        if (key === currentWeekKey) renderEmployeeList();
-        renderWeekList();
-        showToast("Week " + key + " cleared.", "success");
-      }
-    });
-  });
-}
-
-function updateWeekDisplay() {
-  var info = weekInfo(currentWeekKey);
+/* ── Copy from previous week ───────────────────────────── */
+function copyFromPreviousWeek() {
+  var info = weekInfo(currentWeek);
   if (!info) return;
+  var prevMon = new Date(info.monday.getTime());
+  prevMon.setDate(prevMon.getDate() - 7);
+  var prevWk = isoWeekKey(prevMon);
 
-  document.getElementById("weekBadge").textContent =
-    "Week " + info.week + " · " + info.year;
-  document.getElementById("weekRange").textContent =
-    formatRange(info.monday, info.sunday);
-  document.getElementById("weekLabelForList").textContent =
-    "Week " + info.week + " (" + formatRange(info.monday, info.sunday) + ")";
-
-  var yyyy = info.monday.getFullYear();
-  var mm = String(info.monday.getMonth() + 1).padStart(2, '0');
-  var dd = String(info.monday.getDate()).padStart(2, '0');
-  document.getElementById("weekPicker").value = yyyy + "-" + mm + "-" + dd;
-}
-
-function jumpToWeek(key) {
-  currentWeekKey = key;
-  updateWeekDisplay();
-  renderEmployeeList();
-  renderWeekList();
-}
-
-function jumpByDays(days) {
-  var picker = document.getElementById("weekPicker");
-  var base = picker.value ? new Date(picker.value + "T00:00:00") : new Date();
-  base.setDate(base.getDate() + days);
-  currentWeekKey = isoWeekKey(base);
-  updateWeekDisplay();
-  renderEmployeeList();
-  renderWeekList();
-}
-
-function jumpToDate(date) {
-  currentWeekKey = isoWeekKey(date);
-  updateWeekDisplay();
-  renderEmployeeList();
-  renderWeekList();
-}
-
-function copyFromWeek(srcKey, label) {
-  var srcList = byWeek[srcKey] || [];
-  if (srcList.length === 0) {
-    showToast("Nothing to copy — " + label + " is empty.", "");
+  var prevList = serverData[prevWk] || monthData[prevWk] || [];
+  if (prevList.length === 0) {
+    showToast("Previous week (" + prevWk + ") is empty.", "error");
     return;
   }
-  var curList = byWeek[currentWeekKey] || [];
+  var curList = monthData[currentWeek] || [];
   if (curList.length > 0) {
-    if (!confirm("Overwrite this week's list with " + label + " (" + srcList.length + " employees)?")) return;
+    if (!confirm("Overwrite this week's list with " + prevList.length + " from " + prevWk + "?")) return;
   }
-  setWeekList(currentWeekKey, srcList.slice());
-  renderEmployeeList();
-  renderWeekList();
-  showToast("✅ Copied " + srcList.length + " from " + label + ".", "success");
+  monthData[currentWeek] = prevList.slice().sort();
+  renderWeekTabs();
+  renderWeekContent();
+  updateSaveStatus();
+  showToast("Copied " + prevList.length + " from " + prevWk + ".", "success");
 }
 
-function updateLegacyNote() {
-  var legacy = loadLegacy();
-  var note = document.getElementById("legacyNote");
-  if (legacy.length > 0) {
-    note.classList.add("show");
+/* ── Clear current week ────────────────────────────────── */
+function clearCurrentWeek() {
+  var curList = monthData[currentWeek] || [];
+  if (curList.length === 0) {
+    showToast("This week is already empty.", "error");
+    return;
+  }
+  if (!confirm("Clear all " + curList.length + " skeletal employees for this week?")) return;
+  monthData[currentWeek] = [];
+  renderWeekTabs();
+  renderWeekContent();
+  updateSaveStatus();
+}
+
+/* ── Legacy migration ──────────────────────────────────── */
+function getLegacyFromStorage() {
+  try {
+    var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch(e) { return []; }
+}
+function updateLegacyBanner() {
+  var legacy = getLegacyFromStorage();
+  var banner = document.getElementById("legacyBanner");
+  if (legacy.length > 0 && (monthData[currentWeek] || []).length === 0) {
+    banner.classList.add("show");
   } else {
-    note.classList.remove("show");
+    banner.classList.remove("show");
   }
 }
+function importLegacy() {
+  var legacy = getLegacyFromStorage();
+  if (legacy.length === 0) return;
+  monthData[currentWeek] = legacy.slice().sort();
+  renderWeekTabs();
+  renderWeekContent();
+  updateSaveStatus();
+  showToast("Imported " + legacy.length + " from local storage.", "success");
+}
 
+/* ── Load month from serverData ────────────────────────── */
+function loadMonth(ym) {
+  currentMonth = ym;
+  var parts = ym.split("-");
+  var year = parseInt(parts[0], 10);
+  var monthIdx = parseInt(parts[1], 10) - 1;
+
+  currentWeeks = getWeeksInMonth(year, monthIdx);
+  monthData = {};
+  currentWeeks.forEach(function(wk) {
+    monthData[wk] = (serverData[wk] || []).slice();
+  });
+
+  document.getElementById("monthPicker").value = ym;
+  var monthDate = new Date(year, monthIdx, 1);
+  document.getElementById("monthLabel").textContent =
+    monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  document.getElementById("monthLabelInList").textContent =
+    monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  if (currentWeeks.length === 0) {
+    document.getElementById("weekTabs").innerHTML =
+      '<div style="padding:20px;color:#6b7a8d;font-style:italic;font-size:13px;">No weeks in this month.</div>';
+    document.getElementById("weekHeaderLabel").textContent = "—";
+    document.getElementById("empGrid").innerHTML = "";
+    updateSaveStatus();
+    return;
+  }
+
+  currentWeek = currentWeeks[0];
+  renderWeekTabs();
+  renderWeekContent();
+  updateSaveStatus();
+}
+
+/* ── Save to backend ───────────────────────────────────── */
+function saveAllChanges() {
+  if (saveInProgress || !isDirty()) return;
+  saveInProgress = true;
+  updateSaveStatus();
+
+  var payload = {};
+  currentWeeks.forEach(function(wk) {
+    payload[wk] = monthData[wk] || [];
+  });
+
+  document.getElementById("f_month").value = currentMonth;
+  document.getElementById("f_payload").value = JSON.stringify(payload);
+  document.getElementById("saveForm").action = API_URL;
+  document.getElementById("saveForm").submit();
+}
+
+/* ── Iframe save handler ───────────────────────────────── */
+document.getElementById("saveIframe").onload = function() {
+  if (!saveInProgress) return;   // blank initial load — ignore
+  setTimeout(function() {
+    // Verify by re-fetching
+    fetchSkeletalJSONP().then(function(data) {
+      saveInProgress = false;
+      if (!data) {
+        showToast("⚠ Could not verify save — please refresh", "error");
+        updateSaveStatus();
+        return;
+      }
+      serverData = data;
+      // Check that what we saved matches what's on the server
+      var match = true;
+      currentWeeks.forEach(function(wk) {
+        var sent = (monthData[wk] || []).slice().sort().join(",");
+        var got  = (serverData[wk] || []).slice().sort().join(",");
+        if (sent !== got) match = false;
+      });
+
+      // Update monthData to server's truth (also refreshes any fields)
+      currentWeeks.forEach(function(wk) {
+        monthData[wk] = (serverData[wk] || []).slice();
+      });
+      renderWeekTabs();
+      renderWeekContent();
+      updateSaveStatus();
+
+      if (match) {
+        showToast("✅ Saved to Google Sheets", "success");
+      } else {
+        showToast("⚠ Save may not have completed — please retry", "error");
+      }
+    });
+  }, 900);
+};
+
+/* ── Wire it all up ────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function() {
-  jumpToDate(new Date());
+  // Default month = current month
+  var now = new Date();
+  var defaultMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 
-  document.getElementById("weekPicker").addEventListener("change", function(e) {
+  showLoading("Loading skeletal data from Google Sheets…");
+  fetchSkeletalJSONP().then(function(data) {
+    initialLoadDone = true;
+    serverData = data || {};
+    hideLoading();
+    loadMonth(defaultMonth);
+
+    if (!data) {
+      showToast("⚠ Could not load from backend — using empty state", "error");
+    }
+  });
+
+  document.getElementById("monthPicker").addEventListener("change", function(e) {
     if (!e.target.value) return;
-    jumpToDate(new Date(e.target.value + "T00:00:00"));
-  });
-
-  document.getElementById("btnPrevWeek").addEventListener("click", function(){ jumpByDays(-7); });
-  document.getElementById("btnNextWeek").addEventListener("click", function(){ jumpByDays(7); });
-  document.getElementById("btnToday").addEventListener("click", function(){ jumpToDate(new Date()); });
-
-  document.getElementById("btnCopyPrev").addEventListener("click", function() {
-    var picker = document.getElementById("weekPicker");
-    var base = picker.value ? new Date(picker.value + "T00:00:00") : new Date();
-    base.setDate(base.getDate() - 7);
-    copyFromWeek(isoWeekKey(base), "previous week");
-  });
-  document.getElementById("btnCopyNext").addEventListener("click", function() {
-    var picker = document.getElementById("weekPicker");
-    var base = picker.value ? new Date(picker.value + "T00:00:00") : new Date();
-    base.setDate(base.getDate() + 7);
-    copyFromWeek(isoWeekKey(base), "next week");
-  });
-
-  document.getElementById("btnClearWeek").addEventListener("click", function() {
-    if (!byWeek[currentWeekKey] || byWeek[currentWeekKey].length === 0) {
-      showToast("This week is already empty.", "");
-      return;
+    if (isDirty()) {
+      if (!confirm("You have unsaved changes. Discard them?")) {
+        e.target.value = currentMonth;
+        return;
+      }
     }
-    if (!confirm("Clear all skeletal employees for this week?")) return;
-    setWeekList(currentWeekKey, []);
-    renderEmployeeList();
-    renderWeekList();
-    showToast("Week cleared.", "success");
+    loadMonth(e.target.value);
   });
 
-  document.getElementById("btnImportLegacy").addEventListener("click", function() {
-    var legacy = loadLegacy();
-    if (legacy.length === 0) return;
-    var curList = byWeek[currentWeekKey] || [];
-    if (curList.length > 0) {
-      if (!confirm("Overwrite this week's list with the legacy flat list (" + legacy.length + " employees)?")) return;
+  document.getElementById("btnPrevMonth").addEventListener("click", function() {
+    if (isDirty() && !confirm("You have unsaved changes. Discard them?")) return;
+    var parts = currentMonth.split("-");
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 2, 1);
+    loadMonth(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0'));
+  });
+  document.getElementById("btnNextMonth").addEventListener("click", function() {
+    if (isDirty() && !confirm("You have unsaved changes. Discard them?")) return;
+    var parts = currentMonth.split("-");
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10), 1);
+    loadMonth(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0'));
+  });
+  document.getElementById("btnThisMonth").addEventListener("click", function() {
+    if (isDirty() && !confirm("You have unsaved changes. Discard them?")) return;
+    var n = new Date();
+    loadMonth(n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, '0'));
+  });
+
+  document.getElementById("btnSaveAll").addEventListener("click", saveAllChanges);
+  document.getElementById("btnCopyPrevWeek").addEventListener("click", copyFromPreviousWeek);
+  document.getElementById("btnClearWeek").addEventListener("click", clearCurrentWeek);
+  document.getElementById("btnImportLegacy").addEventListener("click", importLegacy);
+
+  // Warn before leaving with unsaved changes
+  window.addEventListener("beforeunload", function(e) {
+    if (isDirty()) {
+      e.preventDefault();
+      e.returnValue = "";
     }
-    setWeekList(currentWeekKey, legacy.slice());
-    renderEmployeeList();
-    renderWeekList();
-    showToast("✅ Imported " + legacy.length + " from legacy list.", "success");
   });
-
-  updateLegacyNote();
 });
 </script>
 </body>
