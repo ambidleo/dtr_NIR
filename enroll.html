@@ -9,10 +9,10 @@
   :root {
     --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
     --blue-100:#e8f1fb; --blue-50:#f4f8fd;
-    --green-600:#1c8a4b; --green-100:#e3f6e8;
+    --green-600:#1c8a4b; --green-500:#22a35a; --green-100:#e3f6e8;
     --red-600:#c23b3b; --red-100:#fde7e7;
     --amber-500:#e08a00; --amber-100:#fff4e0;
-    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80; --ink-300:#95a3b6;
     --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
     --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
     --radius:16px; --radius-sm:12px;
@@ -55,10 +55,24 @@
   @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
   h2 { margin:0 0 16px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
 
+  .intro { margin:-8px 0 18px; color:var(--ink-500); font-size:13px; line-height:1.6; }
+  .intro b { color:var(--ink-700); }
+
   .cam-layout { display:grid; grid-template-columns:360px 1fr; gap:24px; align-items:start; }
   .video-wrap {
     position:relative; border-radius:14px; overflow:hidden; background:#000;
     aspect-ratio:4/3; box-shadow:0 6px 20px rgba(15,42,71,.18);
+    border:3px solid var(--blue-500);
+    transition:border-color .25s ease, box-shadow .25s ease;
+  }
+  .video-wrap.idle    { border-color:var(--blue-500); }
+  .video-wrap.ready   { border-color:var(--green-500); }
+  .video-wrap.busy    { border-color:var(--amber-500); }
+  .video-wrap.err     { border-color:var(--red-600); }
+  .video-wrap.flash   { animation:flashGreen 1s ease; }
+  @keyframes flashGreen {
+    0%,100% { box-shadow:0 6px 20px rgba(15,42,71,.18); }
+    50%     { box-shadow:0 0 0 12px rgba(34,197,94,.45), 0 6px 20px rgba(15,42,71,.18); }
   }
   #cam { width:100%; height:100%; object-fit:cover; display:block; transform:scaleX(-1); }
   .video-guide {
@@ -69,20 +83,54 @@
     content:''; width:200px; height:260px;
     border:3px dashed rgba(255,255,255,.7);
     border-radius:50%;
+    transition:border-color .2s ease, box-shadow .2s ease, border-style .2s ease;
+  }
+  .video-guide.matched::before {
+    border-color:#4ade80; border-style:solid;
+    box-shadow:0 0 24px rgba(74,222,128,.55);
+  }
+  .video-guide.waiting::before {
+    border-color:#fbbf24; border-style:solid;
+    box-shadow:0 0 18px rgba(251,191,36,.45);
   }
   .cam-status {
     margin-top:12px; padding:12px 14px; border-radius:10px;
     font-size:13px; font-weight:700; text-align:center;
     background:var(--blue-50); color:var(--blue-700);
-    border:1px solid #d5e3f3;
+    border:1px solid #d5e3f3; line-height:1.45; min-height:44px;
+    transition:background .2s ease, color .2s ease, border-color .2s ease;
   }
   .cam-status.err  { background:var(--red-100); color:var(--red-600); border-color:#f3bcbc; }
   .cam-status.ok   { background:var(--green-100); color:var(--green-600); border-color:#b8e5c6; }
   .cam-status.busy { background:var(--amber-100); color:#7a4a00; border-color:#ffe0a3; }
+  .cam-status.info { background:#f3f6fa; color:var(--ink-500); border-color:var(--line); }
 
+  /* Live capture progress */
+  .capture-progress {
+    margin-top:10px; padding:10px 14px; border-radius:10px;
+    background:#f3f6fa; border:1px solid var(--line);
+    display:none;
+  }
+  .capture-progress.show { display:block; }
+  .capture-progress .label {
+    display:flex; justify-content:space-between; font-size:12px;
+    font-weight:700; color:var(--ink-700); margin-bottom:8px;
+  }
+  .capture-progress .label .angle { color:var(--blue-700); }
+  .capture-bar {
+    height:8px; background:#e3ecf5; border-radius:999px; overflow:hidden;
+    display:grid; grid-template-columns:repeat(6, 1fr); gap:3px;
+  }
+  .capture-bar .dot {
+    height:8px; border-radius:999px; background:#d1dbe7;
+    transition:background .2s ease;
+  }
+  .capture-bar .dot.on { background:var(--green-500); }
+
+  /* Employee list */
   .emp-list {
     display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-    gap:10px; max-height:600px; overflow-y:auto; padding-right:4px;
+    gap:10px; max-height:640px; overflow-y:auto; padding:2px 4px 2px 2px;
   }
   .emp-item {
     display:flex; align-items:center; gap:12px; padding:12px 14px;
@@ -92,7 +140,11 @@
   }
   .emp-item:hover { border-color:#a9c2df; background:#fbfdff; }
   .emp-item.busy  { pointer-events:none; opacity:.7; }
-  .emp-item.enrolled { border-color:#8fce9f; background:linear-gradient(180deg,#f2faf5,#e9f6ee); }
+  .emp-item.enrolled {
+    border-color:#8fce9f;
+    background:linear-gradient(180deg,#f2faf5,#e9f6ee);
+  }
+  .emp-item.enrolled:hover { border-color:var(--green-500); }
   .emp-avatar {
     width:36px; height:36px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
@@ -104,14 +156,16 @@
   .emp-code { font-size:11px; font-weight:800; color:var(--blue-700); letter-spacing:.05em; }
   .emp-name { font-size:13px; font-weight:600; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .emp-badge {
-    font-size:11px; font-weight:700; padding:3px 8px; border-radius:999px;
-    background:#eef2f7; color:var(--ink-500);
+    font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px;
+    background:#eef2f7; color:var(--ink-500); letter-spacing:.03em;
+    text-transform:uppercase; flex-shrink:0;
   }
   .emp-item.enrolled .emp-badge { background:#c8ecd2; color:var(--green-600); }
 
   .toolbar {
     display:flex; justify-content:space-between; align-items:center;
-    gap:12px; margin-top:16px; flex-wrap:wrap;
+    gap:12px; margin-top:16px; padding-top:16px;
+    border-top:1px solid #eef2f7; flex-wrap:wrap;
   }
   .summary { font-size:13px; color:var(--ink-500); font-weight:600; }
   .summary b { color:var(--blue-700); }
@@ -120,13 +174,17 @@
     background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
     color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
     font-size:14px; font-weight:800; cursor:pointer;
-    box-shadow:0 4px 12px rgba(42,98,153,.28); transition:filter .15s ease;
+    box-shadow:0 4px 12px rgba(42,98,153,.28);
+    transition:filter .15s ease, transform .08s ease;
   }
   .btn-primary:hover { filter:brightness(1.06); }
+  .btn-primary:active { transform:translateY(1px); }
+
   .btn-danger {
     background:linear-gradient(135deg,#d9534f,var(--red-600));
     color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 18px;
     font-size:14px; font-weight:800; cursor:pointer;
+    transition:filter .15s ease;
   }
   .btn-danger:hover { filter:brightness(1.06); }
 
@@ -172,19 +230,35 @@
 
   <div class="card">
     <h2>Employee Face Enrollment</h2>
-    <p style="margin:-8px 0 18px; color:var(--ink-500); font-size:13px; line-height:1.5;">
-      Position your face inside the oval, then click an employee below.
-      The camera captures 3 frames automatically and stores them on this device only.
-      Click an already‑enrolled employee to re‑capture or delete.
+    <p class="intro">
+      Click an employee, then follow the on‑screen angle prompts. The camera captures
+      <b>6 high‑quality samples</b> — <b>2 facing forward</b>, <b>2 facing slightly left</b>,
+      <b>2 facing slightly right</b> — for reliable identification under strict matching.
+      Ensure good lighting and remove glasses if they cause glare. Data stays on this device only.
     </p>
 
     <div class="cam-layout">
       <div>
-        <div class="video-wrap">
+        <div class="video-wrap idle" id="videoWrap">
           <video id="cam" autoplay playsinline muted></video>
-          <div class="video-guide"></div>
+          <div class="video-guide" id="videoGuide"></div>
         </div>
         <div class="cam-status" id="camStatus">Starting camera…</div>
+
+        <div class="capture-progress" id="captureProgress">
+          <div class="label">
+            <span id="captureLabel">Capturing…</span>
+            <span class="angle" id="captureAngle">Face forward</span>
+          </div>
+          <div class="capture-bar">
+            <div class="dot" data-i="0"></div>
+            <div class="dot" data-i="1"></div>
+            <div class="dot" data-i="2"></div>
+            <div class="dot" data-i="3"></div>
+            <div class="dot" data-i="4"></div>
+            <div class="dot" data-i="5"></div>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -201,6 +275,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   DHSUD NIR — Enroll Faces
+   Matches strict parameters of kiosk.html for consistency.
+   ═══════════════════════════════════════════════════════════════ */
+
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
   { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
@@ -217,17 +296,54 @@ var EMPLOYEES = [
 var FACES_KEY = "dhsud_face_descriptors";
 var MODEL_URL = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights";
 
+/* Same strictness parameters used in kiosk.html — do not lower these */
+var DETECT_SCORE_MIN = 0.6;
+var DETECT_INPUT_SIZE = 416;
+
+/* 6 samples: 2 front, 2 left, 2 right — for robustness against angles */
+var CAPTURE_SEQUENCE = [
+  { angle:"front", label:"Face forward",          prompt:"Look straight at the camera" },
+  { angle:"front", label:"Face forward",          prompt:"Hold still…" },
+  { angle:"left",  label:"Turn head slightly left", prompt:"Slowly turn head to your LEFT" },
+  { angle:"left",  label:"Turn head slightly left", prompt:"Hold that pose…" },
+  { angle:"right", label:"Turn head slightly right", prompt:"Slowly turn head to your RIGHT" },
+  { angle:"right", label:"Turn head slightly right", prompt:"Hold that pose…" }
+];
+
+/* ─── Utilities ─────────────────────────────────────── */
 function showToast(msg, type) {
   var t = document.getElementById("toast");
-  t.textContent = msg; t.className = "toast show " + (type || "");
+  t.textContent = msg;
+  t.className = "toast show " + (type || "");
   clearTimeout(t._timer);
-  t._timer = setTimeout(function(){ t.className = "toast"; }, 3000);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 3200);
 }
 
 function setStatus(text, cls) {
   var s = document.getElementById("camStatus");
   s.textContent = text;
   s.className = "cam-status" + (cls ? " " + cls : "");
+  var wrap = document.getElementById("videoWrap");
+  wrap.className = "video-wrap " + (cls === "ok" ? "ready" : cls === "err" ? "err" : cls === "busy" ? "busy" : "idle");
+}
+
+function setGuide(cls) {
+  document.getElementById("videoGuide").className = "video-guide" + (cls ? " " + cls : "");
+}
+
+function showProgress(show) {
+  document.getElementById("captureProgress").classList.toggle("show", !!show);
+}
+
+function setProgressLabel(text, angle) {
+  document.getElementById("captureLabel").textContent = text;
+  document.getElementById("captureAngle").textContent = angle;
+}
+
+function setProgressDots(count) {
+  document.querySelectorAll(".capture-bar .dot").forEach(function(d, i) {
+    d.classList.toggle("on", i < count);
+  });
 }
 
 function getFaces() {
@@ -236,22 +352,30 @@ function getFaces() {
 }
 
 function saveFaces(faces) {
-  localStorage.setItem(FACES_KEY, JSON.stringify(faces));
+  try { localStorage.setItem(FACES_KEY, JSON.stringify(faces)); return true; }
+  catch(e) { return false; }
 }
 
+/* Sleep helper */
+function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+/* ─── Main ──────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async function() {
   var cam = document.getElementById("cam");
   var listEl = document.getElementById("empList");
   var modelsReady = false;
   var stream = null;
+  var capturing = false;
 
+  /* Render employee list */
   function renderList() {
     var faces = getFaces();
     listEl.innerHTML = "";
     var enrolled = 0;
 
     EMPLOYEES.forEach(function(emp) {
-      var hasFace = !!(faces[emp.code] && faces[emp.code].length);
+      var samples = (faces[emp.code] || []).length;
+      var hasFace = samples > 0;
       if (hasFace) enrolled++;
 
       var el = document.createElement("div");
@@ -263,7 +387,7 @@ document.addEventListener("DOMContentLoaded", async function() {
           '<span class="emp-code">' + emp.code + '</span>' +
           '<span class="emp-name">' + emp.name + '</span>' +
         '</div>' +
-        '<span class="emp-badge">' + (hasFace ? "Enrolled" : "Not set") + '</span>';
+        '<span class="emp-badge">' + (hasFace ? samples + " samples" : "Not set") + '</span>';
 
       el.addEventListener("click", function(){ handleEmployeeClick(emp.code, el); });
       listEl.appendChild(el);
@@ -272,67 +396,137 @@ document.addEventListener("DOMContentLoaded", async function() {
     document.getElementById("enrolledCount").textContent = enrolled;
   }
 
+  /* Capture flow for one employee */
   async function handleEmployeeClick(code, el) {
+    if (capturing) return;
     if (!modelsReady) return showToast("Models still loading — wait a moment.", "error");
     if (!stream) return showToast("Camera not ready.", "error");
 
     var faces = getFaces();
     if (faces[code] && faces[code].length) {
-      if (confirm("This employee is already enrolled. Delete their face data?")) {
+      if (confirm("This employee is already enrolled with " + faces[code].length +
+                  " samples. Delete and re-enroll?")) {
         delete faces[code];
         saveFaces(faces);
         renderList();
-        showToast("Deleted enrollment.", "success");
-        return;
+        showToast("Old enrollment deleted. Click again to re-enroll.", "success");
       }
       return;
     }
 
+    capturing = true;
     el.classList.add("busy");
-    setStatus("Hold still — capturing in 1…", "busy");
-
-    await new Promise(r => setTimeout(r, 700));
-    setStatus("Capturing 3 frames — please look at the camera", "busy");
+    showProgress(true);
+    setProgressDots(0);
+    setGuide("waiting");
 
     var descriptors = [];
-    for (var i = 0; i < 3; i++) {
-      var det = await faceapi
-        .detectSingleFace(cam, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-      if (det) descriptors.push(Array.from(det.descriptor));
-      await new Promise(r => setTimeout(r, 250));
+    var SKIP_LIMIT = 6;   // give up if same step fails 6 times in a row
+    var skipped = 0;
+
+    setStatus("Get ready — capturing will start in 2 seconds…", "busy");
+    await sleep(2000);
+
+    for (var i = 0; i < CAPTURE_SEQUENCE.length; i++) {
+      var step = CAPTURE_SEQUENCE[i];
+      setProgressLabel("Sample " + (i + 1) + " of " + CAPTURE_SEQUENCE.length,
+                       step.label);
+      setStatus(step.prompt + " — hold still…", "busy");
+      setGuide("waiting");
+
+      /* Try to capture this sample, retrying if face is not detected */
+      var captured = false;
+      var attempts = 0;
+      while (!captured && attempts < SKIP_LIMIT) {
+        attempts++;
+        var det = await faceapi
+          .detectSingleFace(cam, new faceapi.TinyFaceDetectorOptions({
+            inputSize: DETECT_INPUT_SIZE,
+            scoreThreshold: DETECT_SCORE_MIN
+          }))
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (det && det.descriptor) {
+          /* Additional quality: detection score must be high enough */
+          if (det.detection && det.detection.score >= DETECT_SCORE_MIN) {
+            descriptors.push(Array.from(det.descriptor));
+            captured = true;
+            setGuide("matched");
+            setProgressDots(descriptors.length);
+            setStatus("✅ Sample " + descriptors.length + " captured", "ok");
+            await sleep(400);
+          } else {
+            setStatus("⚠ Poor quality — move closer / better lighting (" +
+                      attempts + "/" + SKIP_LIMIT + ")", "busy");
+            await sleep(300);
+          }
+        } else {
+          setStatus("👤 No face detected — position your face in the oval (" +
+                    attempts + "/" + SKIP_LIMIT + ")", "busy");
+          await sleep(400);
+        }
+      }
+
+      if (!captured) {
+        /* Couldn't get this angle — keep any previous samples, warn user */
+        setStatus("⚠ Skipped " + step.label + " — will try again", "busy");
+        await sleep(500);
+        /* Do NOT retry the whole sequence; just skip this one sample */
+      }
+
+      setGuide("");
+      await sleep(200);
     }
+
+    showProgress(false);
+    setGuide("");
+    setStatus("💾 Saving enrollment…", "busy");
 
     el.classList.remove("busy");
+    capturing = false;
 
-    if (descriptors.length === 0) {
-      setStatus("No face detected — try again with better lighting", "err");
-      return showToast("Capture failed — no face found.", "error");
+    /* Require at least 4 good samples */
+    if (descriptors.length < 4) {
+      setStatus("❌ Not enough good samples (" + descriptors.length +
+                "/6). Try again with better lighting.", "err");
+      return showToast("Enrollment failed — need at least 4 good samples.", "error");
     }
 
-    faces = getFaces();
-    faces[code] = descriptors;
-    saveFaces(faces);
+    var faces2 = getFaces();
+    faces2[code] = descriptors;
+    if (!saveFaces(faces2)) {
+      setStatus("❌ Could not save — browser storage is blocked", "err");
+      return showToast("Storage error — enrollment not saved.", "error");
+    }
+
     renderList();
-    setStatus("✅ Saved " + descriptors.length + " face samples", "ok");
-    showToast("✅ Enrolled successfully.", "success");
+    setStatus("✅ " + descriptors.length + " face samples saved", "ok");
+    document.getElementById("videoWrap").classList.add("flash");
+    setTimeout(function(){
+      document.getElementById("videoWrap").classList.remove("flash");
+    }, 1100);
+    showToast("✅ Enrolled with " + descriptors.length + " samples.", "success");
+
+    await sleep(2200);
+    setStatus("Ready — click another employee to enroll, or return to the kiosk.", "info");
   }
 
-  // Start camera first
+  /* Start camera */
+  setStatus("🔄 Starting camera…", "busy");
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480, facingMode: "user" }
     });
     cam.srcObject = stream;
     await cam.play();
-    setStatus("Loading face models…", "busy");
+    setStatus("🔄 Loading face models…", "busy");
   } catch (e) {
-    setStatus("Camera error: " + e.message + " — camera needs HTTPS or localhost", "err");
+    setStatus("❌ Camera error: " + e.message + " — needs HTTPS or localhost", "err");
     return;
   }
 
-  // Load models
+  /* Load models */
   try {
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -342,17 +536,19 @@ document.addEventListener("DOMContentLoaded", async function() {
     modelsReady = true;
     setStatus("✅ Camera ready — click an employee to enroll", "ok");
   } catch (e) {
-    setStatus("Could not load models: " + e.message + " (check internet)", "err");
+    setStatus("❌ Could not load models: " + e.message + " (check internet)", "err");
     return;
   }
 
   renderList();
 
+  /* Clear-all button */
   document.getElementById("btn-clear-all").addEventListener("click", function() {
-    if (!confirm("Delete ALL face enrollments on this device?")) return;
+    if (!confirm("Delete ALL face enrollments on this device? This cannot be undone.")) return;
     localStorage.removeItem(FACES_KEY);
     renderList();
     showToast("All enrollments cleared.", "success");
+    setStatus("All enrollments cleared.", "info");
   });
 });
 </script>
