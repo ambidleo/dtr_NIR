@@ -17,12 +17,10 @@
   * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
   body {
     margin:0; color:var(--ink-900); min-height:100vh;
-    background:
-      radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%),
-      var(--bg);
+    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
   }
   header {
-    background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
+    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
     color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
     box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
   }
@@ -41,7 +39,7 @@
   .nav-links a {
     color:#fff; text-decoration:none; font-size:13px; font-weight:600;
     background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+    padding:8px 14px; border-radius:999px;
   }
   .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
 
@@ -49,9 +47,8 @@
   .card {
     background:var(--white); border-radius:var(--radius); padding:26px;
     box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
-    margin-bottom:22px; animation:fadeUp .4s ease both;
+    margin-bottom:22px;
   }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
   h2 { margin:0 0 20px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
 
   label { display:block; font-size:12px; font-weight:800; margin:0 0 6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
@@ -72,7 +69,7 @@
   .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
 
   .primary {
-    background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
+    background:linear-gradient(135deg,var(--blue-600) 0%,var(--blue-500) 100%);
     color:#fff; width:100%; margin-top:8px; border:0; padding:16px;
     font-size:16px; font-weight:800; border-radius:var(--radius-sm); cursor:pointer;
     box-shadow:0 6px 16px rgba(42,98,153,.30);
@@ -159,8 +156,8 @@
     </div>
   </div>
   <nav class="nav-links">
-     <a href="skeletal.html">👥 Skeletal</a>
     <a href="kiosk.html">🏠 Kiosk</a>
+    <a href="skeletal.html">👥 Skeletal</a>
     <a href="index.html">⚙️ Admin</a>
   </nav>
 </header>
@@ -188,8 +185,8 @@
     <button type="button" class="primary" id="btn-print">🖨️ Generate & Print DTR</button>
 
     <div id="dtrStatus">
-      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.
-      The Day column always shows the day of the month (1–31); days outside the chosen period are left blank.
+      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
+      Friday rows use the <b>skeletal list from that Friday's week</b> (configured in the Skeletal page). Days outside the chosen period are left blank.
     </div>
   </div>
 </div>
@@ -212,6 +209,51 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
+/* ─── Per-week skeletal storage ─────────────────────────── */
+var SKELETAL_BY_WEEK_KEY = "dhsud_skeletal_by_week";
+var SKELETAL_LEGACY_KEY  = "dhsud_skeletal_workforce";
+
+function getIsoWeekKey(date) {
+  var d = new Date(date.getTime());
+  d.setHours(0,0,0,0);
+  var dow = (d.getDay() + 6) % 7 + 1;
+  d.setDate(d.getDate() + 4 - dow);
+  var yearStart = new Date(d.getFullYear(), 0, 1);
+  var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
+}
+
+function loadSkeletalByWeek() {
+  try { return JSON.parse(localStorage.getItem(SKELETAL_BY_WEEK_KEY) || "{}"); }
+  catch(e) { return {}; }
+}
+
+function loadSkeletalLegacy() {
+  try {
+    var arr = JSON.parse(localStorage.getItem(SKELETAL_LEGACY_KEY) || "[]");
+    var set = {};
+    if (Array.isArray(arr)) arr.forEach(function(c){ set[c] = true; });
+    return set;
+  } catch(e) { return {}; }
+}
+
+/* Is this employee skeletal on this specific date?
+   Uses per-week list if that week is configured; otherwise falls back to legacy. */
+function isSkeletalOn(code, date) {
+  var byWeek = loadSkeletalByWeek();
+  var wk = getIsoWeekKey(date);
+  if (Object.prototype.hasOwnProperty.call(byWeek, wk)) {
+    var arr = byWeek[wk];
+    return Array.isArray(arr) && arr.indexOf(code) !== -1;
+  }
+  return !!loadSkeletalLegacy()[code];
+}
+
+/* ─── Time helpers ──────────────────────────────────────── */
+function isFriday(y, m, d) {
+  return new Date(y, m, d).getDay() === 5;
+}
+
 function parseMins(t) {
   if (!t) return null;
   var match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -223,21 +265,36 @@ function parseMins(t) {
 }
 
 function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
-  var inM = parseMins(amIn), outM = parseMins(amOut), pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
+  var inM = parseMins(amIn), outM = parseMins(amOut);
+  var pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
   var total = 0;
-  if (inM === null && pmInM !== null && pmOutM !== null) return Math.max(0, pmOutM - pmInM);
+
+  /* PM-only (half-day) */
+  if (inM === null && pmInM !== null && pmOutM !== null) {
+    return Math.max(0, pmOutM - pmInM);
+  }
   if (inM === null) return 0;
-  if (outM !== null && outM <= 749) return Math.max(0, outM - inM);
+
+  /* Early clock-out before lunch AND no PM data — just return AM span */
+  if (outM !== null && outM <= 749 && (pmInM === null || pmOutM === null)) {
+    return Math.max(0, outM - inM);
+  }
+
+  /* Clock-out between 12:30 and 12:59 — could be a full noon out */
   if (outM !== null && outM >= 750 && outM <= 779) {
     total += Math.max(0, 720 - inM);
     if (pmOutM !== null) total += Math.max(0, pmOutM - outM);
     return total;
   }
+
   if (outM !== null) total += Math.max(0, Math.min(720, outM) - inM);
-  if (pmInM !== null && pmOutM !== null) total += Math.max(0, pmOutM - Math.max(780, pmInM));
+  if (pmInM !== null && pmOutM !== null) {
+    total += Math.max(0, pmOutM - Math.max(780, pmInM));
+  }
   return total;
 }
 
+/* ─── Main ──────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function () {
   var sel = document.getElementById("dtrEmp");
   EMPLOYEES.forEach(function(e){
@@ -252,17 +309,23 @@ document.addEventListener("DOMContentLoaded", function () {
     var endV   = document.getElementById("endDate").value;
     var msg    = document.getElementById("dtrStatus");
 
-    if (!code || !startV || !endV) { msg.textContent = "⚠ Please fill all fields."; msg.style.color = "#9b1c1c"; return; }
-    if (new Date(endV) < new Date(startV)) { msg.textContent = "⚠ End date must be after start date."; msg.style.color = "#9b1c1c"; return; }
+    if (!code || !startV || !endV) {
+      msg.textContent = "⚠ Please fill all fields.";
+      msg.style.color = "#9b1c1c";
+      return;
+    }
+    if (new Date(endV) < new Date(startV)) {
+      msg.textContent = "⚠ End date must be after start date.";
+      msg.style.color = "#9b1c1c";
+      return;
+    }
 
     var start = new Date(startV + "T00:00:00");
     var end   = new Date(endV   + "T00:00:00");
 
-    // CSC Form No. 48 is a per-month form. Guard against multi-month ranges
-    // (e.g. Aug 16 – Sep 15) because a single Day 1–31 column can't represent
-    // two different months unambiguously.
-    if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) {
-      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b> CSC Form No. 48 is a per‑month form.<br>Print one DTR per month.";
+    if (start.getFullYear() !== end.getFullYear() ||
+        start.getMonth() !== end.getMonth()) {
+      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per‑month form — print one DTR per month.";
       msg.style.color = "#9b1c1c";
       return;
     }
@@ -291,7 +354,6 @@ document.addEventListener("DOMContentLoaded", function () {
       window[callbackName] = function(data) {
         finish(data || { success: false, error: "Empty response for " + dateStr });
       };
-
       script.onerror = function() {
         finish({ success: false, error: "Network error loading " + dateStr });
       };
@@ -306,21 +368,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function buildDTR(code, start, end) {
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
+
     var totalUT = 0;
     var rowsHTML = "";
-    var byDay = {};               // ← keyed by DAY-OF-MONTH (1..31)
+    var byDay = {};               // keyed by DAY-OF-MONTH (1..31)
     var failedDates = [];
 
-    var year  = start.getFullYear();
-    var month = start.getMonth();           // 0-based
+    var year     = start.getFullYear();
+    var month    = start.getMonth();
     var startDay = start.getDate();
     var endDay   = end.getDate();
 
-    // Fetch every day in the period, keyed by the day-of-month
+    /* Fetch every day in the period, keyed by day-of-month */
     for (var d = startDay; d <= endDay; d++) {
+      var cellDate = new Date(year, month, d);
       var dStr = year + "-" +
                  String(month + 1).padStart(2, '0') + "-" +
                  String(d).padStart(2, '0');
+
+      /* Friday + non-skeletal (per-week) → blank row, skip fetch */
+      if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
+        byDay[d] = { success: true, data: {} };
+        continue;
+      }
 
       var data = await fetchDateDataJSONP(dStr);
       if (!data || !data.success) {
@@ -334,10 +404,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (failedDates.length) {
       var m = document.getElementById("dtrStatus");
       m.style.color = "#9b1c1c";
-      m.textContent = "⚠ " + failedDates.length + " date(s) failed to load (" + failedDates.join(", ") + "). Generating with partial data.";
+      m.textContent = "⚠ " + failedDates.length + " date(s) failed to load (" +
+                      failedDates.join(", ") + "). Generating with partial data.";
     }
 
-    // Render Day 1..31. Only days inside the chosen period will have data.
+    /* Render Day 1..31. Only days inside the chosen period will have data. */
     for (var j = 1; j <= 31; j++) {
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
 
@@ -359,17 +430,42 @@ document.addEventListener("DOMContentLoaded", function () {
       rowsHTML += `<tr><td>${j}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
     }
 
-    // Handy diagnostic while verifying — open DevTools Console to inspect.
-    console.log("DTR build — employee:", code, "| month:", month + 1, year,
-                "| period:", startDay + "-" + endDay, "| byDay:", byDay);
+    /* Employee is "skeletal" for the purposes of the printed schedule if they
+       are skeletal on ANY Friday within this period (falls back to legacy). */
+    var anyFridaySkeletal = false;
+    for (var fd = startDay; fd <= endDay; fd++) {
+      if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
+        anyFridaySkeletal = true;
+        break;
+      }
+    }
+    var empIsSkeletal = anyFridaySkeletal || !!loadSkeletalLegacy()[code];
 
-    generatePrint(emp, rowsHTML, totalUT);
+    console.log("DTR build — employee:", code,
+                "| month:", (month + 1) + "/" + year,
+                "| skeletal (any Friday in period):", empIsSkeletal,
+                "| period:", startDay + "-" + endDay,
+                "| byDay:", byDay);
+
+    generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
   }
 
-  function generatePrint(emp, rowsHTML, totalUT) {
+  function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
     var period = document.getElementById("period").value.trim();
     var totalUTH = Math.floor(totalUT / 60);
     var totalUTM = totalUT % 60;
+
+    var officialHours = empIsSkeletal
+      ? "Mon–Thu 7:00 A.M. – 4:00 P.M. · Fri 8:00 A.M. – 5:00 P.M."
+      : "Mon–Thu 7:00 A.M. – 6:00 P.M. (Compressed, no work Fridays) / DO No. 2026-015";
+
+    var arrivalTxt = empIsSkeletal
+      ? "Arrival: 7 A.M. (Mon–Thu) / 8 A.M. (Fri)"
+      : "Arrival: 7 A.M. (Mon–Thu only)";
+
+    var departureTxt = empIsSkeletal
+      ? "Departure: 4 P.M. (Mon–Thu) / 5 P.M. (Fri)"
+      : "Departure: 6 P.M. (Mon–Thu only)";
 
     var singleCopyHTML = `
       <div class="dtr-copy">
@@ -390,11 +486,11 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="info-col" style="text-align:left;"><b>For the period:</b> <span style="text-decoration:underline;">${period}</span></div>
           </div>
           <div class="info-row">
-            <div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">Compressed/8:00 A.M. - 5:00 P.M / DO No. 2026-015</span></div>
+            <div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">${officialHours}</span></div>
           </div>
           <div class="info-row" style="margin-bottom: 5px;">
-            <div class="info-col" style="text-align:left;"><b>Arrival:</b> 8 A.M. / 1 P.M.</div>
-            <div class="info-col" style="text-align:right;"><b>Departure:</b> 12 N / 5 P.M.</div>
+            <div class="info-col" style="text-align:left;"><b>${arrivalTxt}</b></div>
+            <div class="info-col" style="text-align:right;"><b>${departureTxt}</b></div>
           </div>
           <table class="dtr-table">
             <thead>
