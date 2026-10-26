@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f4e79">
-<title>DHSUD NIR — Skeletal Workforce</title>
+<title>DHSUD NIR — Skeletal Workforce (Per Week)</title>
 <style>
   :root {
     --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
     --blue-100:#e8f1fb; --blue-50:#f4f8fd;
-    --green-600:#1c8a4b;
+    --green-600:#1c8a4b; --green-500:#22a35a; --green-100:#e3f6e8;
+    --red-600:#c23b3b; --red-100:#fde7e7;
     --amber-500:#e08a00; --amber-100:#fff4e0;
     --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
     --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
@@ -19,11 +20,11 @@
   * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
   body {
     margin:0; color:var(--ink-900); min-height:100vh;
-    background:radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%), var(--bg);
+    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
   }
 
   header {
-    background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
+    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
     color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
     box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
   }
@@ -42,30 +43,27 @@
   .nav-links a {
     color:#fff; text-decoration:none; font-size:13px; font-weight:600;
     background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+    padding:8px 14px; border-radius:999px;
   }
   .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
 
-  .wrap { max-width:920px; margin:26px auto 40px; padding:0 18px; }
+  .wrap { max-width:960px; margin:26px auto 40px; padding:0 18px; }
   .card {
     background:var(--white); border-radius:var(--radius); padding:26px;
     box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
-    margin-bottom:22px; animation:fadeUp .35s ease both;
+    margin-bottom:22px;
   }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
   h2 { margin:0 0 16px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
 
-  /* Schedule reference */
   .sched-card {
-    background:linear-gradient(180deg, #f4f8fd 0%, #e9f2fc 100%);
+    background:linear-gradient(180deg,#f4f8fd 0%,#e9f2fc 100%);
     border:1px solid #d5e6f7; border-radius:var(--radius-sm); padding:20px;
   }
   .sched-ref {
     display:inline-flex; align-items:center; gap:6px;
     font-size:11px; font-weight:800; letter-spacing:.5px;
     color:var(--amber-500); background:var(--amber-100);
-    border:1px solid #ffe0a3;
-    padding:5px 12px; border-radius:999px; margin-bottom:14px;
+    border:1px solid #ffe0a3; padding:5px 12px; border-radius:999px; margin-bottom:14px;
   }
   .sched-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .sched-col {
@@ -76,19 +74,64 @@
     text-transform:uppercase; letter-spacing:.06em; font-weight:800;
   }
   .sched-col .time { font-size:15px; font-weight:700; color:var(--blue-700); margin-bottom:2px; }
-  .sched-col .days { font-size:12px; color:var(--ink-500); font-weight:600; }
+  .sched-col .days { font-size:12px; color:var(--ink-500); font-weight:600; margin-top:2px; }
   .sched-note {
     margin-top:14px; padding:10px 14px;
     background:rgba(224,138,0,.08); border:1px solid #ffe0a3;
     border-radius:8px; font-size:12px; color:#7a4a00; font-weight:600; line-height:1.5;
   }
 
-  /* Employee list */
+  .week-selector {
+    display:grid;
+    grid-template-columns:minmax(220px, 1fr) auto;
+    gap:16px; align-items:center;
+    padding:18px;
+    background:linear-gradient(180deg,#f4f8fd,#e9f2fc);
+    border:1px solid #d5e6f7; border-radius:12px;
+  }
+  .week-selector .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .week-selector label {
+    margin:0; font-size:12px; font-weight:800; color:var(--ink-500);
+    text-transform:uppercase; letter-spacing:.05em;
+  }
+  .week-selector input[type="date"] {
+    padding:10px 12px; border:1.5px solid #ccd9e8; border-radius:8px;
+    font-size:15px; font-weight:700; color:var(--ink-900);
+    background:#fff; cursor:pointer;
+  }
+  .week-selector input[type="date"]:focus {
+    outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18);
+  }
+  .week-info {
+    display:flex; flex-direction:column; gap:4px;
+    text-align:right; min-width:180px;
+  }
+  .week-badge {
+    display:inline-block;
+    font-size:16px; font-weight:800; color:var(--blue-700);
+    background:#fff; padding:6px 14px; border-radius:999px;
+    border:1px solid #d5e6f7;
+  }
+  .week-range { font-size:12px; color:var(--ink-500); font-weight:600; }
+  .week-nav { grid-column:1 / -1; display:flex; gap:6px; flex-wrap:wrap; padding-top:4px; }
+  .week-nav button {
+    padding:9px 16px; border-radius:999px; font-size:12px; font-weight:700;
+    background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700);
+    cursor:pointer; transition:background .15s ease, border-color .15s ease;
+  }
+  .week-nav button:hover { background:#f7fafd; border-color:#b8cbe3; }
+  .week-nav button.primary {
+    background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
+    color:#fff; border-color:transparent;
+  }
+  .week-nav button.primary:hover { filter:brightness(1.06); background:linear-gradient(135deg,var(--blue-600),var(--blue-500)); }
+
   .emp-list { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
   .emp-item {
     display:flex; align-items:center; gap:10px; padding:12px 14px;
     background:#fff; border:1.5px solid #dbe3ee; border-radius:10px;
     cursor:pointer; transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    user-select:none;
   }
   .emp-item:hover { border-color:#a9c2df; background:#fbfdff; }
   .emp-item.selected {
@@ -102,7 +145,6 @@
   .emp-code { font-size:11px; font-weight:800; color:var(--blue-700); letter-spacing:.05em; }
   .emp-name { font-size:13px; font-weight:600; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  /* Toolbar */
   .toolbar {
     display:flex; justify-content:space-between; align-items:center;
     gap:12px; margin-top:20px; padding-top:16px;
@@ -110,25 +152,61 @@
   }
   .summary { font-size:13px; color:var(--ink-500); font-weight:600; }
   .summary b { color:var(--blue-700); }
-  .summary .changed { color:var(--amber-500); margin-left:8px; font-weight:700; }
-
-  .btn-primary {
-    background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
-    color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
-    font-size:14px; font-weight:800; cursor:pointer;
-    box-shadow:0 4px 12px rgba(42,98,153,.28);
-    transition:filter .15s ease, transform .08s ease;
+  .saved-badge {
+    margin-left:8px; font-size:11px; font-weight:800;
+    color:var(--green-600); background:var(--green-100);
+    padding:3px 10px; border-radius:999px;
+    opacity:0; transition:opacity .25s ease;
   }
-  .btn-primary:hover { filter:brightness(1.06); }
-  .btn-primary:active { transform:translateY(1px); }
+  .saved-badge.show { opacity:1; }
 
-  .btn-ghost {
-    background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700);
-    border-radius:var(--radius-sm); padding:12px 18px; font-size:14px; font-weight:700; cursor:pointer;
-    transition:background .15s ease, border-color .15s ease;
-    margin-right:8px;
+  .btn-danger {
+    background:linear-gradient(135deg,#d9534f,var(--red-600));
+    color:#fff; border:0; border-radius:var(--radius-sm); padding:11px 18px;
+    font-size:13px; font-weight:800; cursor:pointer;
   }
-  .btn-ghost:hover { background:#f7fafd; border-color:#b8cbe3; }
+  .btn-danger:hover { filter:brightness(1.06); }
+
+  .week-list-table {
+    width:100%; border-collapse:separate; border-spacing:0;
+    font-size:13px; border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  }
+  .week-list-table thead th {
+    background:linear-gradient(180deg,#f7fafd,#eef4fb);
+    color:var(--ink-500); font-size:11px; font-weight:800;
+    letter-spacing:.06em; text-transform:uppercase;
+    padding:11px 14px; text-align:left; border-bottom:1.5px solid var(--line);
+  }
+  .week-list-table tbody td { padding:11px 14px; border-bottom:1px solid #eef2f7; }
+  .week-list-table tbody tr:last-child td { border-bottom:0; }
+  .week-list-table tbody tr:hover td { background:var(--blue-50); }
+  .week-list-table tbody tr.current td { background:#f0f8ff; }
+  .week-list-table tbody tr.current td:first-child { font-weight:800; color:var(--blue-700); }
+  .week-list-table .num { text-align:center; font-weight:700; }
+  .week-list-table button {
+    background:none; border:1px solid var(--line); border-radius:6px;
+    padding:5px 10px; font-size:12px; font-weight:700; cursor:pointer;
+    color:var(--ink-700); transition:background .15s ease;
+  }
+  .week-list-table button:hover { background:#f7fafd; }
+  .week-list-table button.danger { color:var(--red-600); border-color:#f3bcbc; }
+  .week-list-table button.danger:hover { background:var(--red-100); }
+
+  .empty-state { text-align:center; color:var(--ink-500); padding:32px 20px; font-style:italic; font-size:13px; }
+
+  .legacy-note {
+    margin-top:16px; padding:12px 16px; border-radius:10px;
+    background:var(--amber-100); border:1px solid #ffe0a3;
+    color:#7a4a00; font-size:13px; font-weight:600; line-height:1.5;
+    display:none;
+  }
+  .legacy-note.show { display:block; }
+  .legacy-note b { color:#5a3400; }
+  .legacy-note button {
+    background:#fff; border:1px solid #e0b070; color:#7a4a00;
+    border-radius:6px; padding:6px 12px; font-size:12px; font-weight:800;
+    cursor:pointer; margin-left:8px;
+  }
 
   .toast {
     position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
@@ -143,6 +221,8 @@
   @media (max-width:640px) {
     .sched-grid { grid-template-columns:1fr; }
     .emp-list { grid-template-columns:1fr; }
+    .week-selector { grid-template-columns:1fr; }
+    .week-info { text-align:left; }
     .brand-sub { display:none; }
     .card { padding:18px; }
     header { padding:12px 16px; }
@@ -159,7 +239,7 @@
     <div class="brand-mark">DH</div>
     <div class="brand-text">
       <span class="brand-title">DHSUD NIR</span>
-      <span class="brand-sub">Skeletal Workforce</span>
+      <span class="brand-sub">Skeletal Workforce · Per Week</span>
     </div>
   </div>
   <nav class="nav-links">
@@ -171,8 +251,10 @@
 
 <div class="wrap">
 
-  <!-- Reference schedule -->
-     <div class="sched-card">
+  <!-- Schedule reference -->
+  <div class="card">
+    <h2>Friday Skeletal Workforce Schedule</h2>
+    <div class="sched-card">
       <span class="sched-ref">📋 DO No. 2026-015</span>
       <div class="sched-grid">
         <div class="sched-col">
@@ -193,33 +275,65 @@
         </div>
       </div>
       <div class="sched-note">
-        ⚠️ <b>Non‑skeletal employees</b> follow the compressed <b>7:00 AM – 6:00 PM Mon–Thu</b> schedule and have no work on Fridays.
-        Their DTR carries the <b>DO No. 2026-015</b> reference.<br>
-        <b>Skeletal employees</b> report <b>7:00 AM – 4:00 PM Mon–Thu</b> and <b>8:00 AM – 5:00 PM on Fridays</b>.
-        Their DTR does <b>not</b> carry the DO No. 2026-015 reference.
+        ⚠️ Assign skeletal employees <b>per week</b>. When printing a DTR, each Friday uses the
+        skeletal list from its ISO week (e.g. Aug 7 = Week 32, Aug 14 = Week 33). Weeks that are
+        <b>not configured</b> fall back to the older flat list so nothing breaks.
+      </div>
+    </div>
+  </div>
+
+  <!-- Week selector -->
+  <div class="card">
+    <h2>Select Week to Encode</h2>
+    <div class="week-selector">
+      <div class="row">
+        <label for="weekPicker">Pick any date in the week</label>
+        <input type="date" id="weekPicker">
+      </div>
+      <div class="week-info">
+        <div class="week-badge" id="weekBadge">—</div>
+        <div class="week-range" id="weekRange">—</div>
+      </div>
+      <div class="week-nav">
+        <button id="btnPrevWeek" type="button">← Prev week</button>
+        <button id="btnToday" type="button">Today</button>
+        <button id="btnNextWeek" type="button">Next week →</button>
+        <button id="btnCopyPrev" type="button">⤵ Copy from prev</button>
+        <button id="btnCopyNext" type="button">⤴ Copy from next</button>
       </div>
     </div>
   </div>
 
   <!-- Employee selection -->
   <div class="card">
-    <h2>Mark Skeletal Workforce (Friday)</h2>
+    <h2>Employees Skeletal for <span id="weekLabelForList">—</span></h2>
     <p style="margin:-8px 0 0; color:var(--ink-500); font-size:13px;">
-      Check the employees who are <b>required to report on Fridays</b> under the skeletal workforce.
-      This list is used automatically by the <em>Print DTR</em> page.
+      Check the employees who are <b>required to report on Friday</b> this week.
+      Changes save automatically.
     </p>
 
     <div class="emp-list" id="empList"></div>
 
     <div class="toolbar">
       <div class="summary">
-        <b id="skeletalCount">0</b> of 21 marked as skeletal
-        <span class="changed" id="changedBadge" style="display:none;">● Unsaved changes</span>
+        <b id="weekCount">0</b> of 21 skeletal this week
+        <span class="saved-badge" id="savedBadge">✓ Saved</span>
       </div>
-      <div>
-        <button class="btn-ghost" id="btn-reset" type="button">Reset</button>
-        <button class="btn-primary" id="btn-save" type="button">💾 Save Skeletal List</button>
-      </div>
+      <button class="btn-danger" id="btnClearWeek" type="button">Clear This Week</button>
+    </div>
+
+    <div class="legacy-note" id="legacyNote">
+      <b>Older flat skeletal list detected.</b>
+      Weeks without their own list currently fall back to it.
+      <button id="btnImportLegacy" type="button">Copy legacy list into this week</button>
+    </div>
+  </div>
+
+  <!-- All configured weeks -->
+  <div class="card">
+    <h2>Configured Weeks</h2>
+    <div id="weekListContainer">
+      <div class="empty-state">No weeks configured yet. Pick a week above and start checking employees.</div>
     </div>
   </div>
 
@@ -239,103 +353,314 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
-var STORAGE_KEY = "dhsud_skeletal_workforce";
+var BY_WEEK_KEY   = "dhsud_skeletal_by_week";
+var LEGACY_KEY    = "dhsud_skeletal_workforce";
 
-function loadSkeletal() {
+/* ── ISO week helpers ──────────────────────────────────── */
+function isoWeekKey(date) {
+  var d = new Date(date.getTime());
+  d.setHours(0,0,0,0);
+  var dow = (d.getDay() + 6) % 7 + 1;
+  d.setDate(d.getDate() + 4 - dow);
+  var yearStart = new Date(d.getFullYear(), 0, 1);
+  var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
+}
+function parseWeekKey(key) {
+  var m = key.match(/^(\d{4})-W(\d{2})$/);
+  if (!m) return null;
+  return { year: parseInt(m[1], 10), week: parseInt(m[2], 10) };
+}
+function mondayOfIsoWeek(year, week) {
+  var jan4 = new Date(year, 0, 4);
+  var jan4Day = (jan4.getDay() + 6) % 7;
+  var week1Monday = new Date(jan4.getTime());
+  week1Monday.setDate(jan4.getDate() - jan4Day);
+  var target = new Date(week1Monday.getTime());
+  target.setDate(week1Monday.getDate() + (week - 1) * 7);
+  return target;
+}
+function weekInfo(key) {
+  var p = parseWeekKey(key);
+  if (!p) return null;
+  var mon = mondayOfIsoWeek(p.year, p.week);
+  var sun = new Date(mon.getTime());
+  sun.setDate(mon.getDate() + 6);
+  return { key: key, year: p.year, week: p.week, monday: mon, sunday: sun };
+}
+function formatRange(mon, sun) {
+  var mMonth = mon.toLocaleDateString("en-US", { month: "short" });
+  var sMonth = sun.toLocaleDateString("en-US", { month: "short" });
+  var mYear  = mon.getFullYear();
+  var sYear  = sun.getFullYear();
+  if (mYear === sYear && mMonth === sMonth) {
+    return mon.getDate() + " – " + sun.getDate() + " " + mMonth + " " + mYear;
+  }
+  if (mYear === sYear) {
+    return mon.getDate() + " " + mMonth + " – " + sun.getDate() + " " + sMonth + " " + mYear;
+  }
+  return mon.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+       + " – "
+       + sun.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+/* ── Storage ──────────────────────────────────────────── */
+function loadByWeek() {
+  try { return JSON.parse(localStorage.getItem(BY_WEEK_KEY) || "{}"); }
+  catch(e) { return {}; }
+}
+function saveByWeek(obj) {
+  try { localStorage.setItem(BY_WEEK_KEY, JSON.stringify(obj)); return true; }
+  catch(e) { return false; }
+}
+function loadLegacy() {
   try {
-    var raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    var arr = JSON.parse(raw);
+    var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
     return Array.isArray(arr) ? arr : [];
   } catch(e) { return []; }
 }
 
-function saveSkeletal(codes) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(codes));
-    return true;
-  } catch(e) { return false; }
-}
+/* ── State ────────────────────────────────────────────── */
+var currentWeekKey = null;
+var byWeek         = loadByWeek();
 
+/* ── UI helpers ───────────────────────────────────────── */
 function showToast(msg, type) {
   var t = document.getElementById("toast");
   t.textContent = msg;
   t.className = "toast show " + (type || "");
   clearTimeout(t._timer);
-  t._timer = setTimeout(function(){ t.className = "toast"; }, 2600);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 2000);
+}
+function flashSaved() {
+  var b = document.getElementById("savedBadge");
+  b.classList.add("show");
+  clearTimeout(b._timer);
+  b._timer = setTimeout(function(){ b.classList.remove("show"); }, 1600);
+}
+
+function renderEmployeeList() {
+  var list = byWeek[currentWeekKey] || [];
+  var set  = {};
+  list.forEach(function(c){ set[c] = true; });
+
+  var el = document.getElementById("empList");
+  el.innerHTML = "";
+  var count = 0;
+
+  EMPLOYEES.forEach(function(emp) {
+    var checked = !!set[emp.code];
+    if (checked) count++;
+
+    var lbl = document.createElement("label");
+    lbl.className = "emp-item" + (checked ? " selected" : "");
+    lbl.innerHTML =
+      '<input type="checkbox" data-code="' + emp.code + '"' + (checked ? ' checked' : '') + '>' +
+      '<div class="emp-info">' +
+        '<span class="emp-code">' + emp.code + '</span>' +
+        '<span class="emp-name">' + emp.name + '</span>' +
+      '</div>';
+
+    lbl.querySelector("input").addEventListener("change", function(e) {
+      var code = emp.code;
+      var arr  = (byWeek[currentWeekKey] || []).slice();
+      if (e.target.checked) {
+        if (arr.indexOf(code) === -1) arr.push(code);
+      } else {
+        arr = arr.filter(function(c){ return c !== code; });
+      }
+      setWeekList(currentWeekKey, arr);
+      renderEmployeeList();
+      renderWeekList();
+    });
+
+    el.appendChild(lbl);
+  });
+
+  document.getElementById("weekCount").textContent = count;
+}
+
+function setWeekList(weekKey, codes) {
+  if (codes.length === 0) {
+    delete byWeek[weekKey];
+  } else {
+    byWeek[weekKey] = codes.sort();
+  }
+  saveByWeek(byWeek);
+  flashSaved();
+}
+
+function renderWeekList() {
+  var container = document.getElementById("weekListContainer");
+  var keys = Object.keys(byWeek).sort();
+
+  if (keys.length === 0) {
+    container.innerHTML = '<div class="empty-state">No weeks configured yet. Pick a week above and start checking employees.</div>';
+    return;
+  }
+
+  var html = '<table class="week-list-table"><thead><tr>' +
+    '<th>Week</th>' +
+    '<th>Date range</th>' +
+    '<th style="text-align:center;">Skeletal</th>' +
+    '<th style="text-align:right;">Actions</th>' +
+    '</tr></thead><tbody>';
+
+  keys.forEach(function(k) {
+    var info = weekInfo(k);
+    if (!info) return;
+    var count = (byWeek[k] || []).length;
+    var isCurrent = (k === currentWeekKey);
+    html += '<tr class="' + (isCurrent ? 'current' : '') + '">' +
+      '<td><b>Week ' + info.week + '</b> · ' + info.year + '</td>' +
+      '<td>' + formatRange(info.monday, info.sunday) + '</td>' +
+      '<td class="num">' + count + '</td>' +
+      '<td style="text-align:right;">' +
+        '<button data-action="open" data-key="' + k + '">Open</button> ' +
+        '<button data-action="delete" data-key="' + k + '" class="danger">Delete</button>' +
+      '</td></tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  container.querySelectorAll("button[data-action]").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var action = btn.dataset.action;
+      var key = btn.dataset.key;
+
+      if (action === "open") {
+        jumpToWeek(key);
+      } else if (action === "delete") {
+        if (!confirm("Delete all skeletal assignments for " + key + "?")) return;
+        delete byWeek[key];
+        saveByWeek(byWeek);
+        if (key === currentWeekKey) renderEmployeeList();
+        renderWeekList();
+        showToast("Week " + key + " cleared.", "success");
+      }
+    });
+  });
+}
+
+function updateWeekDisplay() {
+  var info = weekInfo(currentWeekKey);
+  if (!info) return;
+
+  document.getElementById("weekBadge").textContent =
+    "Week " + info.week + " · " + info.year;
+  document.getElementById("weekRange").textContent =
+    formatRange(info.monday, info.sunday);
+  document.getElementById("weekLabelForList").textContent =
+    "Week " + info.week + " (" + formatRange(info.monday, info.sunday) + ")";
+
+  var yyyy = info.monday.getFullYear();
+  var mm = String(info.monday.getMonth() + 1).padStart(2, '0');
+  var dd = String(info.monday.getDate()).padStart(2, '0');
+  document.getElementById("weekPicker").value = yyyy + "-" + mm + "-" + dd;
+}
+
+function jumpToWeek(key) {
+  currentWeekKey = key;
+  updateWeekDisplay();
+  renderEmployeeList();
+  renderWeekList();
+}
+
+function jumpByDays(days) {
+  var picker = document.getElementById("weekPicker");
+  var base = picker.value ? new Date(picker.value + "T00:00:00") : new Date();
+  base.setDate(base.getDate() + days);
+  currentWeekKey = isoWeekKey(base);
+  updateWeekDisplay();
+  renderEmployeeList();
+  renderWeekList();
+}
+
+function jumpToDate(date) {
+  currentWeekKey = isoWeekKey(date);
+  updateWeekDisplay();
+  renderEmployeeList();
+  renderWeekList();
+}
+
+function copyFromWeek(srcKey, label) {
+  var srcList = byWeek[srcKey] || [];
+  if (srcList.length === 0) {
+    showToast("Nothing to copy — " + label + " is empty.", "");
+    return;
+  }
+  var curList = byWeek[currentWeekKey] || [];
+  if (curList.length > 0) {
+    if (!confirm("Overwrite this week's list with " + label + " (" + srcList.length + " employees)?")) return;
+  }
+  setWeekList(currentWeekKey, srcList.slice());
+  renderEmployeeList();
+  renderWeekList();
+  showToast("✅ Copied " + srcList.length + " from " + label + ".", "success");
+}
+
+function updateLegacyNote() {
+  var legacy = loadLegacy();
+  var note = document.getElementById("legacyNote");
+  if (legacy.length > 0) {
+    note.classList.add("show");
+  } else {
+    note.classList.remove("show");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  var container = document.getElementById("empList");
-  var saved = loadSkeletal();
-  var current = {};
-  saved.forEach(function(c){ current[c] = true; });
+  jumpToDate(new Date());
 
-  var dirty = false;
+  document.getElementById("weekPicker").addEventListener("change", function(e) {
+    if (!e.target.value) return;
+    jumpToDate(new Date(e.target.value + "T00:00:00"));
+  });
 
-  function markChanged() {
-    if (dirty) return;
-    dirty = true;
-    document.getElementById("changedBadge").style.display = "inline";
-  }
+  document.getElementById("btnPrevWeek").addEventListener("click", function(){ jumpByDays(-7); });
+  document.getElementById("btnNextWeek").addEventListener("click", function(){ jumpByDays(7); });
+  document.getElementById("btnToday").addEventListener("click", function(){ jumpToDate(new Date()); });
 
-  function renderList() {
-    container.innerHTML = "";
-    var count = 0;
+  document.getElementById("btnCopyPrev").addEventListener("click", function() {
+    var picker = document.getElementById("weekPicker");
+    var base = picker.value ? new Date(picker.value + "T00:00:00") : new Date();
+    base.setDate(base.getDate() - 7);
+    copyFromWeek(isoWeekKey(base), "previous week");
+  });
+  document.getElementById("btnCopyNext").addEventListener("click", function() {
+    var picker = document.getElementById("weekPicker");
+    var base = picker.value ? new Date(picker.value + "T00:00:00") : new Date();
+    base.setDate(base.getDate() + 7);
+    copyFromWeek(isoWeekKey(base), "next week");
+  });
 
-    EMPLOYEES.forEach(function(emp) {
-      var checked = !!current[emp.code];
-      if (checked) count++;
-
-      var lbl = document.createElement("label");
-      lbl.className = "emp-item" + (checked ? " selected" : "");
-      lbl.innerHTML =
-        '<input type="checkbox" data-code="' + emp.code + '"' + (checked ? ' checked' : '') + '>' +
-        '<div class="emp-info">' +
-          '<span class="emp-code">' + emp.code + '</span>' +
-          '<span class="emp-name">' + emp.name + '</span>' +
-        '</div>';
-
-      lbl.querySelector("input").addEventListener("change", function(e){
-        current[emp.code] = e.target.checked;
-        renderList();
-        markChanged();
-      });
-
-      container.appendChild(lbl);
-    });
-
-    document.getElementById("skeletalCount").textContent = count;
-  }
-
-  function getSelected() {
-    var arr = [];
-    EMPLOYEES.forEach(function(emp) {
-      if (current[emp.code]) arr.push(emp.code);
-    });
-    return arr;
-  }
-
-  document.getElementById("btn-save").addEventListener("click", function(){
-    var codes = getSelected();
-    if (saveSkeletal(codes)) {
-      dirty = false;
-      document.getElementById("changedBadge").style.display = "none";
-      showToast("✅ Saved " + codes.length + " skeletal worker" + (codes.length !== 1 ? "s" : ""), "success");
-    } else {
-      showToast("⚠ Could not save — browser storage is blocked", "");
+  document.getElementById("btnClearWeek").addEventListener("click", function() {
+    if (!byWeek[currentWeekKey] || byWeek[currentWeekKey].length === 0) {
+      showToast("This week is already empty.", "");
+      return;
     }
+    if (!confirm("Clear all skeletal employees for this week?")) return;
+    setWeekList(currentWeekKey, []);
+    renderEmployeeList();
+    renderWeekList();
+    showToast("Week cleared.", "success");
   });
 
-  document.getElementById("btn-reset").addEventListener("click", function(){
-    if (!confirm("Clear all skeletal selections?")) return;
-    current = {};
-    renderList();
-    markChanged();
-    showToast("Selections cleared — remember to Save", "");
+  document.getElementById("btnImportLegacy").addEventListener("click", function() {
+    var legacy = loadLegacy();
+    if (legacy.length === 0) return;
+    var curList = byWeek[currentWeekKey] || [];
+    if (curList.length > 0) {
+      if (!confirm("Overwrite this week's list with the legacy flat list (" + legacy.length + " employees)?")) return;
+    }
+    setWeekList(currentWeekKey, legacy.slice());
+    renderEmployeeList();
+    renderWeekList();
+    showToast("✅ Imported " + legacy.length + " from legacy list.", "success");
   });
 
-  renderList();
+  updateLegacyNote();
 });
 </script>
 </body>
