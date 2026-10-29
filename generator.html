@@ -35,7 +35,7 @@
   .brand-text { display:flex; flex-direction:column; line-height:1.1; }
   .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
   .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
-  .nav-links { display:flex; gap:8px; }
+  .nav-links { display:flex; gap:8px; flex-wrap:wrap; }
   .nav-links a {
     color:#fff; text-decoration:none; font-size:13px; font-weight:600;
     background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
@@ -138,6 +138,19 @@
     .dtr-table .time-col { width:14%; }
     .dtr-table .ut-col { width:9%; }
 
+    /* Friday no-work row style */
+    .dtr-table td.do-row {
+      background:#f0f4f8 !important;
+      font-style:italic;
+      font-size:7px;
+      text-align:center;
+      color:#222;
+    }
+    .dtr-table td.do-row b {
+      font-style:normal;
+      letter-spacing:.3px;
+    }
+
     .dtr-footer { margin-top:10px; font-size:8px; }
     .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
     .signature-block { text-align:center; width:45%; }
@@ -159,6 +172,8 @@
   <nav class="nav-links">
     <a href="kiosk.html">🏠 Kiosk</a>
     <a href="skeletal.html">👥 Skeletal</a>
+    <a href="leave.html">📋 Leave</a>
+    <a href="payslip.html">💵 Payslip</a>
     <a href="index.html">⚙️ Admin</a>
   </nav>
 </header>
@@ -187,7 +202,7 @@
 
     <div id="dtrStatus">
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
-      Friday rows use the <b>skeletal list from that Friday's week</b>. Days outside the chosen period are left blank.
+      DO No. 2026‑015 prints on each <b>Friday row</b> where the employee is not on the skeletal list. Days outside the chosen period are left blank.
     </div>
   </div>
 </div>
@@ -305,8 +320,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "Check that you pasted the FULL file, not just the <script> block.";
     }
     console.error("❌ Missing elements:", missing);
-    console.error("All IDs currently in the page:",
-      Array.from(document.querySelectorAll("[id]")).map(function(e){ return e.id; }));
     return;
   }
 
@@ -403,15 +416,17 @@ document.addEventListener("DOMContentLoaded", function () {
     var month = start.getMonth();
     var startDay = start.getDate();
     var endDay = end.getDate();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
 
     document.getElementById("dtrStatus").textContent = "⏳ Downloading time logs…";
 
+    /* Fetch loop — non-skeletal Fridays are not fetched */
     for (var d = startDay; d <= endDay; d++) {
       var cellDate = new Date(year, month, d);
       var dStr = year + "-" + String(month + 1).padStart(2, '0') + "-" + String(d).padStart(2, '0');
 
       if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
-        byDay[d] = { success: true, data: {} };
+        byDay[d] = { success: true, data: {}, skippedFriday: true };
         continue;
       }
 
@@ -430,7 +445,29 @@ document.addEventListener("DOMContentLoaded", function () {
       m.textContent = "⚠ " + failedDates.length + " date(s) failed to load. Generating with partial data.";
     }
 
+    /* Row loop — DO No. prints on the Friday row itself */
     for (var j = 1; j <= 31; j++) {
+      var inPeriod = (j >= startDay && j <= endDay && j <= daysInMonth);
+
+      /* Days outside the period: empty row, no special handling */
+      if (!inPeriod) {
+        rowsHTML += '<tr><td>' + j + '</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+        continue;
+      }
+
+      var fridayHere    = isFriday(year, month, j);
+      var skeletalHere  = fridayHere && isSkeletalOn(code, new Date(year, month, j));
+
+      /* Friday inside period + NOT skeletal → DO No. 2026-015 message in row */
+      if (fridayHere && !skeletalHere) {
+        rowsHTML += '<tr><td>' + j + '</td>' +
+          '<td colspan="6" class="do-row">' +
+            '<b>DO No. 2026-015</b> — No work on Fridays (Compressed Workweek)' +
+          '</td></tr>';
+        continue;
+      }
+
+      /* Normal day (Mon–Thu, or a skeletal Friday) — show times */
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
       var rec = byDay[j];
       if (rec && rec.success && rec.data && rec.data[code]) {
@@ -450,13 +487,17 @@ document.addEventListener("DOMContentLoaded", function () {
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
     }
 
-    var empIsSkeletal = false;
+    /* Employee Type label for the top of the DTR.
+       Show "Skeletal" only if AT LEAST ONE Friday in period is skeletal;
+       otherwise "Regular". DO No. stays on the Friday rows, not here. */
+    var anyFridaySkeletal = false;
     for (var fd = startDay; fd <= endDay; fd++) {
       if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
-        empIsSkeletal = true;
+        anyFridaySkeletal = true;
         break;
       }
     }
+    var empIsSkeletal = anyFridaySkeletal;
 
     /* Console diagnostic */
     var fridaysInPeriod = [];
@@ -464,11 +505,13 @@ document.addEventListener("DOMContentLoaded", function () {
       if (isFriday(year, month, q)) {
         var ddObj = new Date(year, month, q);
         var wkKey = getIsoWeekKey(ddObj);
+        var skel = isSkeletalOn(code, ddObj);
         fridaysInPeriod.push({
           date: q + "/" + (month + 1),
           week: wkKey,
           configured: backendHasData ? Object.prototype.hasOwnProperty.call(skeletalByWeek, wkKey) : "(backend empty)",
-          skeletalHere: isSkeletalOn(code, ddObj)
+          skeletalHere: skel,
+          rowWillShow: skel ? "times" : "DO No. 2026-015 message"
         });
       }
     }
@@ -477,7 +520,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Period:", startDay + "–" + endDay + " of " + (month + 1) + "/" + year);
     console.log("backendHasData:", backendHasData, "| legacyKeys:", Object.keys(legacySet).length);
     console.log("Fridays in period:", fridaysInPeriod);
-    console.log("Classification:", empIsSkeletal ? "SKELETAL (no DO No.)" : "REGULAR (DO No. 2026-015)");
+    console.log("Any Friday skeletal (=> header shows Skeletal):", anyFridaySkeletal);
 
     generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
   }
@@ -489,11 +532,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var typeLabel = empIsSkeletal ? "Skeletal Workforce" : "Regular (Non-Skeletal)";
 
-    /* DO No. is included in Official Hours for regular employees,
-       AND also on a dedicated bordered Reference line — belt and suspenders. */
+    /* DO No. removed from Official Hours — it now prints on each Friday row */
     var officialHoursTxt = empIsSkeletal
       ? "Mon–Thu 7:00 A.M. – 4:00 P.M. · Fri 8:00 A.M. – 5:00 P.M."
-      : "Mon–Thu 7:00 A.M. – 6:00 P.M. (Compressed, no work Fridays) / DO No. 2026-015";
+      : "Mon–Thu 7:00 A.M. – 6:00 P.M. (Compressed, no work Fridays)";
 
     var arrivalTxt = empIsSkeletal
       ? "Arrival: 7 A.M. (Mon–Thu) / 8 A.M. (Fri)"
@@ -502,21 +544,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var departureTxt = empIsSkeletal
       ? "Departure: 4 P.M. (Mon–Thu) / 5 P.M. (Fri)"
       : "Departure: 6 P.M. (Mon–Thu only)";
-
-    var doRefLine = empIsSkeletal
-      ? ""
-      : '<div class="info-row" style="margin-top:3px; margin-bottom:3px; padding:3px 6px; border:1px solid #000; background:#eef4fb;">' +
-          '<div class="info-col" style="text-align:left; font-size:9px;">' +
-            '<b>Reference:</b> <b>DO No. 2026-015</b> — Compressed Workweek, no work on Fridays' +
-          '</div>' +
-        '</div>';
-
-    /* Diagnostic log at print time */
-    console.log("── generatePrint ──");
-    console.log("  Employee Type      :", typeLabel);
-    console.log("  DO No. shown?      :", empIsSkeletal ? "NO (employee is skeletal)" : "YES");
-    console.log("  Official Hours txt :", officialHoursTxt);
-    console.log("  DO ref line length :", doRefLine.length, doRefLine.length === 0 ? "(hidden — skeletal)" : "(visible — regular)");
 
     var singleCopyHTML =
       '<div class="dtr-copy">' +
@@ -542,7 +569,6 @@ document.addEventListener("DOMContentLoaded", function () {
           '<div class="info-row">' +
             '<div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">' + officialHoursTxt + '</span></div>' +
           '</div>' +
-          doRefLine +
           '<div class="info-row" style="margin-bottom:5px;">' +
             '<div class="info-col" style="text-align:left;"><b>' + arrivalTxt + '</b></div>' +
             '<div class="info-col" style="text-align:right;"><b>' + departureTxt + '</b></div>' +
