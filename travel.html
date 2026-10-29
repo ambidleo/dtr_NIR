@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4e79">
+<title>DHSUD NIR — Travel Order</title>
+<style>
+  :root {
+    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
+    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --green-600:#1c8a4b; --green-100:#e3f6e8;
+    --red-600:#c23b3b; --red-100:#fde7e7;
+    --amber-500:#e08a00; --amber-100:#fff4e0;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
+    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
+    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
+    --radius:16px; --radius-sm:12px;
+  }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  body {
+    margin:0; color:var(--ink-900); min-height:100vh;
+    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
+  }
+  header {
+    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
+    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
+    color:var(--blue-700); font-weight:800; font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  }
+  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
+  .nav-links { display:flex; gap:8px; flex-wrap:wrap; }
+  .nav-links a {
+    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    padding:8px 14px; border-radius:999px;
+  }
+  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+
+  .wrap { max-width:1000px; margin:26px auto 40px; padding:0 18px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:26px;
+    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
+    margin-bottom:22px;
+  }
+  h2 { margin:0 0 18px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
+  h2 span { color:var(--ink-500); font-weight:600; font-size:13px; }
+
+  label { display:block; font-size:12px; font-weight:800; margin:0 0 6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
+  input, select, textarea {
+    width:100%; padding:11px 13px; border:1.5px solid #ccd9e8; border-radius:var(--radius-sm);
+    font-size:14px; font-weight:600; color:var(--ink-900); background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease; font-family:inherit;
+  }
+  input:hover, select:hover, textarea:hover { border-color:#b8cbe3; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
+  input[readonly] { background:#f7fafd; color:var(--ink-500); }
+  textarea { resize:vertical; min-height:60px; }
+
+  .row { display:grid; gap:14px; }
+  .row.cols-2 { grid-template-columns:1fr 1fr; }
+  .row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+  .field { margin-bottom:14px; }
+
+  .section-label {
+    margin:22px 0 12px; padding-bottom:6px;
+    font-size:12px; font-weight:800; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--ink-500);
+    border-bottom:1px solid var(--line);
+  }
+
+  .btn {
+    cursor:pointer; border:0; border-radius:var(--radius-sm);
+    padding:12px 22px; font-size:14px; font-weight:800;
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .btn:active { transform:translateY(1px); }
+  .btn-primary {
+    background:linear-gradient(135deg,var(--blue-600),var(--blue-500)); color:#fff;
+    box-shadow:0 4px 12px rgba(42,98,153,.28);
+  }
+  .btn-primary:hover { filter:brightness(1.06); }
+  .btn-ghost { background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700); }
+  .btn-ghost:hover { background:#f7fafd; border-color:#b8cbe3; }
+  .btn-danger { background:linear-gradient(180deg,#e05e5e,var(--red-600)); color:#fff; }
+  .btn-danger:hover { filter:brightness(1.07); }
+  .btn-sm { padding:6px 12px; font-size:12px; }
+
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+
+  /* Personnel list */
+  .personnel-row {
+    display:grid; grid-template-columns:1fr 1fr auto; gap:10px;
+    padding:12px; margin-bottom:10px;
+    background:#fafcff; border:1.5px solid #dbe3ee; border-radius:10px;
+    align-items:end;
+  }
+  .personnel-row .field { margin-bottom:0; }
+
+  /* History table */
+  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--line); }
+  table.history { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; min-width:800px; }
+  table.history thead th {
+    background:linear-gradient(180deg,#f7fafd,#eef4fb);
+    color:var(--ink-500); font-size:11px; font-weight:800;
+    letter-spacing:.06em; text-transform:uppercase;
+    padding:10px 10px; text-align:center; border-bottom:1.5px solid var(--line);
+  }
+  table.history tbody td { padding:9px 10px; border-bottom:1px solid #eef2f7; text-align:center; }
+  table.history tbody td.txt-left { text-align:left; }
+  table.history tbody tr:hover td { background:var(--blue-50); }
+  table.history tbody tr:last-child td { border-bottom:0; }
+  .empty { text-align:center; color:var(--ink-500); padding:32px 20px; font-style:italic; font-size:13px; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
+    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
+    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
+    opacity:0; pointer-events:none; transition:all .25s ease; z-index:100;
+    max-width:calc(100vw - 48px);
+  }
+  .toast.show { opacity:1; transform:translate(-50%, 0); }
+  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
+  .toast.error { background:linear-gradient(135deg,#b02a2a,#d9534f); }
+
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; font-size:13px; }
+
+  #print-area { display: none; }
+
+  @media (max-width:720px) {
+    .row.cols-2, .row.cols-3 { grid-template-columns:1fr; }
+    .personnel-row { grid-template-columns:1fr; }
+    .brand-sub { display:none; }
+    .card { padding:18px; }
+    header { padding:12px 16px; }
+  }
+
+  /* ═════════ PRINT LAYOUT ═════════ */
+  @media print {
+    @page { size: A4 portrait; margin: 0.55in 0.6in; }
+
+    html, body { background:#fff !important; margin:0; padding:0; }
+    header, .wrap, #fatal, .toast { display:none !important; }
+    #print-area { display:block !important; }
+
+    #print-area {
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.35;
+      color: #000;
+    }
+
+    .to-page { page-break-after: always; }
+    .to-page:last-child { page-break-after: auto; }
+
+    /* HEADER */
+    .to-header {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .to-header > tbody > tr > td {
+      vertical-align: middle;
+      padding: 0;
+    }
+    .to-header .to-title {
+      font-size: 20pt;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+    }
+    .to-header .to-doc-info { text-align: right; }
+    .to-header .to-doc-info table {
+      display: inline-table;
+      border-collapse: collapse;
+      font-size: 8pt;
+    }
+    .to-header .to-doc-info table td {
+      border: 1px solid #000;
+      padding: 2px 6px;
+      text-align: left;
+      font-size: 8pt;
+    }
+    .to-header .to-doc-info .label { font-weight: bold; }
+
+    /* DATE + CONTROL */
+    .to-date-control {
+      display: flex;
+      justify-content: space-between;
+      margin: 12px 0 6px;
+      font-size: 10.5pt;
+    }
+
+    /* INTRO */
+    .to-intro {
+      margin-top: 10px;
+      text-indent: 40px;
+      text-align: justify;
+      line-height: 1.4;
+    }
+
+    /* MAIN TABLE */
+    .to-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 9.5pt;
+    }
+    .to-table th,
+    .to-table td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      vertical-align: top;
+      line-height: 1.3;
+    }
+    .to-table th {
+      background: #e9e9e9;
+      text-align: center;
+      font-weight: bold;
+      font-size: 9.5pt;
+    }
+    .to-table .person-line {
+      display: block;
+    }
+    .to-table .person-designation {
+      display: block;
+      font-size: 9pt;
+      font-style: italic;
+      margin-top: 2px;
+    }
+    .to-table .purpose-period {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    /* PARAGRAPHS */
+    .to-para {
+      margin-top: 12px;
+      text-align: justify;
+      line-height: 1.4;
+    }
+    .to-para.indent { text-indent: 40px; }
+
+    /* SIGNATURE PAGE */
+    .to-signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 70px;
+    }
+    .to-signature-table td {
+      width: 50%;
+      text-align: center;
+      vertical-align: top;
+      padding: 0 24px;
+    }
+    .to-signature-label {
+      text-align: left;
+      font-weight: bold;
+      margin-bottom: 60px;
+      font-size: 10.5pt;
+    }
+    .to-signature-name {
+      font-weight: bold;
+      border-bottom: 1px solid #000;
+      padding-bottom: 3px;
+      margin-bottom: 4px;
+      font-size: 10.5pt;
+    }
+    .to-signature-title {
+      font-size: 10pt;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <span class="brand-title">DHSUD NIR</span>
+      <span class="brand-sub">Travel Order</span>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="kiosk.html">🏠 Kiosk</a>
+    <a href="skeletal.html">👥 Skeletal</a>
+    <a href="generator.html">🖨️ DTR</a>
+    <a href="leave.html">📋 Leave</a>
+    <a href="payslip.html">💵 Payslip</a>
+    <a href="index.html">⚙️ Admin</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div id="fatal"></div>
+
+  <!-- Create form -->
+  <div class="card">
+    <h2>Create Travel Order <span>(FORM-ASHRDD-009)</span></h2>
+
+    <div class="row cols-3">
+      <div class="field">
+        <label for="toDate">Travel Order Date</label>
+        <input type="date" id="toDate">
+      </div>
+      <div class="field">
+        <label for="controlNo">Control No. (auto‑generated)</label>
+        <input type="text" id="controlNo" placeholder="YYYY-MM-NNN">
+      </div>
+      <div class="field">
+        <label for="travelType">Travel Type</label>
+        <select id="travelType">
+          <option value="Air / land">Air / land</option>
+          <option value="Air">Air</option>
+          <option value="Land">Land</option>
+          <option value="Air / land / sea">Air / land / sea</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="destination">Destination</label>
+      <input type="text" id="destination" placeholder="e.g. San Carlos City, Negros Occidental">
+    </div>
+
+    <div class="field">
+      <label for="purpose">Purpose</label>
+      <textarea id="purpose" rows="3" placeholder="e.g. REQUESTING THE APPROVAL OF TRAVEL ORDER FOR THE PROVISION OF TECHNICAL ASSISTANCE ON THE UPDATING OF CLUP AND ZO OF SAN CARLOS CITY, NEGROS OCCIDENTAL"></textarea>
+    </div>
+
+    <div class="row cols-2">
+      <div class="field">
+        <label for="periodStart">Period Covered — Start</label>
+        <input type="date" id="periodStart">
+      </div>
+      <div class="field">
+        <label for="periodEnd">Period Covered — End</label>
+        <input type="date" id="periodEnd">
+      </div>
+    </div>
+
+    <div class="section-label">Personnel</div>
+    <div id="personnelList"></div>
+    <button class="btn btn-ghost" id="btnAddPersonnel" type="button">+ Add Personnel</button>
+
+    <div class="section-label">Signatories</div>
+    <div class="row cols-2">
+      <div>
+        <div class="field">
+          <label for="recommendedName">Recommended By — Name</label>
+          <input type="text" id="recommendedName" value="ELENITA PAULINA R. CAÑETE">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="recommendedTitle">Recommended By — Title</label>
+          <input type="text" id="recommendedTitle" value="OIC-Regional Director">
+        </div>
+      </div>
+      <div>
+        <div class="field">
+          <label for="approvedName">Approved By — Name</label>
+          <input type="text" id="approvedName" value="EDUARDO P. ROBLES, Jr.">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="approvedTitle">Approved By — Title</label>
+          <input type="text" id="approvedTitle" value="Senior Undersecretary">
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-primary" id="btnPrint">🖨️ Save &amp; Print Travel Order</button>
+      <button class="btn btn-ghost" id="btnSave">💾 Save Only</button>
+      <button class="btn btn-ghost" id="btnClear">Clear Form</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <h2>Saved Travel Orders <span id="historyCount"></span></h2>
+    <div class="table-wrap">
+      <table class="history" id="historyTable">
+        <thead>
+          <tr>
+            <th>Control No.</th>
+            <th>Date</th>
+            <th style="text-align:left">Personnel</th>
+            <th style="text-align:left">Destination</th>
+            <th>Period</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+
+<datalist id="employeeNames">
+  <option value="Elenita Paulina R. Cañete">
+  <option value="Brechelle Grace P. Benotapa">
+  <option value="Engr. Precious Danica V. Valleramos">
+  <option value="Engr. Harrison C. Gudito, MPA">
+  <option value="Erika Joy S. Guiloreza">
+  <option value="Stanley S. Adraneda">
+  <option value="Katrina S. Amonares">
+  <option value="Lorie Ann A. Bantayan">
+  <option value="Daisy Mae T. Batuigas">
+  <option value="Marla Beth C. Deocadez">
+  <option value="Kimberly M. Enim">
+  <option value="Arnie Rose N. Famoso">
+  <option value="Debbie H. Felomira">
+  <option value="Philjoe M. Maghanoy">
+  <option value="Paul Ryan B. Pacardo">
+  <option value="Shaira June Rubia">
+  <option value="Paul D. Sartorio">
+  <option value="Christalyn Tan">
+  <option value="Helen Mae B. Tandog">
+  <option value="Leo Ambid">
+  <option value="Earl Gallego">
+</datalist>
+
+<script>
+var ORDERS_KEY   = "dhsud_travel_orders";
+var COUNTER_KEY  = "dhsud_travel_counter";
+var DEFAULT_RECOMMENDED_NAME  = "ELENITA PAULINA R. CAÑETE";
+var DEFAULT_RECOMMENDED_TITLE = "OIC-Regional Director";
+var DEFAULT_APPROVED_NAME     = "EDUARDO P. ROBLES, Jr.";
+var DEFAULT_APPROVED_TITLE    = "Senior Undersecretary";
+
+var toPersonnel = [];   // [{name, designation}]
+
+/* ── Storage ─────────────────────────────────────────── */
+function getOrders() {
+  try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]"); }
+  catch(e) { return []; }
+}
+function saveOrders(arr) {
+  try { localStorage.setItem(ORDERS_KEY, JSON.stringify(arr)); return true; }
+  catch(e) { return false; }
+}
+function getCounters() {
+  try { return JSON.parse(localStorage.getItem(COUNTER_KEY) || "{}"); }
+  catch(e) { return {}; }
+}
+function saveCounters(obj) {
+  try { localStorage.setItem(COUNTER_KEY, JSON.stringify(obj)); return true; }
+  catch(e) { return false; }
+}
+
+/* ── Helpers ─────────────────────────────────────────── */
+function showToast(msg, type) {
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + (type || "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 2600);
+}
+function pad2(n) { return String(n).padStart(2, '0'); }
+function pad3(n) { return String(n).padStart(3, '0'); }
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+function monthKeyFromDate(dateStr) {
+  if (!dateStr) return "";
+  var parts = dateStr.split("-");
+  return parts[0] + "-" + parts[1];
+}
+function formatLongDate(dateStr) {
+  if (!dateStr) return "";
+  var d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+function formatPeriod(startStr, endStr) {
+  if (!startStr && !endStr) return "";
+  if (!endStr || startStr === endStr) return formatLongDate(startStr);
+  var s = new Date(startStr + "T00:00:00");
+  var e = new Date(endStr   + "T00:00:00");
+  var sM = s.toLocaleDateString("en-US", { month: "long" });
+  var eM = e.toLocaleDateString("en-US", { month: "long" });
+  var sY = s.getFullYear();
+  var eY = e.getFullYear();
+
+  if (sY === eY && sM === eM) {
+    return sM + " " + s.getDate() + "-" + e.getDate() + ", " + sY;
+  }
+  if (sY === eY) {
+    return sM + " " + s.getDate() + " - " + eM + " " + e.getDate() + ", " + sY;
+  }
+  return formatLongDate(startStr) + " - " + formatLongDate(endStr);
+}
+
+/* ── Control number ──────────────────────────────────── */
+function previewNextControlNo() {
+  var dateVal = document.getElementById("toDate").value || todayStr();
+  var mk = monthKeyFromDate(dateVal);
+  var counters = getCounters();
+  var next = (counters[mk] || 0) + 1;
+  return mk + "-" + pad3(next);
+}
+
+function regenerateControlNo() {
+  document.getElementById("controlNo").value = previewNextControlNo();
+}
+
+function commitControlNo(usedNo) {
+  var m = usedNo.match(/^(\d{4})-(\d{2})-(\d{3})$/);
+  if (!m) return;
+  var mk = m[1] + "-" + m[2];
+  var num = parseInt(m[3], 10);
+  var counters = getCounters();
+  counters[mk] = Math.max(counters[mk] || 0, num);
+  saveCounters(counters);
+}
+
+/* ── Personnel UI ────────────────────────────────────── */
+function renderPersonnelList() {
+  var container = document.getElementById("personnelList");
+  container.innerHTML = "";
+
+  if (toPersonnel.length === 0) {
+    container.innerHTML = '<div style="padding:10px; color:var(--ink-500); font-size:13px; font-style:italic;">No personnel yet — click "Add Personnel" below.</div>';
+    return;
+  }
+
+  toPersonnel.forEach(function(p, i) {
+    var row = document.createElement("div");
+    row.className = "personnel-row";
+    row.innerHTML =
+      '<div class="field">' +
+        '<label>Name</label>' +
+        '<input type="text" list="employeeNames" data-idx="' + i + '" data-k="name" value="' + escapeAttr(p.name || '') + '" placeholder="Full name">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Designation</label>' +
+        '<input type="text" data-idx="' + i + '" data-k="designation" value="' + escapeAttr(p.designation || '') + '" placeholder="e.g. HHRO II">' +
+      '</div>' +
+      '<div style="display:flex; align-items:flex-end; padding-bottom:1px;">' +
+        '<button class="btn btn-danger btn-sm" type="button" data-remove="' + i + '">Remove</button>' +
+      '</div>';
+
+    row.querySelectorAll("input[data-k]").forEach(function(inp) {
+      inp.addEventListener("input", function(e) {
+        var idx = parseInt(e.target.dataset.idx, 10);
+        var key = e.target.dataset.k;
+        toPersonnel[idx][key] = e.target.value;
+      });
+    });
+    row.querySelector("button[data-remove]").addEventListener("click", function(e) {
+      var idx = parseInt(e.target.dataset.remove, 10);
+      toPersonnel.splice(idx, 1);
+      renderPersonnelList();
+    });
+
+    container.appendChild(row);
+  });
+}
+
+function escapeAttr(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ── Form data collection ────────────────────────────── */
+function collectForm() {
+  return {
+    controlNo: document.getElementById("controlNo").value.trim(),
+    date: document.getElementById("toDate").value,
+    destination: document.getElementById("destination").value.trim(),
+    purpose: document.getElementById("purpose").value.trim(),
+    periodStart: document.getElementById("periodStart").value,
+    periodEnd: document.getElementById("periodEnd").value,
+    travelType: document.getElementById("travelType").value,
+    personnel: toPersonnel.filter(function(p){ return (p.name || "").trim() !== ""; }).map(function(p){
+      return { name: (p.name || "").trim(), designation: (p.designation || "").trim() };
+    }),
+    recommendedName: document.getElementById("recommendedName").value.trim() || DEFAULT_RECOMMENDED_NAME,
+    recommendedTitle: document.getElementById("recommendedTitle").value.trim() || DEFAULT_RECOMMENDED_TITLE,
+    approvedName: document.getElementById("approvedName").value.trim() || DEFAULT_APPROVED_NAME,
+    approvedTitle: document.getElementById("approvedTitle").value.trim() || DEFAULT_APPROVED_TITLE
+  };
+}
+
+function validate(order) {
+  if (!order.controlNo) return "Control No. is required.";
+  if (!/^\d{4}-\d{2}-\d{3}$/.test(order.controlNo)) {
+    return "Control No. must be in the format YYYY-MM-NNN (e.g. 2026-10-001).";
+  }
+  if (!order.date) return "Travel Order Date is required.";
+  if (!order.destination) return "Destination is required.";
+  if (!order.purpose) return "Purpose is required.";
+  if (!order.periodStart || !order.periodEnd) return "Period Covered (start and end) is required.";
+  if (new Date(order.periodEnd) < new Date(order.periodStart)) return "Period End must be on or after Period Start.";
+  if (order.personnel.length === 0) return "At least one personnel is required.";
+  return "";
+}
+
+/* ── Save & reprint ──────────────────────────────────── */
+function saveOrder(order) {
+  var orders = getOrders();
+  var idx = orders.findIndex(function(o){ return o.controlNo === order.controlNo; });
+  if (idx >= 0) orders[idx] = order;
+  else orders.push(order);
+  orders.sort(function(a, b){ return (b.date || "").localeCompare(a.date || ""); });
+  saveOrders(orders);
+  commitControlNo(order.controlNo);
+  renderHistory();
+}
+
+function renderHistory() {
+  var orders = getOrders();
+  var tbody = document.querySelector("#historyTable tbody");
+  tbody.innerHTML = "";
+  document.getElementById("historyCount").textContent =
+    orders.length === 0 ? "" : "(" + orders.length + " saved)";
+
+  if (orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No travel orders saved yet.</td></tr>';
+    return;
+  }
+
+  orders.forEach(function(o) {
+    var names = o.personnel.map(function(p){ return p.name; }).join(", ");
+    if (names.length > 70) names = names.slice(0, 70) + "…";
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td><b>' + escapeHtml(o.controlNo) + '</b></td>' +
+      '<td>' + escapeHtml(formatLongDate(o.date)) + '</td>' +
+      '<td class="txt-left">' + escapeHtml(names) + '</td>' +
+      '<td class="txt-left">' + escapeHtml(o.destination) + '</td>' +
+      '<td>' + escapeHtml(formatPeriod(o.periodStart, o.periodEnd)) + '</td>' +
+      '<td>' +
+        '<button class="btn btn-ghost btn-sm" data-act="reprint" data-cn="' + escapeAttr(o.controlNo) + '">🖨️ Reprint</button> ' +
+        '<button class="btn btn-danger btn-sm" data-act="delete" data-cn="' + escapeAttr(o.controlNo) + '">Del</button>' +
+      '</td>';
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll("button[data-act]").forEach(function(b) {
+    b.addEventListener("click", function() {
+      var cn = b.dataset.cn;
+      var act = b.dataset.act;
+      if (act === "reprint") {
+        var order = getOrders().find(function(o){ return o.controlNo === cn; });
+        if (order) printOrder(order);
+      } else if (act === "delete") {
+        if (!confirm("Delete travel order " + cn + "?")) return;
+        var orders = getOrders().filter(function(o){ return o.controlNo !== cn; });
+        saveOrders(orders);
+        renderHistory();
+        showToast("Travel order deleted.", "success");
+      }
+    });
+  });
+}
+
+/* ── Print builder ───────────────────────────────────── */
+function buildHeaderHtml() {
+  return '' +
+    '<table class="to-header"><tbody><tr>' +
+      '<td class="to-title">TRAVEL ORDER</td>' +
+      '<td class="to-doc-info">' +
+        '<table>' +
+          '<tr><td><span class="label">Doc Control No.</span> : FORM-ASHRDD-009</td></tr>' +
+          '<tr><td><span class="label">Revision No</span>: 0</td></tr>' +
+          '<tr><td><span class="label">Effectivity Date</span> : 11 SEPTEMBER 2023</td></tr>' +
+        '</table>' +
+      '</td>' +
+    '</tr></tbody></table>';
+}
+
+function printOrder(order) {
+  var personnelRows = "";
+  order.personnel.forEach(function(p, i) {
+    personnelRows += '<tr>' +
+      '<td><span class="person-line">' + escapeHtml(p.name) + '</span>' +
+      (p.designation ? '<span class="person-designation">' + escapeHtml(p.designation) + '</span>' : '') +
+      '</td>';
+    if (i === 0) {
+      var rowspan = order.personnel.length;
+      personnelRows +=
+        '<td rowspan="' + rowspan + '">' + escapeHtml(order.destination) + '</td>' +
+        '<td rowspan="' + rowspan + '">' +
+          escapeHtml(order.purpose) +
+          '<div class="purpose-period">PERIOD COVERED:<br>' +
+          escapeHtml(formatPeriod(order.periodStart, order.periodEnd)) +
+          '</div>' +
+        '</td>';
+    }
+    personnelRows += '</tr>';
+  });
+
+  var page1 =
+    '<div class="to-page">' +
+      buildHeaderHtml() +
+      '<div class="to-date-control">' +
+        '<div>Date: ' + escapeHtml(formatLongDate(order.date)) + '</div>' +
+        '<div>Control No. ' + escapeHtml(order.controlNo) + '</div>' +
+      '</div>' +
+      '<div class="to-intro">The following personnel of this Department are hereby authorized and directed to travel subject to the details specified below.</div>' +
+      '<table class="to-table">' +
+        '<thead>' +
+          '<tr>' +
+            '<th style="width:35%">NAME(S)</th>' +
+            '<th style="width:28%">DESTINATION(S)</th>' +
+            '<th style="width:37%">PURPOSE(S)/PERIOD COVERED</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>' + personnelRows + '</tbody>' +
+      '</table>' +
+      '<div class="to-para"><b>' + escapeHtml(order.travelType) + ' travel authorized</b></div>' +
+      '<div class="to-para indent">Expenses to be incurred will be in accordance with EO 77 per approved itinerary is chargeable to the Department of Human Settlements and Urban Development subject to availability of fund and usual auditing regulations.</div>' +
+      '<div class="to-para indent">Upon completion of travel, they shall submit a Certificate of Appearance and a Certificate of Travel Completed.</div>' +
+    '</div>';
+
+  var page2 =
+    '<div class="to-page">' +
+      buildHeaderHtml() +
+      '<table class="to-signature-table"><tbody><tr>' +
+        '<td>' +
+          '<div class="to-signature-label">RECOMMENDED BY:</div>' +
+          '<div class="to-signature-name">' + escapeHtml(order.recommendedName) + '</div>' +
+          '<div class="to-signature-title">' + escapeHtml(order.recommendedTitle) + '</div>' +
+        '</td>' +
+        '<td>' +
+          '<div class="to-signature-label">APPROVED BY:</div>' +
+          '<div class="to-signature-name">' + escapeHtml(order.approvedName) + '</div>' +
+          '<div class="to-signature-title">' + escapeHtml(order.approvedTitle) + '</div>' +
+        '</td>' +
+      '</tr></tbody></table>' +
+    '</div>';
+
+  document.getElementById("print-area").innerHTML = page1 + page2;
+  setTimeout(function() { window.print(); }, 200);
+}
+
+/* ── Actions ─────────────────────────────────────────── */
+document.getElementById("btnAddPersonnel").addEventListener("click", function() {
+  toPersonnel.push({ name: "", designation: "" });
+  renderPersonnelList();
+});
+
+document.getElementById("btnPrint").addEventListener("click", function() {
+  var order = collectForm();
+  var err = validate(order);
+  if (err) return showToast("⚠ " + err, "error");
+
+  saveOrder(order);
+  showToast("✅ Travel order saved. Opening print preview…", "success");
+  printOrder(order);
+});
+
+document.getElementById("btnSave").addEventListener("click", function() {
+  var order = collectForm();
+  var err = validate(order);
+  if (err) return showToast("⚠ " + err, "error");
+
+  saveOrder(order);
+  showToast("✅ Travel order saved (" + order.controlNo + ").", "success");
+  regenerateControlNo();
+});
+
+document.getElementById("btnClear").addEventListener("click", function() {
+  if (!confirm("Clear the form? Unsaved changes will be lost.")) return;
+  resetForm();
+  showToast("Form cleared.", "success");
+});
+
+document.getElementById("toDate").addEventListener("change", function() {
+  /* Regenerate control number when date changes (user can still override) */
+  regenerateControlNo();
+});
+
+function resetForm() {
+  document.getElementById("toDate").value = todayStr();
+  document.getElementById("destination").value = "";
+  document.getElementById("purpose").value = "";
+  document.getElementById("periodStart").value = "";
+  document.getElementById("periodEnd").value = "";
+  document.getElementById("travelType").value = "Air / land";
+  document.getElementById("recommendedName").value = DEFAULT_RECOMMENDED_NAME;
+  document.getElementById("recommendedTitle").value = DEFAULT_RECOMMENDED_TITLE;
+  document.getElementById("approvedName").value = DEFAULT_APPROVED_NAME;
+  document.getElementById("approvedTitle").value = DEFAULT_APPROVED_TITLE;
+  toPersonnel = [{ name: "", designation: "" }];
+  renderPersonnelList();
+  regenerateControlNo();
+}
+
+/* ── Boot ────────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", function() {
+  /* Add toast element to body if not present */
+  if (!document.getElementById("toast")) {
+    var t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+  resetForm();
+  renderHistory();
+});
+</script>
+</body>
+</html>
