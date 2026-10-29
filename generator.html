@@ -1,200 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f4e79">
-<title>DHSUD NIR — DTR Print Generator</title>
-<style>
-  :root {
-    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
-    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
-    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
-    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
-    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
-    --radius:16px; --radius-sm:12px;
-  }
-  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
-  body {
-    margin:0; color:var(--ink-900); min-height:100vh;
-    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
-  }
-  header {
-    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
-    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
-    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
-  }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .brand-mark {
-    width:40px; height:40px; border-radius:11px;
-    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
-    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
-  }
-  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
-  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
-  .nav-links { display:flex; gap:8px; }
-  .nav-links a {
-    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
-    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-    padding:8px 14px; border-radius:999px;
-  }
-  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
-
-  .wrap { max-width:760px; margin:26px auto 40px; padding:0 18px; }
-  .card {
-    background:var(--white); border-radius:var(--radius); padding:26px;
-    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
-    margin-bottom:22px;
-  }
-  h2 { margin:0 0 20px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
-
-  label { display:block; font-size:12px; font-weight:800; margin:0 0 6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
-  select, input[type="text"], input[type="date"] {
-    width:100%; padding:12px 14px; border:1.5px solid #ccd9e8; border-radius:var(--radius-sm);
-    font-size:15px; font-weight:600; color:var(--ink-900); background:#fff;
-    transition:border-color .15s ease, box-shadow .15s ease;
-  }
-  select {
-    appearance:none; padding-right:44px; cursor:pointer;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231f4e79' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-    background-repeat:no-repeat; background-position:right 16px center; background-size:18px;
-  }
-  select:hover, input:hover { border-color:#b8cbe3; }
-  select:focus, input:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
-
-  .field { margin-bottom:16px; }
-  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
-
-  .primary {
-    background:linear-gradient(135deg,var(--blue-600) 0%,var(--blue-500) 100%);
-    color:#fff; width:100%; margin-top:8px; border:0; padding:16px;
-    font-size:16px; font-weight:800; border-radius:var(--radius-sm); cursor:pointer;
-    box-shadow:0 6px 16px rgba(42,98,153,.30);
-    transition:filter .15s ease, transform .08s ease, box-shadow .15s ease;
-  }
-  .primary:hover { filter:brightness(1.06); box-shadow:0 8px 20px rgba(42,98,153,.36); }
-  .primary:active { transform:translateY(1px); }
-
-  #dtrStatus {
-    margin-top:16px; font-size:13px; font-weight:600; text-align:center;
-    padding:12px 16px; border-radius:var(--radius-sm);
-    background:var(--blue-50); color:var(--ink-500);
-    border:1px solid #dbe8f5; line-height:1.5;
-  }
-
-  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; }
-
-  #print-area { display: none; }
-
-  @media (max-width:560px) {
-    .row { grid-template-columns:1fr; }
-    .brand-sub { display:none; }
-    .card { padding:18px; }
-    header { padding:12px 16px; }
-    .nav-links a { padding:7px 12px; font-size:12px; }
-  }
-
-  @media print {
-    @page { size: 13in 8.5in landscape; margin: 0.3in; }
-    body { background: #fff; margin: 0; padding: 0; }
-    header, .wrap, #fatal { display: none !important; }
-
-    #print-area {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: stretch;
-      width: 100%;
-      gap: 10px;
-      font-family: Arial, sans-serif;
-      color: #000;
-    }
-
-    .dtr-copy {
-      flex: 1;
-      font-size: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .dtr-header { text-align: center; margin-bottom: 5px; line-height: 1.1; }
-    .dtr-header h3 { margin: 0; font-size: 9px; font-weight: normal; }
-    .dtr-header h2 { margin: 0; font-size: 10px; font-weight: bold; }
-    .dtr-header h4 { margin: 0; font-size: 9px; font-weight: normal; }
-
-    .form-title { font-size: 9px; margin-bottom: 2px; }
-    .info-row { display: flex; margin-bottom: 2px; font-size: 8px; }
-    .info-col { flex: 1; }
-
-    .dtr-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-    .dtr-table th, .dtr-table td { border: 1px solid #000; text-align: center; padding: 1px 2px; font-size: 8px; }
-    .dtr-table th { font-weight: bold; }
-    .dtr-table .day-col { width: 5%; }
-    .dtr-table .time-col { width: 14%; }
-    .dtr-table .ut-col { width: 9%; }
-
-    .dtr-footer { margin-top: 10px; font-size: 8px; }
-    .certify-text { margin-bottom: 15px; text-align: justify; line-height: 1.2; }
-    .signature-block { text-align: center; width: 45%; }
-    .signature-name { font-weight: bold; text-decoration: underline; margin-bottom: 2px; font-size: 8px; }
-    .signature-title { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; }
-  }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="brand">
-    <div class="brand-mark">DH</div>
-    <div class="brand-text">
-      <span class="brand-title">DHSUD NIR</span>
-      <span class="brand-sub">Print DTR</span>
-    </div>
-  </div>
-  <nav class="nav-links">
-    <a href="kiosk.html">🏠 Kiosk</a>
-    <a href="skeletal.html">👥 Skeletal</a>
-    <a href="index.html">⚙️ Admin</a>
-  </nav>
-</header>
-
-<div class="wrap">
-  <div id="fatal"></div>
-  <div class="card">
-    <h2>Generate & Print DTR (CSC Form No. 48)</h2>
-
-    <div class="field">
-      <label for="dtrEmp">Employee</label>
-      <select id="dtrEmp"><option value="">— Select Employee —</option></select>
-    </div>
-
-    <div class="field">
-      <label for="period">Period Text (appears on form)</label>
-      <input type="text" id="period" value="August 16-31, 2026">
-    </div>
-
-    <div class="row">
-      <div><label for="startDate">Start date</label><input type="date" id="startDate" value="2026-08-16"></div>
-      <div><label for="endDate">End date</label><input type="date" id="endDate" value="2026-08-31"></div>
-    </div>
-
-    <button type="button" class="primary" id="btn-print">🖨️ Generate & Print DTR</button>
-
-    <div id="dtrStatus">
-      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
-      Friday rows use the <b>skeletal list from that Friday's week</b> (configured in the Skeletal page). Days outside the chosen period are left blank.
-    </div>
-  </div>
-</div>
-
-<div id="print-area"></div>
-
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbyyaX_v0Nbvxm-QUyRSDEtY3d6CNRHu63fPqTSoz5ly0ixwZR5IX4hWbTD3hb3iHsSR/exec";
+var LEGACY_KEY = "dhsud_skeletal_workforce";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -209,10 +15,7 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
-/* ─── Per-week skeletal storage ─────────────────────────── */
-var SKELETAL_BY_WEEK_KEY = "dhsud_skeletal_by_week";
-var SKELETAL_LEGACY_KEY  = "dhsud_skeletal_workforce";
-
+/* ── ISO week helpers ──────────────────────────────────── */
 function getIsoWeekKey(date) {
   var d = new Date(date.getTime());
   d.setHours(0,0,0,0);
@@ -223,36 +26,43 @@ function getIsoWeekKey(date) {
   return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
 }
 
-function loadSkeletalByWeek() {
-  try { return JSON.parse(localStorage.getItem(SKELETAL_BY_WEEK_KEY) || "{}"); }
-  catch(e) { return {}; }
+/* ── Fetch skeletal data from backend ──────────────────── */
+function fetchSkeletal() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_skelgen_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r || {});
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && data.data) finish(data.data);
+      else finish({});
+    };
+    script.onerror = function() { finish({}); };
+    var timer = setTimeout(function() { finish({}); }, 12000);
+    script.src = API_URL + "?action=getSkeletal&callback=" + cbName;
+    document.body.appendChild(script);
+  });
 }
 
+/* ── Local legacy fallback (only used if backend is completely empty) ── */
 function loadSkeletalLegacy() {
   try {
-    var arr = JSON.parse(localStorage.getItem(SKELETAL_LEGACY_KEY) || "[]");
+    var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
     var set = {};
     if (Array.isArray(arr)) arr.forEach(function(c){ set[c] = true; });
     return set;
   } catch(e) { return {}; }
 }
 
-/* Is this employee skeletal on this specific date?
-   Uses per-week list if that week is configured; otherwise falls back to legacy. */
-function isSkeletalOn(code, date) {
-  var byWeek = loadSkeletalByWeek();
-  var wk = getIsoWeekKey(date);
-  if (Object.prototype.hasOwnProperty.call(byWeek, wk)) {
-    var arr = byWeek[wk];
-    return Array.isArray(arr) && arr.indexOf(code) !== -1;
-  }
-  return !!loadSkeletalLegacy()[code];
-}
-
-/* ─── Time helpers ──────────────────────────────────────── */
-function isFriday(y, m, d) {
-  return new Date(y, m, d).getDay() === 5;
-}
+/* ── Time helpers ──────────────────────────────────────── */
+function isFriday(y, m, d) { return new Date(y, m, d).getDay() === 5; }
 
 function parseMins(t) {
   if (!t) return null;
@@ -268,33 +78,22 @@ function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
   var inM = parseMins(amIn), outM = parseMins(amOut);
   var pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
   var total = 0;
-
-  /* PM-only (half-day) */
-  if (inM === null && pmInM !== null && pmOutM !== null) {
-    return Math.max(0, pmOutM - pmInM);
-  }
+  if (inM === null && pmInM !== null && pmOutM !== null) return Math.max(0, pmOutM - pmInM);
   if (inM === null) return 0;
-
-  /* Early clock-out before lunch AND no PM data — just return AM span */
   if (outM !== null && outM <= 749 && (pmInM === null || pmOutM === null)) {
     return Math.max(0, outM - inM);
   }
-
-  /* Clock-out between 12:30 and 12:59 — could be a full noon out */
   if (outM !== null && outM >= 750 && outM <= 779) {
     total += Math.max(0, 720 - inM);
     if (pmOutM !== null) total += Math.max(0, pmOutM - outM);
     return total;
   }
-
   if (outM !== null) total += Math.max(0, Math.min(720, outM) - inM);
-  if (pmInM !== null && pmOutM !== null) {
-    total += Math.max(0, pmOutM - Math.max(780, pmInM));
-  }
+  if (pmInM !== null && pmOutM !== null) total += Math.max(0, pmOutM - Math.max(780, pmInM));
   return total;
 }
 
-/* ─── Main ──────────────────────────────────────────────── */
+/* ── Main ──────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function () {
   var sel = document.getElementById("dtrEmp");
   EMPLOYEES.forEach(function(e){
@@ -323,14 +122,13 @@ document.addEventListener("DOMContentLoaded", function () {
     var start = new Date(startV + "T00:00:00");
     var end   = new Date(endV   + "T00:00:00");
 
-    if (start.getFullYear() !== end.getFullYear() ||
-        start.getMonth() !== end.getMonth()) {
+    if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) {
       msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per‑month form — print one DTR per month.";
       msg.style.color = "#9b1c1c";
       return;
     }
 
-    msg.textContent = "⏳ Downloading data... Please wait.";
+    msg.textContent = "⏳ Fetching skeletal data from Google Sheets…";
     msg.style.color = "#1f4e79";
 
     buildDTR(code, start, end);
@@ -338,30 +136,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function fetchDateDataJSONP(dateStr) {
     return new Promise(function(resolve) {
-      var callbackName = "jsonp_dtr_" + Math.round(1000000 * Math.random());
+      var cbName = "jsonp_dtr_" + Math.round(1000000 * Math.random());
       var script = document.createElement("script");
       var done = false;
-
-      function finish(result) {
+      function finish(r) {
         if (done) return;
         done = true;
         clearTimeout(timer);
         if (script.parentNode) script.parentNode.removeChild(script);
-        delete window[callbackName];
-        resolve(result);
+        delete window[cbName];
+        resolve(r);
       }
-
-      window[callbackName] = function(data) {
-        finish(data || { success: false, error: "Empty response for " + dateStr });
-      };
-      script.onerror = function() {
-        finish({ success: false, error: "Network error loading " + dateStr });
-      };
-      var timer = setTimeout(function() {
-        finish({ success: false, error: "Timeout loading " + dateStr });
-      }, 12000);
-
-      script.src = API_URL + "?action=getLogs&date=" + encodeURIComponent(dateStr) + "&callback=" + callbackName;
+      window[cbName] = function(data) { finish(data || { success: false, data: {} }); };
+      script.onerror = function() { finish({ success: false, error: "Network error" }); };
+      var timer = setTimeout(function() { finish({ success: false, error: "Timeout" }); }, 12000);
+      script.src = API_URL + "?action=getLogs&date=" + encodeURIComponent(dateStr) + "&callback=" + cbName;
       document.body.appendChild(script);
     });
   }
@@ -369,24 +158,41 @@ document.addEventListener("DOMContentLoaded", function () {
   async function buildDTR(code, start, end) {
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
 
+    /* Fetch skeletal data from backend — this is the source of truth */
+    var skeletalByWeek = await fetchSkeletal();
+    var legacySet      = loadSkeletalLegacy();
+
+    /* Backend is considered "migrated" if ANY week is configured.
+       Only when it's completely empty do we fall back to legacy localStorage. */
+    var backendHasData = Object.keys(skeletalByWeek).length > 0;
+
+    function isSkeletalOn(empCode, date) {
+      if (backendHasData) {
+        var wk = getIsoWeekKey(date);
+        if (Object.prototype.hasOwnProperty.call(skeletalByWeek, wk)) {
+          return (skeletalByWeek[wk] || []).indexOf(empCode) !== -1;
+        }
+        return false;   // week not configured in backend → treat as not skeletal
+      }
+      /* Backend empty → use local legacy as one-time fallback */
+      return !!legacySet[empCode];
+    }
+
     var totalUT = 0;
     var rowsHTML = "";
-    var byDay = {};               // keyed by DAY-OF-MONTH (1..31)
+    var byDay = {};
     var failedDates = [];
-
-    var year     = start.getFullYear();
-    var month    = start.getMonth();
+    var year = start.getFullYear();
+    var month = start.getMonth();
     var startDay = start.getDate();
-    var endDay   = end.getDate();
+    var endDay = end.getDate();
 
-    /* Fetch every day in the period, keyed by day-of-month */
+    document.getElementById("dtrStatus").textContent = "⏳ Downloading time logs…";
+
     for (var d = startDay; d <= endDay; d++) {
       var cellDate = new Date(year, month, d);
-      var dStr = year + "-" +
-                 String(month + 1).padStart(2, '0') + "-" +
-                 String(d).padStart(2, '0');
+      var dStr = year + "-" + String(month + 1).padStart(2, '0') + "-" + String(d).padStart(2, '0');
 
-      /* Friday + non-skeletal (per-week) → blank row, skip fetch */
       if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
         byDay[d] = { success: true, data: {} };
         continue;
@@ -404,14 +210,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (failedDates.length) {
       var m = document.getElementById("dtrStatus");
       m.style.color = "#9b1c1c";
-      m.textContent = "⚠ " + failedDates.length + " date(s) failed to load (" +
-                      failedDates.join(", ") + "). Generating with partial data.";
+      m.textContent = "⚠ " + failedDates.length + " date(s) failed to load. Generating with partial data.";
     }
 
-    /* Render Day 1..31. Only days inside the chosen period will have data. */
     for (var j = 1; j <= 31; j++) {
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
-
       var rec = byDay[j];
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
@@ -419,33 +222,44 @@ document.addEventListener("DOMContentLoaded", function () {
         amOut = dd.am_out || "";
         pmIn  = dd.pm_in  || "";
         pmOut = dd.pm_out || "";
-
         var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
         var ut = Math.max(0, 480 - worked);
         totalUT += ut;
         utH = Math.floor(ut / 60);
         utM = ut % 60;
       }
-
       rowsHTML += `<tr><td>${j}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
     }
 
-    /* Employee is "skeletal" for the purposes of the printed schedule if they
-       are skeletal on ANY Friday within this period (falls back to legacy). */
-    var anyFridaySkeletal = false;
+    /* Determine final employee type — skeletal if ANY Friday in the
+       period is on a skeletal list (backend or, if empty, legacy). */
+    var empIsSkeletal = false;
     for (var fd = startDay; fd <= endDay; fd++) {
       if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
-        anyFridaySkeletal = true;
+        empIsSkeletal = true;
         break;
       }
     }
-    var empIsSkeletal = anyFridaySkeletal || !!loadSkeletalLegacy()[code];
 
-    console.log("DTR build — employee:", code,
-                "| month:", (month + 1) + "/" + year,
-                "| skeletal (any Friday in period):", empIsSkeletal,
-                "| period:", startDay + "-" + endDay,
-                "| byDay:", byDay);
+    /* Diagnostic — always visible in DevTools Console */
+    var fridaysInPeriod = [];
+    for (var q = startDay; q <= endDay; q++) {
+      if (isFriday(year, month, q)) {
+        var ddObj = new Date(year, month, q);
+        fridaysInPeriod.push({
+          date: (q) + "/" + (month + 1),
+          week: getIsoWeekKey(ddObj),
+          configured: backendHasData ? Object.prototype.hasOwnProperty.call(skeletalByWeek, getIsoWeekKey(ddObj)) : "(backend empty)",
+          skeletalHere: isSkeletalOn(code, ddObj)
+        });
+      }
+    }
+    console.log("═══ DTR BUILD ═══");
+    console.log("Employee:", code, emp.name);
+    console.log("Period:", startDay + "–" + endDay + " of " + (month + 1) + "/" + year);
+    console.log("backendHasData:", backendHasData, "| legacyKeys:", Object.keys(legacySet).length);
+    console.log("Fridays in period:", fridaysInPeriod);
+    console.log("Classification:", empIsSkeletal ? "SKELETAL (no DO No.)" : "REGULAR (DO No. 2026-015)");
 
     generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
   }
@@ -455,17 +269,28 @@ document.addEventListener("DOMContentLoaded", function () {
     var totalUTH = Math.floor(totalUT / 60);
     var totalUTM = totalUT % 60;
 
-    var officialHours = empIsSkeletal
+    /* Type label — printed on the DTR for clarity */
+    var typeLabel = empIsSkeletal ? "Skeletal Workforce" : "Regular (Non-Skeletal)";
+
+    var officialHoursTxt = empIsSkeletal
       ? "Mon–Thu 7:00 A.M. – 4:00 P.M. · Fri 8:00 A.M. – 5:00 P.M."
-      : "Mon–Thu 7:00 A.M. – 6:00 P.M. (Compressed, no work Fridays) / DO No. 2026-015";
+      : "Mon–Thu 7:00 A.M. – 6:00 P.M. (Compressed, no work Fridays)";
 
     var arrivalTxt = empIsSkeletal
       ? "Arrival: 7 A.M. (Mon–Thu) / 8 A.M. (Fri)"
       : "Arrival: 7 A.M. (Mon–Thu only)";
-
     var departureTxt = empIsSkeletal
       ? "Departure: 4 P.M. (Mon–Thu) / 5 P.M. (Fri)"
       : "Departure: 6 P.M. (Mon–Thu only)";
+
+    /* DO No. 2026-015 gets its OWN visible line for non-skeletal employees */
+    var doRefLine = empIsSkeletal
+      ? ""
+      : `<div class="info-row" style="margin-top:1px;">
+           <div class="info-col" style="text-align:left;">
+             <b>Reference:</b> <span style="text-decoration:underline; font-weight:bold;">DO No. 2026-015</span>
+           </div>
+         </div>`;
 
     var singleCopyHTML = `
       <div class="dtr-copy">
@@ -486,8 +311,12 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="info-col" style="text-align:left;"><b>For the period:</b> <span style="text-decoration:underline;">${period}</span></div>
           </div>
           <div class="info-row">
-            <div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">${officialHours}</span></div>
+            <div class="info-col" style="text-align:left;"><b>Employee Type:</b> <span style="text-decoration:underline;">${typeLabel}</span></div>
           </div>
+          <div class="info-row">
+            <div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">${officialHoursTxt}</span></div>
+          </div>
+          ${doRefLine}
           <div class="info-row" style="margin-bottom: 5px;">
             <div class="info-col" style="text-align:left;"><b>${arrivalTxt}</b></div>
             <div class="info-col" style="text-align:right;"><b>${departureTxt}</b></div>
@@ -522,5 +351,3 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
-</body>
-</html>
