@@ -97,7 +97,6 @@
 
   .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
 
-  /* Personnel list */
   .personnel-row {
     display:grid; grid-template-columns:1fr 1fr auto; gap:10px;
     padding:12px; margin-bottom:10px;
@@ -106,7 +105,6 @@
   }
   .personnel-row .field { margin-bottom:0; }
 
-  /* History table */
   .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--line); }
   table.history { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; min-width:800px; }
   table.history thead th {
@@ -144,29 +142,32 @@
     header { padding:12px 16px; }
   }
 
-  /* ═════════ PRINT LAYOUT ═════════ */
+  /* ═══════════════════════════════════════════════════════
+     PRINT LAYOUT — FORM-ASHRDD-009 on a SINGLE A4 page
+     ═══════════════════════════════════════════════════════ */
   @media print {
-    @page { size: A4 portrait; margin: 0.55in 0.6in; }
+    @page { size: A4 portrait; margin: 0.35in 0.5in; }
 
-    html, body { background:#fff !important; margin:0; padding:0; }
-    header, .wrap, #fatal, .toast { display:none !important; }
-    #print-area { display:block !important; }
+    html, body {
+      background: #fff !important;
+      margin: 0;
+      padding: 0;
+    }
+    header, .wrap, #fatal, .toast { display: none !important; }
+    #print-area { display: block !important; }
 
     #print-area {
       font-family: Calibri, "Segoe UI", Arial, sans-serif;
-      font-size: 10.5pt;
-      line-height: 1.35;
+      font-size: 10pt;
+      line-height: 1.3;
       color: #000;
     }
 
-    .to-page { page-break-after: always; }
-    .to-page:last-child { page-break-after: auto; }
-
-    /* HEADER */
+    /* Header row */
     .to-header {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
     }
     .to-header > tbody > tr > td {
       vertical-align: middle;
@@ -175,49 +176,59 @@
     .to-header .to-title {
       font-size: 20pt;
       font-weight: bold;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.2px;
+      vertical-align: middle;
+      line-height: 1.15;
     }
     .to-header .to-doc-info { text-align: right; }
     .to-header .to-doc-info table {
       display: inline-table;
       border-collapse: collapse;
-      font-size: 8pt;
+      font-size: 7.5pt;
+      font-family: Calibri, Arial, sans-serif;
     }
     .to-header .to-doc-info table td {
       border: 1px solid #000;
       padding: 2px 6px;
       text-align: left;
-      font-size: 8pt;
+      vertical-align: middle;
+      line-height: 1.2;
     }
     .to-header .to-doc-info .label { font-weight: bold; }
 
-    /* DATE + CONTROL */
+    /* Ruled line under header */
+    .to-header-rule {
+      border-top: 1.5px solid #000;
+      margin-bottom: 8px;
+    }
+
+    /* Date + Control number */
     .to-date-control {
       display: flex;
       justify-content: space-between;
-      margin: 12px 0 6px;
-      font-size: 10.5pt;
+      align-items: baseline;
+      margin: 8px 0 4px;
+      font-size: 10pt;
     }
 
-    /* INTRO */
+    /* Intro paragraph */
     .to-intro {
-      margin-top: 10px;
-      text-indent: 40px;
+      margin-top: 8px;
       text-align: justify;
-      line-height: 1.4;
+      line-height: 1.35;
     }
 
-    /* MAIN TABLE */
+    /* Main personnel table */
     .to-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 12px;
+      margin-top: 8px;
       font-size: 9.5pt;
     }
     .to-table th,
     .to-table td {
       border: 1px solid #000;
-      padding: 6px 8px;
+      padding: 5px 7px;
       vertical-align: top;
       line-height: 1.3;
     }
@@ -226,56 +237,53 @@
       text-align: center;
       font-weight: bold;
       font-size: 9.5pt;
-    }
-    .to-table .person-line {
-      display: block;
-    }
-    .to-table .person-designation {
-      display: block;
-      font-size: 9pt;
-      font-style: italic;
-      margin-top: 2px;
+      padding: 4px 6px;
     }
     .to-table .purpose-period {
-      margin-top: 10px;
+      margin-top: 8px;
       font-weight: bold;
     }
 
-    /* PARAGRAPHS */
+    /* Paragraphs after the table */
     .to-para {
-      margin-top: 12px;
+      margin-top: 8px;
       text-align: justify;
-      line-height: 1.4;
+      line-height: 1.35;
     }
-    .to-para.indent { text-indent: 40px; }
+    .to-para.authorized { font-weight: bold; margin-top: 10px; }
+    .to-para.indent { text-indent: 36px; }
 
-    /* SIGNATURE PAGE */
+    /* ─── Signature blocks — side by side, compact ────── */
     .to-signature-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 70px;
+      margin-top: 24px;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .to-signature-table td {
       width: 50%;
       text-align: center;
       vertical-align: top;
-      padding: 0 24px;
+      padding: 0 20px;
     }
     .to-signature-label {
       text-align: left;
       font-weight: bold;
-      margin-bottom: 60px;
-      font-size: 10.5pt;
+      margin-bottom: 34px;
+      font-size: 10pt;
     }
     .to-signature-name {
       font-weight: bold;
       border-bottom: 1px solid #000;
-      padding-bottom: 3px;
-      margin-bottom: 4px;
-      font-size: 10.5pt;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+      font-size: 10pt;
+      text-transform: uppercase;
     }
     .to-signature-title {
-      font-size: 10pt;
+      font-size: 9.5pt;
+      line-height: 1.25;
     }
   }
 </style>
@@ -303,7 +311,6 @@
 <div class="wrap">
   <div id="fatal"></div>
 
-  <!-- Create form -->
   <div class="card">
     <h2>Create Travel Order <span>(FORM-ASHRDD-009)</span></h2>
 
@@ -383,7 +390,6 @@
     </div>
   </div>
 
-  <!-- History -->
   <div class="card">
     <h2>Saved Travel Orders <span id="historyCount"></span></h2>
     <div class="table-wrap">
@@ -438,9 +444,8 @@ var DEFAULT_RECOMMENDED_TITLE = "OIC-Regional Director";
 var DEFAULT_APPROVED_NAME     = "EDUARDO P. ROBLES, Jr.";
 var DEFAULT_APPROVED_TITLE    = "Senior Undersecretary";
 
-var toPersonnel = [];   // [{name, designation}]
+var toPersonnel = [];
 
-/* ── Storage ─────────────────────────────────────────── */
 function getOrders() {
   try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]"); }
   catch(e) { return []; }
@@ -458,9 +463,9 @@ function saveCounters(obj) {
   catch(e) { return false; }
 }
 
-/* ── Helpers ─────────────────────────────────────────── */
 function showToast(msg, type) {
   var t = document.getElementById("toast");
+  if (!t) return;
   t.textContent = msg;
   t.className = "toast show " + (type || "");
   clearTimeout(t._timer);
@@ -491,7 +496,6 @@ function formatPeriod(startStr, endStr) {
   var eM = e.toLocaleDateString("en-US", { month: "long" });
   var sY = s.getFullYear();
   var eY = e.getFullYear();
-
   if (sY === eY && sM === eM) {
     return sM + " " + s.getDate() + "-" + e.getDate() + ", " + sY;
   }
@@ -501,7 +505,6 @@ function formatPeriod(startStr, endStr) {
   return formatLongDate(startStr) + " - " + formatLongDate(endStr);
 }
 
-/* ── Control number ──────────────────────────────────── */
 function previewNextControlNo() {
   var dateVal = document.getElementById("toDate").value || todayStr();
   var mk = monthKeyFromDate(dateVal);
@@ -509,11 +512,9 @@ function previewNextControlNo() {
   var next = (counters[mk] || 0) + 1;
   return mk + "-" + pad3(next);
 }
-
 function regenerateControlNo() {
   document.getElementById("controlNo").value = previewNextControlNo();
 }
-
 function commitControlNo(usedNo) {
   var m = usedNo.match(/^(\d{4})-(\d{2})-(\d{3})$/);
   if (!m) return;
@@ -524,7 +525,6 @@ function commitControlNo(usedNo) {
   saveCounters(counters);
 }
 
-/* ── Personnel UI ────────────────────────────────────── */
 function renderPersonnelList() {
   var container = document.getElementById("personnelList");
   container.innerHTML = "";
@@ -574,7 +574,6 @@ function escapeHtml(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/* ── Form data collection ────────────────────────────── */
 function collectForm() {
   return {
     controlNo: document.getElementById("controlNo").value.trim(),
@@ -608,7 +607,6 @@ function validate(order) {
   return "";
 }
 
-/* ── Save & reprint ──────────────────────────────────── */
 function saveOrder(order) {
   var orders = getOrders();
   var idx = orders.findIndex(function(o){ return o.controlNo === order.controlNo; });
@@ -667,7 +665,10 @@ function renderHistory() {
   });
 }
 
-/* ── Print builder ───────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   SINGLE-PAGE PRINT BUILDER
+   Header + content + signatures all on one A4 page
+   ═══════════════════════════════════════════════════════ */
 function buildHeaderHtml() {
   return '' +
     '<table class="to-header"><tbody><tr>' +
@@ -675,22 +676,27 @@ function buildHeaderHtml() {
       '<td class="to-doc-info">' +
         '<table>' +
           '<tr><td><span class="label">Doc Control No.</span> : FORM-ASHRDD-009</td></tr>' +
-          '<tr><td><span class="label">Revision No</span>: 0</td></tr>' +
+          '<tr><td><span class="label">Revision No</span> : 0</td></tr>' +
           '<tr><td><span class="label">Effectivity Date</span> : 11 SEPTEMBER 2023</td></tr>' +
         '</table>' +
       '</td>' +
-    '</tr></tbody></table>';
+    '</tr></tbody></table>' +
+    '<div class="to-header-rule"></div>';
 }
 
 function printOrder(order) {
+  /* Personnel rows — each person gets its own row in column 1.
+     DESTINATION and PURPOSE columns are merged with rowspan. */
   var personnelRows = "";
+  var rowspan = order.personnel.length;
+
   order.personnel.forEach(function(p, i) {
-    personnelRows += '<tr>' +
-      '<td><span class="person-line">' + escapeHtml(p.name) + '</span>' +
-      (p.designation ? '<span class="person-designation">' + escapeHtml(p.designation) + '</span>' : '') +
-      '</td>';
+    var combined = p.name;
+    if (p.designation) combined += ", " + p.designation;
+
+    personnelRows += '<tr>';
+    personnelRows += '<td>' + escapeHtml(combined) + '</td>';
     if (i === 0) {
-      var rowspan = order.personnel.length;
       personnelRows +=
         '<td rowspan="' + rowspan + '">' + escapeHtml(order.destination) + '</td>' +
         '<td rowspan="' + rowspan + '">' +
@@ -703,8 +709,24 @@ function printOrder(order) {
     personnelRows += '</tr>';
   });
 
-  var page1 =
-    '<div class="to-page">' +
+  /* Signatures table — Recommended By (left) / Approved By (right) */
+  var signatureTable =
+    '<table class="to-signature-table"><tbody><tr>' +
+      '<td>' +
+        '<div class="to-signature-label">RECOMMENDED BY:</div>' +
+        '<div class="to-signature-name">' + escapeHtml(order.recommendedName) + '</div>' +
+        '<div class="to-signature-title">' + escapeHtml(order.recommendedTitle) + '</div>' +
+      '</td>' +
+      '<td>' +
+        '<div class="to-signature-label">APPROVED BY:</div>' +
+        '<div class="to-signature-name">' + escapeHtml(order.approvedName) + '</div>' +
+        '<div class="to-signature-title">' + escapeHtml(order.approvedTitle) + '</div>' +
+      '</td>' +
+    '</tr></tbody></table>';
+
+  /* Everything on one page */
+  var html =
+    '<div class="to-single">' +
       buildHeaderHtml() +
       '<div class="to-date-control">' +
         '<div>Date: ' + escapeHtml(formatLongDate(order.date)) + '</div>' +
@@ -714,36 +736,20 @@ function printOrder(order) {
       '<table class="to-table">' +
         '<thead>' +
           '<tr>' +
-            '<th style="width:35%">NAME(S)</th>' +
-            '<th style="width:28%">DESTINATION(S)</th>' +
-            '<th style="width:37%">PURPOSE(S)/PERIOD COVERED</th>' +
+            '<th style="width:34%">NAME(S)</th>' +
+            '<th style="width:26%">DESTINATION(S)</th>' +
+            '<th style="width:40%">PURPOSE(S)/PERIOD COVERED</th>' +
           '</tr>' +
         '</thead>' +
         '<tbody>' + personnelRows + '</tbody>' +
       '</table>' +
-      '<div class="to-para"><b>' + escapeHtml(order.travelType) + ' travel authorized</b></div>' +
+      '<div class="to-para authorized">' + escapeHtml(order.travelType) + ' travel authorized</div>' +
       '<div class="to-para indent">Expenses to be incurred will be in accordance with EO 77 per approved itinerary is chargeable to the Department of Human Settlements and Urban Development subject to availability of fund and usual auditing regulations.</div>' +
       '<div class="to-para indent">Upon completion of travel, they shall submit a Certificate of Appearance and a Certificate of Travel Completed.</div>' +
+      signatureTable +
     '</div>';
 
-  var page2 =
-    '<div class="to-page">' +
-      buildHeaderHtml() +
-      '<table class="to-signature-table"><tbody><tr>' +
-        '<td>' +
-          '<div class="to-signature-label">RECOMMENDED BY:</div>' +
-          '<div class="to-signature-name">' + escapeHtml(order.recommendedName) + '</div>' +
-          '<div class="to-signature-title">' + escapeHtml(order.recommendedTitle) + '</div>' +
-        '</td>' +
-        '<td>' +
-          '<div class="to-signature-label">APPROVED BY:</div>' +
-          '<div class="to-signature-name">' + escapeHtml(order.approvedName) + '</div>' +
-          '<div class="to-signature-title">' + escapeHtml(order.approvedTitle) + '</div>' +
-        '</td>' +
-      '</tr></tbody></table>' +
-    '</div>';
-
-  document.getElementById("print-area").innerHTML = page1 + page2;
+  document.getElementById("print-area").innerHTML = html;
   setTimeout(function() { window.print(); }, 200);
 }
 
@@ -780,7 +786,6 @@ document.getElementById("btnClear").addEventListener("click", function() {
 });
 
 document.getElementById("toDate").addEventListener("change", function() {
-  /* Regenerate control number when date changes (user can still override) */
   regenerateControlNo();
 });
 
@@ -800,9 +805,7 @@ function resetForm() {
   regenerateControlNo();
 }
 
-/* ── Boot ────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function() {
-  /* Add toast element to body if not present */
   if (!document.getElementById("toast")) {
     var t = document.createElement("div");
     t.id = "toast";
