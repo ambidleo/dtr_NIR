@@ -84,15 +84,16 @@
     transition:filter .15s ease, transform .08s ease;
   }
   .btn:active { transform:translateY(1px); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; filter:none; }
   .btn-primary {
     background:linear-gradient(135deg,var(--blue-600),var(--blue-500)); color:#fff;
     box-shadow:0 4px 12px rgba(42,98,153,.28);
   }
-  .btn-primary:hover { filter:brightness(1.06); }
+  .btn-primary:hover:not(:disabled) { filter:brightness(1.06); }
   .btn-ghost { background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700); }
-  .btn-ghost:hover { background:#f7fafd; border-color:#b8cbe3; }
+  .btn-ghost:hover:not(:disabled) { background:#f7fafd; border-color:#b8cbe3; }
   .btn-danger { background:linear-gradient(180deg,#e05e5e,var(--red-600)); color:#fff; }
-  .btn-danger:hover { filter:brightness(1.07); }
+  .btn-danger:hover:not(:disabled) { filter:brightness(1.07); }
   .btn-sm { padding:6px 12px; font-size:12px; }
 
   .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
@@ -130,9 +131,30 @@
   .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
   .toast.error { background:linear-gradient(135deg,#b02a2a,#d9534f); }
 
+  .loading-overlay {
+    position:fixed; inset:0; background:rgba(15,42,71,.5);
+    display:none; align-items:center; justify-content:center; z-index:200;
+    backdrop-filter:blur(4px);
+  }
+  .loading-overlay.show { display:flex; }
+  .loading-card {
+    background:#fff; padding:24px 32px; border-radius:14px;
+    display:flex; align-items:center; gap:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .loading-spinner {
+    width:32px; height:32px; border:3px solid #dbe3ee;
+    border-top-color:var(--blue-600); border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin { 100% { transform:rotate(360deg); } }
+  .loading-text { font-size:14px; font-weight:700; color:var(--ink-700); }
+
   #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; font-size:13px; }
 
   #print-area { display: none; }
+
+  .hidden-form { display: none; }
 
   @media (max-width:720px) {
     .row.cols-2, .row.cols-3 { grid-template-columns:1fr; }
@@ -142,153 +164,72 @@
     header { padding:12px 16px; }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     PRINT LAYOUT — FORM-ASHRDD-009 on a SINGLE A4 page
-     ═══════════════════════════════════════════════════════ */
+  /* ═════════ PRINT LAYOUT ═════════ */
   @media print {
     @page { size: A4 portrait; margin: 0.35in 0.5in; }
-
-    html, body {
-      background: #fff !important;
-      margin: 0;
-      padding: 0;
-    }
-    header, .wrap, #fatal, .toast { display: none !important; }
-    #print-area { display: block !important; }
-
+    html, body { background:#fff !important; margin:0; padding:0; }
+    header, .wrap, #fatal, .toast, .loading-overlay, .hidden-form { display:none !important; }
+    #print-area { display:block !important; }
     #print-area {
       font-family: Calibri, "Segoe UI", Arial, sans-serif;
-      font-size: 10pt;
-      line-height: 1.3;
-      color: #000;
+      font-size: 10pt; line-height: 1.3; color: #000;
     }
-
-    /* Header row */
-    .to-header {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 4px;
-    }
-    .to-header > tbody > tr > td {
-      vertical-align: middle;
-      padding: 0;
-    }
-    .to-header .to-title {
-      font-size: 20pt;
-      font-weight: bold;
-      letter-spacing: 1.2px;
-      vertical-align: middle;
-      line-height: 1.15;
-    }
-    .to-header .to-doc-info { text-align: right; }
-    .to-header .to-doc-info table {
-      display: inline-table;
-      border-collapse: collapse;
-      font-size: 7.5pt;
-      font-family: Calibri, Arial, sans-serif;
-    }
-    .to-header .to-doc-info table td {
-      border: 1px solid #000;
-      padding: 2px 6px;
-      text-align: left;
-      vertical-align: middle;
-      line-height: 1.2;
-    }
-    .to-header .to-doc-info .label { font-weight: bold; }
-
-    /* Ruled line under header */
-    .to-header-rule {
-      border-top: 1.5px solid #000;
-      margin-bottom: 8px;
-    }
-
-    /* Date + Control number */
-    .to-date-control {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin: 8px 0 4px;
-      font-size: 10pt;
-    }
-
-    /* Intro paragraph */
-    .to-intro {
-      margin-top: 8px;
-      text-align: justify;
-      line-height: 1.35;
-    }
-
-    /* Main personnel table */
-    .to-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      font-size: 9.5pt;
-    }
-    .to-table th,
-    .to-table td {
-      border: 1px solid #000;
-      padding: 5px 7px;
-      vertical-align: top;
-      line-height: 1.3;
-    }
-    .to-table th {
-      background: #e9e9e9;
-      text-align: center;
-      font-weight: bold;
-      font-size: 9.5pt;
-      padding: 4px 6px;
-    }
-    .to-table .purpose-period {
-      margin-top: 8px;
-      font-weight: bold;
-    }
-
-    /* Paragraphs after the table */
-    .to-para {
-      margin-top: 8px;
-      text-align: justify;
-      line-height: 1.35;
-    }
-    .to-para.authorized { font-weight: bold; margin-top: 10px; }
-    .to-para.indent { text-indent: 36px; }
-
-    /* ─── Signature blocks — side by side, compact ────── */
+    .to-header { width:100%; border-collapse:collapse; margin-bottom:4px; }
+    .to-header > tbody > tr > td { vertical-align:middle; padding:0; }
+    .to-header .to-title { font-size:20pt; font-weight:bold; letter-spacing:1.2px; line-height:1.15; }
+    .to-header .to-doc-info { text-align:right; }
+    .to-header .to-doc-info table { display:inline-table; border-collapse:collapse; font-size:7.5pt; font-family:Calibri,Arial,sans-serif; }
+    .to-header .to-doc-info table td { border:1px solid #000; padding:2px 6px; text-align:left; line-height:1.2; }
+    .to-header .to-doc-info .label { font-weight:bold; }
+    .to-header-rule { border-top:1.5px solid #000; margin-bottom:8px; }
+    .to-date-control { display:flex; justify-content:space-between; align-items:baseline; margin:8px 0 4px; font-size:10pt; }
+    .to-intro { margin-top:8px; text-align:justify; line-height:1.35; }
+    .to-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:9.5pt; }
+    .to-table th, .to-table td { border:1px solid #000; padding:5px 7px; vertical-align:top; line-height:1.3; }
+    .to-table th { background:#e9e9e9; text-align:center; font-weight:bold; font-size:9.5pt; padding:4px 6px; }
+    .to-table .purpose-period { margin-top:8px; font-weight:bold; }
+    .to-para { margin-top:8px; text-align:justify; line-height:1.35; }
+    .to-para.authorized { font-weight:bold; margin-top:10px; }
+    .to-para.indent { text-indent:36px; }
     .to-signature-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 24px;
-      page-break-inside: avoid;
-      break-inside: avoid;
+      width:100%; border-collapse:collapse; margin-top:24px;
+      page-break-inside:avoid; break-inside:avoid;
     }
-    .to-signature-table td {
-      width: 50%;
-      text-align: center;
-      vertical-align: top;
-      padding: 0 20px;
-    }
-    .to-signature-label {
-      text-align: left;
-      font-weight: bold;
-      margin-bottom: 34px;
-      font-size: 10pt;
-    }
-    .to-signature-name {
-      font-weight: bold;
-      border-bottom: 1px solid #000;
-      padding-bottom: 2px;
-      margin-bottom: 3px;
-      font-size: 10pt;
-      text-transform: uppercase;
-    }
-    .to-signature-title {
-      font-size: 9.5pt;
-      line-height: 1.25;
-    }
+    .to-signature-table td { width:50%; text-align:center; vertical-align:top; padding:0 20px; }
+    .to-signature-label { text-align:left; font-weight:bold; margin-bottom:34px; font-size:10pt; }
+    .to-signature-name { font-weight:bold; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:3px; font-size:10pt; text-transform:uppercase; }
+    .to-signature-title { font-size:9.5pt; line-height:1.25; }
   }
 </style>
 </head>
 <body>
+
+<!-- Hidden form for POSTs -->
+<form id="saveForm" method="POST" target="hidden_save" class="hidden-form">
+  <input type="hidden" name="action" id="sf_action" value="saveTravelOrder">
+  <input type="hidden" name="controlNo" id="sf_controlNo">
+  <input type="hidden" name="date" id="sf_date">
+  <input type="hidden" name="destination" id="sf_destination">
+  <input type="hidden" name="purpose" id="sf_purpose">
+  <input type="hidden" name="periodStart" id="sf_periodStart">
+  <input type="hidden" name="periodEnd" id="sf_periodEnd">
+  <input type="hidden" name="travelType" id="sf_travelType">
+  <input type="hidden" name="personnel" id="sf_personnel">
+  <input type="hidden" name="recommendedName" id="sf_recommendedName">
+  <input type="hidden" name="recommendedTitle" id="sf_recommendedTitle">
+  <input type="hidden" name="approvedName" id="sf_approvedName">
+  <input type="hidden" name="approvedTitle" id="sf_approvedTitle">
+</form>
+<iframe name="hidden_save" id="hidden_save" class="hidden-form"></iframe>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Loading…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <header>
   <div class="brand">
@@ -382,9 +323,9 @@
     </div>
 
     <div class="toolbar">
-      <button class="btn btn-primary" id="btnPrint">🖨️ Save &amp; Print Travel Order</button>
-      <button class="btn btn-ghost" id="btnSave">💾 Save Only</button>
-      <button class="btn btn-ghost" id="btnClear">Clear Form</button>
+      <button class="btn btn-primary" id="btnPrint" type="button" disabled>🖨️ Save &amp; Print Travel Order</button>
+      <button class="btn btn-ghost" id="btnSave" type="button" disabled>💾 Save Only</button>
+      <button class="btn btn-ghost" id="btnClear" type="button">Clear Form</button>
     </div>
   </div>
 
@@ -435,39 +376,35 @@
 </datalist>
 
 <script>
-var ORDERS_KEY   = "dhsud_travel_orders";
-var COUNTER_KEY  = "dhsud_travel_counter";
+var API_URL = "https://script.google.com/macros/s/AKfycbyPT5WoANMVWKq9jykNSq4SBkF44xVxAzM1jDYJiSMSQgrLTpiMVICtAkGTRQcdV5m2/exec";
+
 var DEFAULT_RECOMMENDED_NAME  = "ELENITA PAULINA R. CAÑETE";
 var DEFAULT_RECOMMENDED_TITLE = "OIC-Regional Director";
 var DEFAULT_APPROVED_NAME     = "EDUARDO P. ROBLES, Jr.";
 var DEFAULT_APPROVED_TITLE    = "Senior Undersecretary";
 
-var toPersonnel = [];
+/* ── State ───────────────────────────────────────────── */
+var allOrders         = [];
+var pendingAction     = null;   // { type, order, controlNo }
+var backendReady      = false;
+var toPersonnel       = [];
+var pendingTimer      = null;
 
-function getOrders() {
-  try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]"); }
-  catch(e) { return []; }
-}
-function saveOrders(arr) {
-  try { localStorage.setItem(ORDERS_KEY, JSON.stringify(arr)); return true; }
-  catch(e) { return false; }
-}
-function getCounters() {
-  try { return JSON.parse(localStorage.getItem(COUNTER_KEY) || "{}"); }
-  catch(e) { return {}; }
-}
-function saveCounters(obj) {
-  try { localStorage.setItem(COUNTER_KEY, JSON.stringify(obj)); return true; }
-  catch(e) { return false; }
-}
-
+/* ── Utilities ───────────────────────────────────────── */
 function showToast(msg, type) {
   var t = document.getElementById("toast");
   if (!t) return;
   t.textContent = msg;
   t.className = "toast show " + (type || "");
   clearTimeout(t._timer);
-  t._timer = setTimeout(function(){ t.className = "toast"; }, 2600);
+  t._timer = setTimeout(function(){ t.className = "toast"; }, 3200);
+}
+function showLoading(text) {
+  document.getElementById("loadingText").textContent = text || "Loading…";
+  document.getElementById("loadingOverlay").classList.add("show");
+}
+function hideLoading() {
+  document.getElementById("loadingOverlay").classList.remove("show");
 }
 function pad2(n) { return String(n).padStart(2, '0'); }
 function pad3(n) { return String(n).padStart(3, '0'); }
@@ -502,36 +439,77 @@ function formatPeriod(startStr, endStr) {
   }
   return formatLongDate(startStr) + " - " + formatLongDate(endStr);
 }
+function escapeAttr(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
+/* ── Backend fetch (JSONP) ───────────────────────────── */
+function fetchTravelOrders() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_travel_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r || []);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) finish(data.data);
+      else finish([]);
+    };
+    script.onerror = function() { finish([]); };
+    var timer = setTimeout(function() { finish([]); }, 12000);
+    script.src = API_URL + "?action=getTravelOrders&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+function loadAllOrders(silent) {
+  if (!silent) showLoading("Loading travel orders…");
+  return fetchTravelOrders().then(function(orders) {
+    allOrders = orders;
+    if (!silent) hideLoading();
+    renderHistory();
+    regenerateControlNo();
+    return orders;
+  });
+}
+
+/* ── Control number ──────────────────────────────────── */
 function previewNextControlNo() {
   var dateVal = document.getElementById("toDate").value || todayStr();
   var mk = monthKeyFromDate(dateVal);
-  var counters = getCounters();
-  var next = (counters[mk] || 0) + 1;
-  return mk + "-" + pad3(next);
+  var max = 0;
+  allOrders.forEach(function(o) {
+    if (o.controlNo && o.controlNo.indexOf(mk + "-") === 0) {
+      var parts = o.controlNo.split("-");
+      if (parts.length === 3) {
+        var n = parseInt(parts[2], 10);
+        if (!isNaN(n) && n > max) max = n;
+      }
+    }
+  });
+  return mk + "-" + pad3(max + 1);
 }
 function regenerateControlNo() {
   document.getElementById("controlNo").value = previewNextControlNo();
 }
-function commitControlNo(usedNo) {
-  var m = usedNo.match(/^(\d{4})-(\d{2})-(\d{3})$/);
-  if (!m) return;
-  var mk = m[1] + "-" + m[2];
-  var num = parseInt(m[3], 10);
-  var counters = getCounters();
-  counters[mk] = Math.max(counters[mk] || 0, num);
-  saveCounters(counters);
-}
 
+/* ── Personnel UI ────────────────────────────────────── */
 function renderPersonnelList() {
   var container = document.getElementById("personnelList");
   container.innerHTML = "";
-
   if (toPersonnel.length === 0) {
     container.innerHTML = '<div style="padding:10px; color:var(--ink-500); font-size:13px; font-style:italic;">No personnel yet — click "Add Personnel" below.</div>';
     return;
   }
-
   toPersonnel.forEach(function(p, i) {
     var row = document.createElement("div");
     row.className = "personnel-row";
@@ -547,7 +525,6 @@ function renderPersonnelList() {
       '<div style="display:flex; align-items:flex-end; padding-bottom:1px;">' +
         '<button class="btn btn-danger btn-sm" type="button" data-remove="' + i + '">Remove</button>' +
       '</div>';
-
     row.querySelectorAll("input[data-k]").forEach(function(inp) {
       inp.addEventListener("input", function(e) {
         var idx = parseInt(e.target.dataset.idx, 10);
@@ -560,18 +537,11 @@ function renderPersonnelList() {
       toPersonnel.splice(idx, 1);
       renderPersonnelList();
     });
-
     container.appendChild(row);
   });
 }
 
-function escapeAttr(s) {
-  return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-function escapeHtml(s) {
-  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
+/* ── Form collection / validation ────────────────────── */
 function collectForm() {
   return {
     controlNo: document.getElementById("controlNo").value.trim(),
@@ -590,7 +560,6 @@ function collectForm() {
     approvedTitle: document.getElementById("approvedTitle").value.trim() || DEFAULT_APPROVED_TITLE
   };
 }
-
 function validate(order) {
   if (!order.controlNo) return "Control No. is required.";
   if (!/^\d{4}-\d{2}-\d{3}$/.test(order.controlNo)) {
@@ -605,30 +574,77 @@ function validate(order) {
   return "";
 }
 
-function saveOrder(order) {
-  var orders = getOrders();
-  var idx = orders.findIndex(function(o){ return o.controlNo === order.controlNo; });
-  if (idx >= 0) orders[idx] = order;
-  else orders.push(order);
-  orders.sort(function(a, b){ return (b.date || "").localeCompare(a.date || ""); });
-  saveOrders(orders);
-  commitControlNo(order.controlNo);
-  renderHistory();
+/* ── Submit via form POST ────────────────────────────── */
+function submitSave(order) {
+  var f = document.getElementById("saveForm");
+  document.getElementById("sf_action").value        = "saveTravelOrder";
+  document.getElementById("sf_controlNo").value     = order.controlNo;
+  document.getElementById("sf_date").value          = order.date;
+  document.getElementById("sf_destination").value   = order.destination;
+  document.getElementById("sf_purpose").value       = order.purpose;
+  document.getElementById("sf_periodStart").value   = order.periodStart;
+  document.getElementById("sf_periodEnd").value     = order.periodEnd;
+  document.getElementById("sf_travelType").value    = order.travelType;
+  document.getElementById("sf_personnel").value     = JSON.stringify(order.personnel);
+  document.getElementById("sf_recommendedName").value  = order.recommendedName;
+  document.getElementById("sf_recommendedTitle").value = order.recommendedTitle;
+  document.getElementById("sf_approvedName").value     = order.approvedName;
+  document.getElementById("sf_approvedTitle").value    = order.approvedTitle;
+  f.action = API_URL;
+  f.submit();
+}
+function submitDelete(controlNo) {
+  var f = document.getElementById("saveForm");
+  document.getElementById("sf_action").value    = "deleteTravelOrder";
+  document.getElementById("sf_controlNo").value = controlNo;
+  f.action = API_URL;
+  f.submit();
 }
 
+/* ── Iframe onload — verify save / delete ────────────── */
+document.getElementById("hidden_save").onload = function() {
+  if (!pendingAction) return;
+  var action = pendingAction;
+
+  clearTimeout(pendingTimer);
+  pendingTimer = setTimeout(function() {
+    loadAllOrders(true).then(function() {
+      if (action.type === "saveAndPrint" || action.type === "saveOnly") {
+        var found = allOrders.find(function(o){ return o.controlNo === action.order.controlNo; });
+        if (found) {
+          if (action.type === "saveAndPrint") {
+            showToast("✅ Saved to Google Sheets. Opening print…", "success");
+            printOrder(action.order);
+          } else {
+            showToast("✅ Saved to Google Sheets (" + action.order.controlNo + ").", "success");
+            regenerateControlNo();
+          }
+        } else {
+          showToast("⚠ Save may have failed — refresh and try again.", "error");
+        }
+      } else if (action.type === "delete") {
+        var still = allOrders.find(function(o){ return o.controlNo === action.controlNo; });
+        if (!still) showToast("✅ Travel order deleted.", "success");
+        else showToast("⚠ Delete may have failed — refresh and try again.", "error");
+      }
+      pendingAction = null;
+    });
+  }, 1000);
+};
+
+/* ── History ─────────────────────────────────────────── */
 function renderHistory() {
-  var orders = getOrders();
   var tbody = document.querySelector("#historyTable tbody");
   tbody.innerHTML = "";
   document.getElementById("historyCount").textContent =
-    orders.length === 0 ? "" : "(" + orders.length + " saved)";
+    allOrders.length === 0 ? "" : "(" + allOrders.length + " saved)";
 
-  if (orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">No travel orders saved yet.</td></tr>';
+  if (allOrders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No travel orders yet.</td></tr>';
     return;
   }
 
-  orders.forEach(function(o) {
+  allOrders.forEach(function(o) {
     var names = o.personnel.map(function(p){ return p.name; }).join(", ");
     if (names.length > 70) names = names.slice(0, 70) + "…";
     var tr = document.createElement("tr");
@@ -650,23 +666,20 @@ function renderHistory() {
       var cn = b.dataset.cn;
       var act = b.dataset.act;
       if (act === "reprint") {
-        var order = getOrders().find(function(o){ return o.controlNo === cn; });
+        var order = allOrders.find(function(o){ return o.controlNo === cn; });
         if (order) printOrder(order);
       } else if (act === "delete") {
-        if (!confirm("Delete travel order " + cn + "?")) return;
-        var orders = getOrders().filter(function(o){ return o.controlNo !== cn; });
-        saveOrders(orders);
-        renderHistory();
-        showToast("Travel order deleted.", "success");
+        if (!confirm("Delete travel order " + cn + " from Google Sheets?")) return;
+        showLoading("Deleting…");
+        pendingAction = { type: "delete", controlNo: cn };
+        submitDelete(cn);
+        setTimeout(hideLoading, 500);
       }
     });
   });
 }
 
-/* ═══════════════════════════════════════════════════════
-   SINGLE-PAGE PRINT BUILDER
-   Header + content + signatures all on one A4 page
-   ═══════════════════════════════════════════════════════ */
+/* ── Print builder ───────────────────────────────────── */
 function buildHeaderHtml() {
   return '' +
     '<table class="to-header"><tbody><tr>' +
@@ -683,8 +696,6 @@ function buildHeaderHtml() {
 }
 
 function printOrder(order) {
-  /* Personnel rows — each person gets its own row in column 1.
-     DESTINATION and PURPOSE columns are merged with rowspan. */
   var personnelRows = "";
   var rowspan = order.personnel.length;
 
@@ -707,7 +718,6 @@ function printOrder(order) {
     personnelRows += '</tr>';
   });
 
-  /* Signatures table — Recommended By (left) / Approved By (right) */
   var signatureTable =
     '<table class="to-signature-table"><tbody><tr>' +
       '<td>' +
@@ -722,7 +732,6 @@ function printOrder(order) {
       '</td>' +
     '</tr></tbody></table>';
 
-  /* Everything on one page */
   var html =
     '<div class="to-single">' +
       buildHeaderHtml() +
@@ -758,23 +767,27 @@ document.getElementById("btnAddPersonnel").addEventListener("click", function() 
 });
 
 document.getElementById("btnPrint").addEventListener("click", function() {
+  if (pendingAction) return showToast("Please wait — previous operation in progress.", "error");
   var order = collectForm();
   var err = validate(order);
   if (err) return showToast("⚠ " + err, "error");
 
-  saveOrder(order);
-  showToast("✅ Travel order saved. Opening print preview…", "success");
-  printOrder(order);
+  showLoading("Saving to Google Sheets…");
+  pendingAction = { type: "saveAndPrint", order: order };
+  submitSave(order);
+  setTimeout(hideLoading, 800);
 });
 
 document.getElementById("btnSave").addEventListener("click", function() {
+  if (pendingAction) return showToast("Please wait — previous operation in progress.", "error");
   var order = collectForm();
   var err = validate(order);
   if (err) return showToast("⚠ " + err, "error");
 
-  saveOrder(order);
-  showToast("✅ Travel order saved (" + order.controlNo + ").", "success");
-  regenerateControlNo();
+  showLoading("Saving to Google Sheets…");
+  pendingAction = { type: "saveOnly", order: order };
+  submitSave(order);
+  setTimeout(hideLoading, 800);
 });
 
 document.getElementById("btnClear").addEventListener("click", function() {
@@ -783,9 +796,7 @@ document.getElementById("btnClear").addEventListener("click", function() {
   showToast("Form cleared.", "success");
 });
 
-document.getElementById("toDate").addEventListener("change", function() {
-  regenerateControlNo();
-});
+document.getElementById("toDate").addEventListener("change", regenerateControlNo);
 
 function resetForm() {
   document.getElementById("toDate").value = todayStr();
@@ -803,15 +814,37 @@ function resetForm() {
   regenerateControlNo();
 }
 
+/* ── Boot ────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function() {
-  if (!document.getElementById("toast")) {
-    var t = document.createElement("div");
-    t.id = "toast";
-    t.className = "toast";
-    document.body.appendChild(t);
+  /* Startup guard */
+  var requiredIds = [
+    "toDate", "controlNo", "destination", "purpose",
+    "periodStart", "periodEnd", "travelType",
+    "personnelList", "btnPrint", "btnSave", "btnClear",
+    "historyTable", "print-area", "saveForm", "hidden_save"
+  ];
+  var missing = requiredIds.filter(function(id){ return !document.getElementById(id); });
+  if (missing.length > 0) {
+    var fatal = document.getElementById("fatal");
+    if (fatal) {
+      fatal.style.display = "block";
+      fatal.textContent =
+        "❌ Missing required elements:\n\n" +
+        missing.map(function(id){ return '  • id="' + id + '"'; }).join("\n");
+    }
+    return;
   }
+
   resetForm();
-  renderHistory();
+
+  loadAllOrders().then(function(orders) {
+    backendReady = true;
+    document.getElementById("btnPrint").disabled = false;
+    document.getElementById("btnSave").disabled = false;
+    if (orders.length === 0) {
+      showToast("ℹ️ No travel orders on the server yet — start by creating one.", "");
+    }
+  });
 });
 </script>
 </body>
