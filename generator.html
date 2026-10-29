@@ -85,7 +85,7 @@
     border:1px solid #dbe8f5; line-height:1.5;
   }
 
-  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; }
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; font-size:13px; }
 
   #print-area { display: none; }
 
@@ -187,7 +187,7 @@
 
     <div id="dtrStatus">
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
-      Friday rows use the <b>skeletal list from that Friday's week</b> (configured in the Skeletal page). Days outside the chosen period are left blank.
+      Friday rows use the <b>skeletal list from that Friday's week</b>. Days outside the chosen period are left blank.
     </div>
   </div>
 </div>
@@ -211,7 +211,6 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
-/* ── ISO week helpers ──────────────────────────────────── */
 function getIsoWeekKey(date) {
   var d = new Date(date.getTime());
   d.setHours(0,0,0,0);
@@ -222,7 +221,6 @@ function getIsoWeekKey(date) {
   return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
 }
 
-/* ── Fetch skeletal data from backend (JSONP) ──────────── */
 function fetchSkeletal() {
   return new Promise(function(resolve) {
     var cbName = "jsonp_skelgen_" + Math.random().toString(36).slice(2);
@@ -247,7 +245,6 @@ function fetchSkeletal() {
   });
 }
 
-/* ── Legacy local fallback (only if backend is completely empty) ── */
 function loadSkeletalLegacy() {
   try {
     var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
@@ -257,7 +254,6 @@ function loadSkeletalLegacy() {
   } catch(e) { return {}; }
 }
 
-/* ── Time helpers ──────────────────────────────────────── */
 function isFriday(y, m, d) { return new Date(y, m, d).getDay() === 5; }
 
 function parseMins(t) {
@@ -289,8 +285,32 @@ function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
   return total;
 }
 
-/* ── Main ──────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function () {
+  /* ── Startup guard: verify all required elements exist ─── */
+  var requiredIds = [
+    "dtrEmp", "period", "startDate", "endDate",
+    "btn-print", "dtrStatus", "fatal", "print-area"
+  ];
+  var missing = requiredIds.filter(function(id) {
+    return !document.getElementById(id);
+  });
+  if (missing.length > 0) {
+    var fatal = document.getElementById("fatal");
+    if (fatal) {
+      fatal.style.display = "block";
+      fatal.textContent =
+        "❌ THIS FILE IS MISSING REQUIRED ELEMENTS:\n\n" +
+        missing.map(function(id){ return '  • <... id="' + id + '">'; }).join("\n") +
+        "\n\nThe HTML body of generator.html is incomplete. " +
+        "Check that you pasted the FULL file, not just the <script> block.";
+    }
+    console.error("❌ Missing elements:", missing);
+    console.error("All IDs currently in the page:",
+      Array.from(document.querySelectorAll("[id]")).map(function(e){ return e.id; }));
+    return;
+  }
+
+  /* ── Populate employee dropdown ───────────────────────── */
   var sel = document.getElementById("dtrEmp");
   EMPLOYEES.forEach(function(e){
     var o = document.createElement("option");
@@ -354,8 +374,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function buildDTR(code, start, end) {
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
+    if (!emp) {
+      document.getElementById("dtrStatus").textContent = "⚠ Employee code " + code + " not found.";
+      document.getElementById("dtrStatus").style.color = "#9b1c1c";
+      return;
+    }
 
-    /* Fetch skeletal data from backend — source of truth */
     var skeletalByWeek = await fetchSkeletal();
     var legacySet      = loadSkeletalLegacy();
     var backendHasData = Object.keys(skeletalByWeek).length > 0;
@@ -426,7 +450,6 @@ document.addEventListener("DOMContentLoaded", function () {
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
     }
 
-    /* Skeletal if ANY Friday in period is on the skeletal list */
     var empIsSkeletal = false;
     for (var fd = startDay; fd <= endDay; fd++) {
       if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
@@ -435,7 +458,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    /* Console diagnostic */
     var fridaysInPeriod = [];
     for (var q = startDay; q <= endDay; q++) {
       if (isFriday(year, month, q)) {
