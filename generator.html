@@ -1,3 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4e79">
+<title>DHSUD NIR — DTR Print Generator</title>
+<style>
+  :root {
+    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
+    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
+    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
+    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
+    --radius:16px; --radius-sm:12px;
+  }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  body {
+    margin:0; color:var(--ink-900); min-height:100vh;
+    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
+  }
+  header {
+    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
+    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
+    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  }
+  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
+  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
+  .nav-links { display:flex; gap:8px; }
+  .nav-links a {
+    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+    padding:8px 14px; border-radius:999px;
+  }
+  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+
+  .wrap { max-width:760px; margin:26px auto 40px; padding:0 18px; }
+  .card {
+    background:var(--white); border-radius:var(--radius); padding:26px;
+    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
+    margin-bottom:22px;
+  }
+  h2 { margin:0 0 20px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
+
+  label { display:block; font-size:12px; font-weight:800; margin:0 0 6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
+  select, input[type="text"], input[type="date"] {
+    width:100%; padding:12px 14px; border:1.5px solid #ccd9e8; border-radius:var(--radius-sm);
+    font-size:15px; font-weight:600; color:var(--ink-900); background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  select {
+    appearance:none; padding-right:44px; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231f4e79' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 16px center; background-size:18px;
+  }
+  select:hover, input:hover { border-color:#b8cbe3; }
+  select:focus, input:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
+
+  .field { margin-bottom:16px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+
+  .primary {
+    background:linear-gradient(135deg,var(--blue-600) 0%,var(--blue-500) 100%);
+    color:#fff; width:100%; margin-top:8px; border:0; padding:16px;
+    font-size:16px; font-weight:800; border-radius:var(--radius-sm); cursor:pointer;
+    box-shadow:0 6px 16px rgba(42,98,153,.30);
+    transition:filter .15s ease, transform .08s ease, box-shadow .15s ease;
+  }
+  .primary:hover { filter:brightness(1.06); box-shadow:0 8px 20px rgba(42,98,153,.36); }
+  .primary:active { transform:translateY(1px); }
+
+  #dtrStatus {
+    margin-top:16px; font-size:13px; font-weight:600; text-align:center;
+    padding:12px 16px; border-radius:var(--radius-sm);
+    background:var(--blue-50); color:var(--ink-500);
+    border:1px solid #dbe8f5; line-height:1.5;
+  }
+
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; }
+
+  #print-area { display: none; }
+
+  @media (max-width:560px) {
+    .row { grid-template-columns:1fr; }
+    .brand-sub { display:none; }
+    .card { padding:18px; }
+    header { padding:12px 16px; }
+    .nav-links a { padding:7px 12px; font-size:12px; }
+  }
+
+  /* ═════════ PRINT LAYOUT ═════════ */
+  @media print {
+    @page { size: 13in 8.5in landscape; margin: 0.3in; }
+    body { background:#fff; margin:0; padding:0; }
+    header, .wrap, #fatal { display:none !important; }
+
+    #print-area {
+      display:flex;
+      flex-direction:row;
+      justify-content:space-between;
+      align-items:stretch;
+      width:100%;
+      gap:10px;
+      font-family:Arial, sans-serif;
+      color:#000;
+    }
+
+    .dtr-copy {
+      flex:1;
+      font-size:8px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; }
+    .dtr-header h3 { margin:0; font-size:9px; font-weight:normal; }
+    .dtr-header h2 { margin:0; font-size:10px; font-weight:bold; }
+    .dtr-header h4 { margin:0; font-size:9px; font-weight:normal; }
+
+    .form-title { font-size:9px; margin-bottom:2px; }
+    .info-row { display:flex; margin-bottom:2px; font-size:8px; }
+    .info-col { flex:1; }
+
+    .dtr-table { width:100%; border-collapse:collapse; margin-top:5px; }
+    .dtr-table th, .dtr-table td { border:1px solid #000; text-align:center; padding:1px 2px; font-size:8px; }
+    .dtr-table th { font-weight:bold; }
+    .dtr-table .day-col { width:5%; }
+    .dtr-table .time-col { width:14%; }
+    .dtr-table .ut-col { width:9%; }
+
+    .dtr-footer { margin-top:10px; font-size:8px; }
+    .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
+    .signature-block { text-align:center; width:45%; }
+    .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:8px; }
+    .signature-title { border-top:1px solid #000; padding-top:2px; font-size:8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">DH</div>
+    <div class="brand-text">
+      <span class="brand-title">DHSUD NIR</span>
+      <span class="brand-sub">Print DTR</span>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="kiosk.html">🏠 Kiosk</a>
+    <a href="skeletal.html">👥 Skeletal</a>
+    <a href="index.html">⚙️ Admin</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div id="fatal"></div>
+  <div class="card">
+    <h2>Generate &amp; Print DTR (CSC Form No. 48)</h2>
+
+    <div class="field">
+      <label for="dtrEmp">Employee</label>
+      <select id="dtrEmp"><option value="">— Select Employee —</option></select>
+    </div>
+
+    <div class="field">
+      <label for="period">Period Text (appears on form)</label>
+      <input type="text" id="period" value="August 1-31, 2026">
+    </div>
+
+    <div class="row">
+      <div><label for="startDate">Start date</label><input type="date" id="startDate" value="2026-08-01"></div>
+      <div><label for="endDate">End date</label><input type="date" id="endDate" value="2026-08-31"></div>
+    </div>
+
+    <button type="button" class="primary" id="btn-print">🖨️ Generate &amp; Print DTR</button>
+
+    <div id="dtrStatus">
+      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
+      Friday rows use the <b>skeletal list from that Friday's week</b> (configured in the Skeletal page). Days outside the chosen period are left blank.
+    </div>
+  </div>
+</div>
+
+<div id="print-area"></div>
+
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbyyaX_v0Nbvxm-QUyRSDEtY3d6CNRHu63fPqTSoz5ly0ixwZR5IX4hWbTD3hb3iHsSR/exec";
 var LEGACY_KEY = "dhsud_skeletal_workforce";
@@ -26,7 +222,7 @@ function getIsoWeekKey(date) {
   return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
 }
 
-/* ── Fetch skeletal data from backend ──────────────────── */
+/* ── Fetch skeletal data from backend (JSONP) ──────────── */
 function fetchSkeletal() {
   return new Promise(function(resolve) {
     var cbName = "jsonp_skelgen_" + Math.random().toString(36).slice(2);
@@ -51,7 +247,7 @@ function fetchSkeletal() {
   });
 }
 
-/* ── Local legacy fallback (only used if backend is completely empty) ── */
+/* ── Legacy local fallback (only if backend is completely empty) ── */
 function loadSkeletalLegacy() {
   try {
     var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
@@ -98,7 +294,8 @@ document.addEventListener("DOMContentLoaded", function () {
   var sel = document.getElementById("dtrEmp");
   EMPLOYEES.forEach(function(e){
     var o = document.createElement("option");
-    o.value = e.code; o.textContent = e.code + " — " + e.name;
+    o.value = e.code;
+    o.textContent = e.code + " — " + e.name;
     sel.appendChild(o);
   });
 
@@ -123,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var end   = new Date(endV   + "T00:00:00");
 
     if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) {
-      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per‑month form — print one DTR per month.";
+      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per-month form — print one DTR per month.";
       msg.style.color = "#9b1c1c";
       return;
     }
@@ -158,12 +355,9 @@ document.addEventListener("DOMContentLoaded", function () {
   async function buildDTR(code, start, end) {
     var emp = EMPLOYEES.find(function(e){ return e.code === code; });
 
-    /* Fetch skeletal data from backend — this is the source of truth */
+    /* Fetch skeletal data from backend — source of truth */
     var skeletalByWeek = await fetchSkeletal();
     var legacySet      = loadSkeletalLegacy();
-
-    /* Backend is considered "migrated" if ANY week is configured.
-       Only when it's completely empty do we fall back to legacy localStorage. */
     var backendHasData = Object.keys(skeletalByWeek).length > 0;
 
     function isSkeletalOn(empCode, date) {
@@ -172,9 +366,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (Object.prototype.hasOwnProperty.call(skeletalByWeek, wk)) {
           return (skeletalByWeek[wk] || []).indexOf(empCode) !== -1;
         }
-        return false;   // week not configured in backend → treat as not skeletal
+        return false;
       }
-      /* Backend empty → use local legacy as one-time fallback */
       return !!legacySet[empCode];
     }
 
@@ -228,11 +421,12 @@ document.addEventListener("DOMContentLoaded", function () {
         utH = Math.floor(ut / 60);
         utM = ut % 60;
       }
-      rowsHTML += `<tr><td>${j}</td><td>${amIn}</td><td>${amOut}</td><td>${pmIn}</td><td>${pmOut}</td><td>${utH}</td><td>${utM}</td></tr>`;
+      rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
+                  '</td><td>' + pmIn + '</td><td>' + pmOut +
+                  '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
     }
 
-    /* Determine final employee type — skeletal if ANY Friday in the
-       period is on a skeletal list (backend or, if empty, legacy). */
+    /* Skeletal if ANY Friday in period is on the skeletal list */
     var empIsSkeletal = false;
     for (var fd = startDay; fd <= endDay; fd++) {
       if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
@@ -241,15 +435,16 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    /* Diagnostic — always visible in DevTools Console */
+    /* Console diagnostic */
     var fridaysInPeriod = [];
     for (var q = startDay; q <= endDay; q++) {
       if (isFriday(year, month, q)) {
         var ddObj = new Date(year, month, q);
+        var wkKey = getIsoWeekKey(ddObj);
         fridaysInPeriod.push({
-          date: (q) + "/" + (month + 1),
-          week: getIsoWeekKey(ddObj),
-          configured: backendHasData ? Object.prototype.hasOwnProperty.call(skeletalByWeek, getIsoWeekKey(ddObj)) : "(backend empty)",
+          date: q + "/" + (month + 1),
+          week: wkKey,
+          configured: backendHasData ? Object.prototype.hasOwnProperty.call(skeletalByWeek, wkKey) : "(backend empty)",
           skeletalHere: isSkeletalOn(code, ddObj)
         });
       }
@@ -269,7 +464,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var totalUTH = Math.floor(totalUT / 60);
     var totalUTM = totalUT % 60;
 
-    /* Type label — printed on the DTR for clarity */
     var typeLabel = empIsSkeletal ? "Skeletal Workforce" : "Regular (Non-Skeletal)";
 
     var officialHoursTxt = empIsSkeletal
@@ -279,69 +473,67 @@ document.addEventListener("DOMContentLoaded", function () {
     var arrivalTxt = empIsSkeletal
       ? "Arrival: 7 A.M. (Mon–Thu) / 8 A.M. (Fri)"
       : "Arrival: 7 A.M. (Mon–Thu only)";
+
     var departureTxt = empIsSkeletal
       ? "Departure: 4 P.M. (Mon–Thu) / 5 P.M. (Fri)"
       : "Departure: 6 P.M. (Mon–Thu only)";
 
-    /* DO No. 2026-015 gets its OWN visible line for non-skeletal employees */
     var doRefLine = empIsSkeletal
       ? ""
-      : `<div class="info-row" style="margin-top:1px;">
-           <div class="info-col" style="text-align:left;">
-             <b>Reference:</b> <span style="text-decoration:underline; font-weight:bold;">DO No. 2026-015</span>
-           </div>
-         </div>`;
+      : '<div class="info-row" style="margin-top:1px;">' +
+        '<div class="info-col" style="text-align:left;">' +
+        '<b>Reference:</b> <span style="text-decoration:underline; font-weight:bold;">DO No. 2026-015</span>' +
+        '</div></div>';
 
-    var singleCopyHTML = `
-      <div class="dtr-copy">
-        <div>
-          <div class="dtr-header">
-            <h3>Republic of the Philippines</h3>
-            <h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>
-            <h4>Negros Island Region</h4>
-            <h4>(Robinsons Supermarket Villamonte) 2/F East 3 Center,</h4>
-            <h4>Narra Extension, Burgos Avenue, Brgy. Villamonte, Bacolod City</h4>
-          </div>
-          <div class="form-title">CSC Form No. 48</div>
-          <div class="form-title" style="text-align:center; font-weight:bold;">DAILY TIME RECORD</div>
-          <div class="info-row" style="margin-top:5px;">
-            <div class="info-col" style="text-align:left;"><b>Name:</b> <span style="text-decoration:underline;">${emp.name}</span></div>
-          </div>
-          <div class="info-row">
-            <div class="info-col" style="text-align:left;"><b>For the period:</b> <span style="text-decoration:underline;">${period}</span></div>
-          </div>
-          <div class="info-row">
-            <div class="info-col" style="text-align:left;"><b>Employee Type:</b> <span style="text-decoration:underline;">${typeLabel}</span></div>
-          </div>
-          <div class="info-row">
-            <div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">${officialHoursTxt}</span></div>
-          </div>
-          ${doRefLine}
-          <div class="info-row" style="margin-bottom: 5px;">
-            <div class="info-col" style="text-align:left;"><b>${arrivalTxt}</b></div>
-            <div class="info-col" style="text-align:right;"><b>${departureTxt}</b></div>
-          </div>
-          <table class="dtr-table">
-            <thead>
-              <tr><th rowspan="2" class="day-col">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th></tr>
-              <tr><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="ut-col">Hours</th><th class="ut-col">Mins.</th></tr>
-            </thead>
-            <tbody>${rowsHTML}</tbody>
-            <tfoot>
-              <tr><td colspan="5" style="text-align:right; font-weight:bold; padding-right:5px;">TOTAL UNDERTIME</td><td style="font-weight:bold;">${totalUTH}</td><td style="font-weight:bold;">${totalUTM}</td></tr>
-              <tr><td colspan="7" style="text-align:left; font-size:7px; padding:3px;"><b>Leave:</b> &nbsp; VL - _____ &nbsp; SL - _____ &nbsp; SpL - _____ &nbsp; UT - _____</td></tr>
-            </tfoot>
-          </table>
-        </div>
-        <div class="dtr-footer">
-          <div class="certify-text">I certify on my honor that the above is correct of the hours of work performed. Record of which was made daily at the time of arrival and departure from the office.</div>
-          <div style="display:flex; justify-content:space-between; margin-top:10px;">
-            <div class="signature-block"><div class="signature-name">${emp.name}</div><div class="signature-title">Employee Signature</div></div>
-            <div class="signature-block"><div class="signature-name">ELENITA PAULINA R. CAÑETE</div><div class="signature-title">OIC-REGIONAL DIRECTOR</div></div>
-          </div>
-        </div>
-      </div>
-    `;
+    var singleCopyHTML =
+      '<div class="dtr-copy">' +
+        '<div>' +
+          '<div class="dtr-header">' +
+            '<h3>Republic of the Philippines</h3>' +
+            '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
+            '<h4>Negros Island Region</h4>' +
+            '<h4>(Robinsons Supermarket Villamonte) 2/F East 3 Center,</h4>' +
+            '<h4>Narra Extension, Burgos Avenue, Brgy. Villamonte, Bacolod City</h4>' +
+          '</div>' +
+          '<div class="form-title">CSC Form No. 48</div>' +
+          '<div class="form-title" style="text-align:center; font-weight:bold;">DAILY TIME RECORD</div>' +
+          '<div class="info-row" style="margin-top:5px;">' +
+            '<div class="info-col" style="text-align:left;"><b>Name:</b> <span style="text-decoration:underline;">' + emp.name + '</span></div>' +
+          '</div>' +
+          '<div class="info-row">' +
+            '<div class="info-col" style="text-align:left;"><b>For the period:</b> <span style="text-decoration:underline;">' + period + '</span></div>' +
+          '</div>' +
+          '<div class="info-row">' +
+            '<div class="info-col" style="text-align:left;"><b>Employee Type:</b> <span style="text-decoration:underline;">' + typeLabel + '</span></div>' +
+          '</div>' +
+          '<div class="info-row">' +
+            '<div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">' + officialHoursTxt + '</span></div>' +
+          '</div>' +
+          doRefLine +
+          '<div class="info-row" style="margin-bottom:5px;">' +
+            '<div class="info-col" style="text-align:left;"><b>' + arrivalTxt + '</b></div>' +
+            '<div class="info-col" style="text-align:right;"><b>' + departureTxt + '</b></div>' +
+          '</div>' +
+          '<table class="dtr-table">' +
+            '<thead>' +
+              '<tr><th rowspan="2" class="day-col">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th></tr>' +
+              '<tr><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="ut-col">Hours</th><th class="ut-col">Mins.</th></tr>' +
+            '</thead>' +
+            '<tbody>' + rowsHTML + '</tbody>' +
+            '<tfoot>' +
+              '<tr><td colspan="5" style="text-align:right; font-weight:bold; padding-right:5px;">TOTAL UNDERTIME</td><td style="font-weight:bold;">' + totalUTH + '</td><td style="font-weight:bold;">' + totalUTM + '</td></tr>' +
+              '<tr><td colspan="7" style="text-align:left; font-size:7px; padding:3px;"><b>Leave:</b> &nbsp; VL - _____ &nbsp; SL - _____ &nbsp; SpL - _____ &nbsp; UT - _____</td></tr>' +
+            '</tfoot>' +
+          '</table>' +
+        '</div>' +
+        '<div class="dtr-footer">' +
+          '<div class="certify-text">I certify on my honor that the above is correct of the hours of work performed. Record of which was made daily at the time of arrival and departure from the office.</div>' +
+          '<div style="display:flex; justify-content:space-between; margin-top:10px;">' +
+            '<div class="signature-block"><div class="signature-name">' + emp.name + '</div><div class="signature-title">Employee Signature</div></div>' +
+            '<div class="signature-block"><div class="signature-name">ELENITA PAULINA R. CAÑETE</div><div class="signature-title">OIC-REGIONAL DIRECTOR</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
 
     document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
     document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
@@ -351,3 +543,5 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+</body>
+</html>
