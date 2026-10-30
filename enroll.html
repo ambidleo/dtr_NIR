@@ -42,7 +42,7 @@
   }
   .gov-seal { width:62px; height:62px; flex-shrink:0;
     filter:drop-shadow(0 1px 2px rgba(0,26,77,.18)); }
-  .gov-seal svg { display:block; width:100%; height:100%; }
+ .gov-seal img { display:block; width:100%; height:100%; object-fit:contain; }
   .gov-masthead-text { flex:1; min-width:260px; line-height:1.2; }
   .gov-republic {
     font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
@@ -244,30 +244,8 @@
 <header class="gov-header">
   <div class="gov-flag-strip" aria-hidden="true"></div>
   <div class="gov-masthead">
-    <div class="gov-seal" aria-hidden="true">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DHSUD seal">
-        <circle cx="50" cy="50" r="49" fill="#FCD116"/>
-        <circle cx="50" cy="50" r="46" fill="#0038A8"/>
-        <circle cx="50" cy="50" r="40" fill="#ffffff"/>
-        <g stroke="#FCD116" stroke-width="1.8" stroke-linecap="round">
-          <line x1="50" y1="13" x2="50" y2="19"/>
-          <line x1="39" y1="15" x2="41" y2="20"/>
-          <line x1="61" y1="15" x2="59" y2="20"/>
-          <line x1="30" y1="22" x2="33" y2="26"/>
-          <line x1="70" y1="22" x2="67" y2="26"/>
-        </g>
-        <circle cx="50" cy="33" r="7" fill="#FCD116"/>
-        <path d="M32 54 L50 39 L68 54 L68 74 L32 74 Z" fill="#0038A8"/>
-        <path d="M32 54 L50 39 L68 54" fill="none" stroke="#FCD116" stroke-width="1.8" stroke-linejoin="round"/>
-        <rect x="45.5" y="62" width="9" height="12" fill="#ffffff"/>
-        <rect x="36" y="58" width="5.5" height="5.5" fill="#FCD116"/>
-        <rect x="58.5" y="58" width="5.5" height="5.5" fill="#FCD116"/>
-        <text x="50" y="86" text-anchor="middle"
-              font-family="Arial, Helvetica, sans-serif"
-              font-weight="900" font-size="7.5"
-              fill="#0038A8" letter-spacing="1.6">DHSUD</text>
-      </svg>
-    </div>
+  <img src="dhsud-logo.png" alt="Department of Human Settlements and Urban Development">
+</div>
     <div class="gov-masthead-text">
       <div class="gov-republic">Republic of the Philippines</div>
       <div class="gov-dept-name">Department of Human Settlements and Urban Development</div>
