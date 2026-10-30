@@ -4,23 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#003087">
-<title>DHSUD NIR — Admin Panel</title>
+<title>DHSUD NIR — DTR Print Generator</title>
 <style>
   :root {
     --blue-700:#003087; --blue-600:#0038A8; --blue-500:#2a6fc9;
     --blue-100:#e6eefc; --blue-50:#f5f8fd;
-    --green-600:#1c8a4b; --green-500:#22a35a;
-    --red-600:#c23b3b; --red-500:#d9534f;
     --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
     --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
-    --shadow-sm:0 1px 2px rgba(15,42,71,.06),0 1px 3px rgba(15,42,71,.04);
     --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
     --radius:16px; --radius-sm:12px;
   }
   * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
   body {
     margin:0; color:var(--ink-900); min-height:100vh;
-    background:radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%), var(--bg);
+    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
   }
 
   /* ════════ GOVERNMENT MASTHEAD ════════ */
@@ -76,93 +73,51 @@
   }
   .gov-nav a:hover { background:#0038A8; color:#fff; border-color:#0038A8; }
 
-  .wrap { max-width:1140px; margin:26px auto 40px; padding:0 18px; }
+  .wrap { max-width:760px; margin:26px auto 40px; padding:0 18px; }
   .card {
     background:var(--white); border-radius:var(--radius); padding:26px;
     box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
-    margin-bottom:22px; animation:fadeUp .35s ease both;
+    margin-bottom:22px;
   }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+  h2 { margin:0 0 20px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
 
-  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-  .card-header h2 { margin:0; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
-
-  .btn-refresh {
-    background:var(--blue-50); border:1px solid #d5e3f3; color:var(--blue-700);
-    font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
-    padding:8px 14px; border-radius:999px; transition:background .15s ease;
-  }
-  .btn-refresh:hover { background:var(--blue-100); }
-  .btn-refresh.loading { opacity:.55; pointer-events:none; }
-  .btn-refresh.loading span { display:inline-block; animation:spin 1s linear infinite; }
-  @keyframes spin { 100% { transform:rotate(360deg); } }
-
-  .filter-row { display:flex; gap:16px; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; }
-  .filter-row > div { flex:1; min-width:180px; }
-  label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
-  input[type="date"] {
+  label { display:block; font-size:12px; font-weight:800; margin:0 0 6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
+  select, input[type="text"], input[type="date"] {
     width:100%; padding:12px 14px; border:1.5px solid #ccd9e8; border-radius:var(--radius-sm);
     font-size:15px; font-weight:600; color:var(--ink-900); background:#fff;
     transition:border-color .15s ease, box-shadow .15s ease;
   }
-  input[type="date"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(42,111,201,.18); }
-
-  .btn-load {
-    background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
-    color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
-    font-size:14px; font-weight:700; cursor:pointer; height:46px; white-space:nowrap;
-    box-shadow:0 4px 10px rgba(0,56,168,.25);
-    transition:filter .15s ease, transform .08s ease;
+  select {
+    appearance:none; padding-right:44px; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230038A8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 16px center; background-size:18px;
   }
-  .btn-load:hover { filter:brightness(1.06); }
-  .btn-load:active { transform:translateY(1px); }
+  select:hover, input:hover { border-color:#b8cbe3; }
+  select:focus, input:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(42,111,201,.18); }
 
-  .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
-  table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; min-width:760px; }
-  thead th {
-    background:linear-gradient(180deg,#f7fafd,#eef4fb);
-    color:var(--ink-500); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
-    padding:13px 10px; text-align:center; border-bottom:1.5px solid var(--line);
-    position:sticky; top:0;
+  .field { margin-bottom:16px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+
+  .primary {
+    background:linear-gradient(135deg,var(--blue-600) 0%,var(--blue-500) 100%);
+    color:#fff; width:100%; margin-top:8px; border:0; padding:16px;
+    font-size:16px; font-weight:800; border-radius:var(--radius-sm); cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,56,168,.30);
+    transition:filter .15s ease, transform .08s ease, box-shadow .15s ease;
   }
-  tbody td { padding:9px 8px; text-align:center; border-bottom:1px solid #eef2f7; }
-  tbody td:first-child { text-align:left; font-weight:600; color:var(--ink-900); padding-left:16px; }
-  tbody tr:nth-child(even) td { background:#fafcff; }
-  tbody tr:hover td { background:var(--blue-50); }
-  tbody tr:last-child td { border-bottom:0; }
+  .primary:hover { filter:brightness(1.06); box-shadow:0 8px 20px rgba(0,56,168,.36); }
+  .primary:active { transform:translateY(1px); }
 
-  input[type="text"] {
-    width:100%; padding:8px 10px; border:1.5px solid #dbe3ee; border-radius:8px;
-    font-size:13px; font-weight:600; text-align:center; color:var(--ink-900); background:#fff;
-    transition:border-color .15s ease, box-shadow .15s ease;
+  #dtrStatus {
+    margin-top:16px; font-size:13px; font-weight:600; text-align:center;
+    padding:12px 16px; border-radius:var(--radius-sm);
+    background:var(--blue-50); color:var(--ink-500);
+    border:1px solid #dbe8f5; line-height:1.5;
   }
-  input[type="text"]:hover { border-color:#b8cbe3; }
-  input[type="text"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(42,111,201,.15); background:#fbfdff; }
-  input[type="text"]::placeholder { color:#a6b3c4; font-weight:500; }
 
-  button { cursor:pointer; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; transition:filter .15s ease, transform .08s ease; }
-  button:active { transform:translateY(1px); }
-  .btn-save { background:linear-gradient(180deg,#25a35c 0%, var(--green-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(28,138,75,.25); }
-  .btn-save:hover { filter:brightness(1.07); }
-  .btn-del  { background:linear-gradient(180deg,#e05e5e 0%, var(--red-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(194,59,59,.22); }
-  .btn-del:hover { filter:brightness(1.07); }
-  td:last-child { white-space:nowrap; }
-  td:last-child button + button { margin-left:6px; }
+  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; font-size:13px; }
 
-  .empty-state { text-align:center; color:var(--ink-500); padding:44px 20px; font-style:italic; font-size:14px; }
-
-  .toast {
-    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
-    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
-    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
-    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
-    z-index:100; max-width:calc(100vw - 48px);
-  }
-  .toast.show { opacity:1; transform:translate(-50%, 0); }
-  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
-  .toast.error   { background:linear-gradient(135deg,#b02a2a,#d9534f); }
-
-  .hidden-iframe { display:none; }
+  #print-area { display: none; }
 
   @media (max-width:860px) {
     .gov-masthead { padding:10px 16px; gap:12px; }
@@ -172,26 +127,72 @@
     .gov-nav { width:100%; }
     .gov-nav a { font-size:11.5px; padding:7px 11px; }
   }
-  @media (max-width:640px) {
+  @media (max-width:560px) {
+    .row { grid-template-columns:1fr; }
     .card { padding:18px; }
+  }
+
+  /* ═════════ PRINT LAYOUT ═════════ */
+  @media print {
+    @page { size: 13in 8.5in landscape; margin: 0.3in; }
+    body { background:#fff; margin:0; padding:0; }
+    header, .wrap, #fatal { display:none !important; }
+
+    #print-area {
+      display:flex;
+      flex-direction:row;
+      justify-content:space-between;
+      align-items:stretch;
+      width:100%;
+      gap:10px;
+      font-family:Arial, sans-serif;
+      color:#000;
+    }
+
+    .dtr-copy {
+      flex:1;
+      font-size:8px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; }
+    .dtr-header h3 { margin:0; font-size:9px; font-weight:normal; }
+    .dtr-header h2 { margin:0; font-size:10px; font-weight:bold; }
+    .dtr-header h4 { margin:0; font-size:9px; font-weight:normal; }
+
+    .form-title { font-size:9px; margin-bottom:2px; }
+    .info-row { display:flex; margin-bottom:2px; font-size:8px; }
+    .info-col { flex:1; }
+
+    .dtr-table { width:100%; border-collapse:collapse; margin-top:5px; }
+    .dtr-table th, .dtr-table td { border:1px solid #000; text-align:center; padding:1px 2px; font-size:8px; }
+    .dtr-table th { font-weight:bold; }
+    .dtr-table .day-col { width:5%; }
+    .dtr-table .time-col { width:14%; }
+    .dtr-table .ut-col { width:9%; }
+
+    .dtr-table td.do-row {
+      background:#f0f4f8 !important; font-style:italic; font-size:7px;
+      text-align:center; color:#222;
+    }
+    .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
+
+    .dtr-table td.travel-row {
+      background:#e8f0ff !important; font-size:7px; text-align:center; color:#0d2a5c;
+    }
+    .dtr-table td.travel-row b { font-style:normal; letter-spacing:.3px; text-transform:uppercase; }
+
+    .dtr-footer { margin-top:10px; font-size:8px; }
+    .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
+    .signature-block { text-align:center; width:45%; }
+    .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:8px; }
+    .signature-title { border-top:1px solid #000; padding-top:2px; font-size:8px; }
   }
 </style>
 </head>
 <body>
-
-<form id="adminForm" method="POST" target="hidden_admin_post" class="hidden-iframe">
-  <input type="hidden" name="action" id="af_action">
-  <input type="hidden" name="date" id="af_date">
-  <input type="hidden" name="code" id="af_code">
-  <input type="hidden" name="name" id="af_name">
-  <input type="hidden" name="am_in" id="af_am_in">
-  <input type="hidden" name="am_out" id="af_am_out">
-  <input type="hidden" name="pm_in" id="af_pm_in">
-  <input type="hidden" name="pm_out" id="af_pm_out">
-</form>
-<iframe name="hidden_admin_post" id="hidden_admin_post" class="hidden-iframe"></iframe>
-
-<div id="toast" class="toast"></div>
 
 <header class="gov-header">
   <div class="gov-flag-strip" aria-hidden="true"></div>
@@ -225,59 +226,52 @@
       <div class="gov-dept-name">Department of Human Settlements and Urban Development</div>
       <div class="gov-region">
         Negros Island Region
-        <span class="gov-module">Admin Panel</span>
+        <span class="gov-module">Print DTR</span>
       </div>
     </div>
     <nav class="gov-nav">
-      <a href="enroll.html">👤 Enroll Faces</a>
       <a href="kiosk.html">🏠 Kiosk</a>
+      <a href="skeletal.html">👥 Skeletal</a>
       <a href="travel.html">✈️ Travel</a>
-      <a href="generator.html">🖨️ Print DTR</a>
+      <a href="index.html">⚙️ Admin</a>
     </nav>
   </div>
 </header>
 
 <div class="wrap">
+  <div id="fatal"></div>
   <div class="card">
-    <div class="card-header">
-      <h2>Manage Time Logs</h2>
-      <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
-        <span>🔄</span> Refresh
-      </button>
+    <h2>Generate &amp; Print DTR (CSC Form No. 48)</h2>
+
+    <div class="field">
+      <label for="dtrEmp">Employee</label>
+      <select id="dtrEmp"><option value="">— Select Employee —</option></select>
     </div>
 
-    <div class="filter-row">
-      <div>
-        <label for="filterDate">Date to View / Edit</label>
-        <input type="date" id="filterDate">
-      </div>
-      <div style="flex:0 0 auto; min-width:0;">
-        <button class="btn-load" id="btn-load" onclick="loadData()">📥 Load Data</button>
-      </div>
+    <div class="field">
+      <label for="period">Period Text (appears on form)</label>
+      <input type="text" id="period" value="August 1-31, 2026">
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:26%;">Employee</th>
-            <th style="width:15%;">AM In</th>
-            <th style="width:15%;">AM Out</th>
-            <th style="width:15%;">PM In</th>
-            <th style="width:15%;">PM Out</th>
-            <th style="width:14%;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="logTableBody">
-          <tr><td colspan="6" class="empty-state">Select a date and click "Load Data".</td></tr>
-        </tbody>
-      </table>
+    <div class="row">
+      <div><label for="startDate">Start date</label><input type="date" id="startDate" value="2026-08-01"></div>
+      <div><label for="endDate">End date</label><input type="date" id="endDate" value="2026-08-31"></div>
+    </div>
+
+    <button type="button" class="primary" id="btn-print">🖨️ Generate &amp; Print DTR</button>
+
+    <div id="dtrStatus">
+      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
+      Friday rows without skeletal coverage show <b>DO No. 2026‑015</b>. Days with an approved Travel Order show <b>TO No.</b> instead of times.
     </div>
   </div>
 </div>
 
+<div id="print-area"></div>
+
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbyyaX_v0Nbvxm-QUyRSDEtY3d6CNRHu63fPqTSoz5ly0ixwZR5IX4hWbTD3hb3iHsSR/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbyPT5WoANMVWKq9jykNSq4SBkF44xVxAzM1jDYJiSMSQgrLTpiMVICtAkGTRQcdV5m2/exec";
+var LEGACY_KEY = "dhsud_skeletal_workforce";
 
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -292,132 +286,428 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
-function showToast(msg, type) {
-  var t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show " + (type || "");
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function(){ t.className = "toast"; }, 3200);
+function pad2(n) { return String(n).padStart(2, '0'); }
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
-
-document.addEventListener("DOMContentLoaded", function() {
-  var dateInput = document.getElementById("filterDate");
-  var tbody = document.getElementById("logTableBody");
-
-  var today = new Date();
-  var month = String(today.getMonth() + 1).padStart(2, '0');
-  var day   = String(today.getDate()).padStart(2, '0');
-  var year  = today.getFullYear();
-  dateInput.value = year + "-" + month + "-" + day;
-
-  dateInput.addEventListener("keypress", function(e) {
-    if (e.key === "Enter") loadData();
-  });
-
-  document.getElementById("hidden_admin_post").onload = function() {
-    setTimeout(loadData, 1000);
-  };
-
-  window.loadData = function() {
-    var dateStr = dateInput.value;
-    if (!dateStr) { showToast("Please select a date first.", "error"); return; }
-
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading records...</td></tr>';
-    var btn = document.getElementById("btn-refresh");
-    btn.classList.add("loading");
-
-    var callbackName = "jsonp_admin_" + Math.round(100000 * Math.random());
+function normalizeName(s) {
+  return String(s || "")
+    .toUpperCase()
+    .replace(/\./g, '')
+    .replace(/\b(ENGR|ENGINEER|MR|MRS|MS|DR|ATTY|HON)\b/g, '')
+    .replace(/[,\s]+/g, ' ')
+    .trim();
+}
+function getIsoWeekKey(date) {
+  var d = new Date(date.getTime());
+  d.setHours(0,0,0,0);
+  var dow = (d.getDay() + 6) % 7 + 1;
+  d.setDate(d.getDate() + 4 - dow);
+  var yearStart = new Date(d.getFullYear(), 0, 1);
+  var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
+}
+function fetchSkeletal() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_skelgen_" + Math.random().toString(36).slice(2);
     var script = document.createElement("script");
     var done = false;
-
-    function finish(errMsg) {
+    function finish(r) {
       if (done) return;
       done = true;
       clearTimeout(timer);
-      if (errMsg) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="color:#a92424; font-style:normal;">Error: ' + errMsg + '</td></tr>';
-      }
       if (script.parentNode) script.parentNode.removeChild(script);
-      delete window[callbackName];
-      btn.classList.remove("loading");
+      delete window[cbName];
+      resolve(r || {});
     }
-
-    window[callbackName] = function(data) {
-      if (data && data.success) {
-        renderTable(data.data || {}, dateStr);
-        finish(null);
-      } else {
-        finish((data && data.error) || "Backend returned an error");
-      }
+    window[cbName] = function(data) {
+      if (data && data.success && data.data) finish(data.data);
+      else finish({});
     };
-
-    script.onerror = function() {
-      finish("Could not load backend. Verify the /exec URL and deployment is public ('Anyone, even anonymous').");
-    };
-    var timer = setTimeout(function() {
-      finish("Backend did not respond within 12s.");
-    }, 12000);
-
-    script.src = API_URL + "?action=getLogs&date=" + encodeURIComponent(dateStr) + "&callback=" + callbackName;
+    script.onerror = function() { finish({}); };
+    var timer = setTimeout(function() { finish({}); }, 12000);
+    script.src = API_URL + "?action=getSkeletal&callback=" + cbName;
     document.body.appendChild(script);
-  };
-
-  function renderTable(logs, dateStr) {
-    tbody.innerHTML = "";
-    var hasRecords = false;
-
-    EMPLOYEES.forEach(function(emp) {
-      var rec = logs[emp.code];
-      if (rec) {
-        hasRecords = true;
-        var tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${emp.name}</td>
-          <td><input type="text" id="amin-${emp.code}" value="${rec.am_in || ''}" placeholder="8:00 AM"></td>
-          <td><input type="text" id="amout-${emp.code}" value="${rec.am_out || ''}" placeholder="12:00 PM"></td>
-          <td><input type="text" id="pmin-${emp.code}" value="${rec.pm_in || ''}" placeholder="1:00 PM"></td>
-          <td><input type="text" id="pmout-${emp.code}" value="${rec.pm_out || ''}" placeholder="5:00 PM"></td>
-          <td>
-            <button class="btn-save" onclick="saveRow('${emp.code}', '${emp.name}', '${dateStr}')">Save</button>
-            <button class="btn-del" onclick="deleteRow('${emp.code}', '${dateStr}')">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
-
-    if (!hasRecords) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No records found for this date.</td></tr>';
+  });
+}
+function fetchTravelOrders() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_travelgen_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r || []);
     }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) finish(data.data);
+      else finish([]);
+    };
+    script.onerror = function() { finish([]); };
+    var timer = setTimeout(function() { finish([]); }, 12000);
+    script.src = API_URL + "?action=getTravelOrders&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+function loadSkeletalLegacy() {
+  try {
+    var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
+    var set = {};
+    if (Array.isArray(arr)) arr.forEach(function(c){ set[c] = true; });
+    return set;
+  } catch(e) { return {}; }
+}
+function isFriday(y, m, d) { return new Date(y, m, d).getDay() === 5; }
+function parseMins(t) {
+  if (!t) return null;
+  var match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return null;
+  var h = parseInt(match[1], 10), m = parseInt(match[2], 10), ap = match[3].toUpperCase();
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+}
+function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
+  var inM = parseMins(amIn), outM = parseMins(amOut);
+  var pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
+  var total = 0;
+  if (inM === null && pmInM !== null && pmOutM !== null) return Math.max(0, pmOutM - pmInM);
+  if (inM === null) return 0;
+  if (outM !== null && outM <= 749 && (pmInM === null || pmOutM === null)) {
+    return Math.max(0, outM - inM);
+  }
+  if (outM !== null && outM >= 750 && outM <= 779) {
+    total += Math.max(0, 720 - inM);
+    if (pmOutM !== null) total += Math.max(0, pmOutM - outM);
+    return total;
+  }
+  if (outM !== null) total += Math.max(0, Math.min(720, outM) - inM);
+  if (pmInM !== null && pmOutM !== null) total += Math.max(0, pmOutM - Math.max(780, pmInM));
+  return total;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  var requiredIds = [
+    "dtrEmp", "period", "startDate", "endDate",
+    "btn-print", "dtrStatus", "fatal", "print-area"
+  ];
+  var missing = requiredIds.filter(function(id) { return !document.getElementById(id); });
+  if (missing.length > 0) {
+    var fatal = document.getElementById("fatal");
+    if (fatal) {
+      fatal.style.display = "block";
+      fatal.textContent =
+        "❌ THIS FILE IS MISSING REQUIRED ELEMENTS:\n\n" +
+        missing.map(function(id){ return '  • <... id="' + id + '">'; }).join("\n");
+    }
+    console.error("❌ Missing elements:", missing);
+    return;
   }
 
-  window.saveRow = function(code, name, dateStr) {
-    document.getElementById("af_action").value = "saveLog";
-    document.getElementById("af_date").value   = dateStr;
-    document.getElementById("af_code").value   = code;
-    document.getElementById("af_name").value   = name;
-    document.getElementById("af_am_in").value  = document.getElementById("amin-"+code).value.trim();
-    document.getElementById("af_am_out").value = document.getElementById("amout-"+code).value.trim();
-    document.getElementById("af_pm_in").value  = document.getElementById("pmin-"+code).value.trim();
-    document.getElementById("af_pm_out").value = document.getElementById("pmout-"+code).value.trim();
+  var sel = document.getElementById("dtrEmp");
+  EMPLOYEES.forEach(function(e){
+    var o = document.createElement("option");
+    o.value = e.code;
+    o.textContent = e.code + " — " + e.name;
+    sel.appendChild(o);
+  });
 
-    document.getElementById("adminForm").action = API_URL;
-    document.getElementById("adminForm").submit();
-    showToast("✅ Sent to Google Sheets — refreshing...", "success");
-  };
+  document.getElementById("btn-print").addEventListener("click", function(){
+    var code   = sel.value;
+    var startV = document.getElementById("startDate").value;
+    var endV   = document.getElementById("endDate").value;
+    var msg    = document.getElementById("dtrStatus");
 
-  window.deleteRow = function(code, dateStr) {
-    if (confirm("Are you sure you want to completely delete this record?")) {
-      document.getElementById("af_action").value = "deleteLog";
-      document.getElementById("af_date").value   = dateStr;
-      document.getElementById("af_code").value   = code;
-      document.getElementById("adminForm").action = API_URL;
-      document.getElementById("adminForm").submit();
-      showToast("🗑️ Deleting record...", "error");
+    if (!code || !startV || !endV) {
+      msg.textContent = "⚠ Please fill all fields.";
+      msg.style.color = "#9b1c1c";
+      return;
     }
-  };
+    if (new Date(endV) < new Date(startV)) {
+      msg.textContent = "⚠ End date must be after start date.";
+      msg.style.color = "#9b1c1c";
+      return;
+    }
 
-  loadData();
+    var start = new Date(startV + "T00:00:00");
+    var end   = new Date(endV   + "T00:00:00");
+
+    if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) {
+      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per-month form — print one DTR per month.";
+      msg.style.color = "#9b1c1c";
+      return;
+    }
+
+    msg.textContent = "⏳ Fetching skeletal & travel data…";
+    msg.style.color = "#003087";
+
+    buildDTR(code, start, end);
+  });
+
+  function fetchDateDataJSONP(dateStr) {
+    return new Promise(function(resolve) {
+      var cbName = "jsonp_dtr_" + Math.round(1000000 * Math.random());
+      var script = document.createElement("script");
+      var done = false;
+      function finish(r) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        if (script.parentNode) script.parentNode.removeChild(script);
+        delete window[cbName];
+        resolve(r);
+      }
+      window[cbName] = function(data) { finish(data || { success: false, data: {} }); };
+      script.onerror = function() { finish({ success: false, error: "Network error" }); };
+      var timer = setTimeout(function() { finish({ success: false, error: "Timeout" }); }, 12000);
+      script.src = API_URL + "?action=getLogs&date=" + encodeURIComponent(dateStr) + "&callback=" + cbName;
+      document.body.appendChild(script);
+    });
+  }
+
+  async function buildDTR(code, start, end) {
+    var emp = EMPLOYEES.find(function(e){ return e.code === code; });
+    if (!emp) {
+      document.getElementById("dtrStatus").textContent = "⚠ Employee code " + code + " not found.";
+      document.getElementById("dtrStatus").style.color = "#9b1c1c";
+      return;
+    }
+
+    var empNameNorm = normalizeName(emp.name);
+
+    var results = await Promise.all([fetchSkeletal(), fetchTravelOrders()]);
+    var skeletalByWeek = results[0] || {};
+    var travelOrders   = results[1] || [];
+    var legacySet      = loadSkeletalLegacy();
+    var backendHasData = Object.keys(skeletalByWeek).length > 0;
+
+    function isSkeletalOn(empCode, date) {
+      if (backendHasData) {
+        var wk = getIsoWeekKey(date);
+        if (Object.prototype.hasOwnProperty.call(skeletalByWeek, wk)) {
+          return (skeletalByWeek[wk] || []).indexOf(empCode) !== -1;
+        }
+        return false;
+      }
+      return !!legacySet[empCode];
+    }
+
+    function findTravelOn(dateStr) {
+      for (var i = 0; i < travelOrders.length; i++) {
+        var to = travelOrders[i];
+        if (!to || !to.periodStart || !to.periodEnd) continue;
+        if (dateStr < to.periodStart || dateStr > to.periodEnd) continue;
+        for (var j = 0; j < (to.personnel || []).length; j++) {
+          var p = to.personnel[j] || {};
+          if (normalizeName(p.name) === empNameNorm) return to;
+        }
+      }
+      return null;
+    }
+
+    var totalUT = 0;
+    var rowsHTML = "";
+    var byDay = {};
+    var failedDates = [];
+    var year = start.getFullYear();
+    var month = start.getMonth();
+    var startDay = start.getDate();
+    var endDay = end.getDate();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    document.getElementById("dtrStatus").textContent = "⏳ Downloading time logs…";
+
+    for (var d = startDay; d <= endDay; d++) {
+      var cellDate = new Date(year, month, d);
+      var dStr = year + "-" + pad2(month + 1) + "-" + pad2(d);
+
+      var travel = findTravelOn(dStr);
+      if (travel) {
+        byDay[d] = { success: true, data: {}, travel: travel };
+        continue;
+      }
+      if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
+        byDay[d] = { success: true, data: {}, skippedFriday: true };
+        continue;
+      }
+      var data = await fetchDateDataJSONP(dStr);
+      if (!data || !data.success) {
+        failedDates.push(dStr);
+        byDay[d] = { success: false, data: {} };
+      } else {
+        byDay[d] = data;
+      }
+    }
+
+    if (failedDates.length) {
+      var m = document.getElementById("dtrStatus");
+      m.style.color = "#9b1c1c";
+      m.textContent = "⚠ " + failedDates.length + " date(s) failed to load. Generating with partial data.";
+    }
+
+    for (var j = 1; j <= 31; j++) {
+      var inPeriod = (j >= startDay && j <= endDay && j <= daysInMonth);
+      if (!inPeriod) {
+        rowsHTML += '<tr><td>' + j + '</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+        continue;
+      }
+
+      var rec = byDay[j];
+
+      if (rec && rec.travel) {
+        var to = rec.travel;
+        var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
+        if (to.destination) {
+          travelNote += ' — ' + escapeHtml(to.destination);
+        }
+        rowsHTML += '<tr><td>' + j + '</td>' +
+          '<td colspan="6" class="travel-row">' + travelNote + '</td></tr>';
+        continue;
+      }
+
+      if (rec && rec.skippedFriday) {
+        rowsHTML += '<tr><td>' + j + '</td>' +
+          '<td colspan="6" class="do-row">' +
+            '<b>DO No. 2026-015</b> — No work on Fridays (Compressed Workweek)' +
+          '</td></tr>';
+        continue;
+      }
+
+      var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
+      if (rec && rec.success && rec.data && rec.data[code]) {
+        var dd = rec.data[code];
+        amIn  = dd.am_in  || "";
+        amOut = dd.am_out || "";
+        pmIn  = dd.pm_in  || "";
+        pmOut = dd.pm_out || "";
+        var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
+        var ut = Math.max(0, 480 - worked);
+        totalUT += ut;
+        utH = Math.floor(ut / 60);
+        utM = ut % 60;
+      }
+      rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
+                  '</td><td>' + pmIn + '</td><td>' + pmOut +
+                  '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
+    }
+
+    var anyFridaySkeletal = false;
+    for (var fd = startDay; fd <= endDay; fd++) {
+      if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
+        anyFridaySkeletal = true;
+        break;
+      }
+    }
+    var empIsSkeletal = anyFridaySkeletal;
+
+    var travelDaysInPeriod = [];
+    for (var td = startDay; td <= endDay; td++) {
+      var tdStr = year + "-" + pad2(month + 1) + "-" + pad2(td);
+      var to2 = findTravelOn(tdStr);
+      if (to2) travelDaysInPeriod.push({ date: tdStr, toNo: to2.controlNo, destination: to2.destination });
+    }
+    var fridaysInPeriod = [];
+    for (var q = startDay; q <= endDay; q++) {
+      if (isFriday(year, month, q)) {
+        var ddObj = new Date(year, month, q);
+        var wkKey = getIsoWeekKey(ddObj);
+        fridaysInPeriod.push({
+          date: q + "/" + (month + 1),
+          week: wkKey,
+          skeletalHere: isSkeletalOn(code, ddObj)
+        });
+      }
+    }
+    console.log("═══ DTR BUILD ═══");
+    console.log("Employee:", code, emp.name);
+    console.log("Period:", startDay + "–" + endDay + " of " + (month + 1) + "/" + year);
+    console.log("Skeletal (backend has data):", backendHasData);
+    console.log("Travel orders fetched:", travelOrders.length);
+    console.log("Travel days in period:", travelDaysInPeriod);
+    console.log("Fridays in period:", fridaysInPeriod);
+    console.log("Classification:", empIsSkeletal ? "SKELETAL (header)" : "REGULAR (header)");
+
+    generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
+  }
+
+  function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
+    var period = document.getElementById("period").value.trim();
+    var totalUTH = Math.floor(totalUT / 60);
+    var totalUTM = totalUT % 60;
+
+    var typeLabel = empIsSkeletal ? "Skeletal Workforce" : "Regular (Non-Skeletal)";
+
+    var officialHoursTxt = empIsSkeletal
+      ? "Mon–Thu 7:00 A.M. – 4:00 P.M. · Fri 8:00 A.M. – 5:00 P.M."
+      : "Mon–Thu 7:00 A.M. – 6:00 P.M. (Compressed, no work Fridays)";
+
+    var arrivalTxt = empIsSkeletal
+      ? "Arrival: 7 A.M. (Mon–Thu) / 8 A.M. (Fri)"
+      : "Arrival: 7 A.M. (Mon–Thu only)";
+
+    var departureTxt = empIsSkeletal
+      ? "Departure: 4 P.M. (Mon–Thu) / 5 P.M. (Fri)"
+      : "Departure: 6 P.M. (Mon–Thu only)";
+
+    var singleCopyHTML =
+      '<div class="dtr-copy">' +
+        '<div>' +
+          '<div class="dtr-header">' +
+            '<h3>Republic of the Philippines</h3>' +
+            '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
+            '<h4>Negros Island Region</h4>' +
+            '<h4>(Robinsons Supermarket Villamonte) 2/F East 3 Center,</h4>' +
+            '<h4>Narra Extension, Burgos Avenue, Brgy. Villamonte, Bacolod City</h4>' +
+          '</div>' +
+          '<div class="form-title">CSC Form No. 48</div>' +
+          '<div class="form-title" style="text-align:center; font-weight:bold;">DAILY TIME RECORD</div>' +
+          '<div class="info-row" style="margin-top:5px;">' +
+            '<div class="info-col" style="text-align:left;"><b>Name:</b> <span style="text-decoration:underline;">' + emp.name + '</span></div>' +
+          '</div>' +
+          '<div class="info-row">' +
+            '<div class="info-col" style="text-align:left;"><b>For the period:</b> <span style="text-decoration:underline;">' + period + '</span></div>' +
+          '</div>' +
+          '<div class="info-row">' +
+            '<div class="info-col" style="text-align:left;"><b>Employee Type:</b> <span style="text-decoration:underline;">' + typeLabel + '</span></div>' +
+          '</div>' +
+          '<div class="info-row">' +
+            '<div class="info-col" style="text-align:left;"><b>Official Hours:</b> <span style="text-decoration:underline;">' + officialHoursTxt + '</span></div>' +
+          '</div>' +
+          '<div class="info-row" style="margin-bottom:5px;">' +
+            '<div class="info-col" style="text-align:left;"><b>' + arrivalTxt + '</b></div>' +
+            '<div class="info-col" style="text-align:right;"><b>' + departureTxt + '</b></div>' +
+          '</div>' +
+          '<table class="dtr-table">' +
+            '<thead>' +
+              '<tr><th rowspan="2" class="day-col">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th></tr>' +
+              '<tr><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="ut-col">Hours</th><th class="ut-col">Mins.</th></tr>' +
+            '</thead>' +
+            '<tbody>' + rowsHTML + '</tbody>' +
+            '<tfoot>' +
+              '<tr><td colspan="5" style="text-align:right; font-weight:bold; padding-right:5px;">TOTAL UNDERTIME</td><td style="font-weight:bold;">' + totalUTH + '</td><td style="font-weight:bold;">' + totalUTM + '</td></tr>' +
+              '<tr><td colspan="7" style="text-align:left; font-size:7px; padding:3px;"><b>Leave:</b> &nbsp; VL - _____ &nbsp; SL - _____ &nbsp; SpL - _____ &nbsp; UT - _____</td></tr>' +
+            '</tfoot>' +
+          '</table>' +
+        '</div>' +
+        '<div class="dtr-footer">' +
+          '<div class="certify-text">I certify on my honor that the above is correct of the hours of work performed. Record of which was made daily at the time of arrival and departure from the office.</div>' +
+          '<div style="display:flex; justify-content:space-between; margin-top:10px;">' +
+            '<div class="signature-block"><div class="signature-name">' + emp.name + '</div><div class="signature-title">Employee Signature</div></div>' +
+            '<div class="signature-block"><div class="signature-name">ELENITA PAULINA R. CAÑETE</div><div class="signature-title">OIC-REGIONAL DIRECTOR</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
+    document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
+    document.getElementById("dtrStatus").style.color = "#1c8a4b";
+
+    setTimeout(function() { window.print(); }, 200);
+  }
 });
 </script>
 </body>
