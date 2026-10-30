@@ -112,11 +112,25 @@
     color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
     font-size:14px; font-weight:700; cursor:pointer; height:46px; white-space:nowrap;
     box-shadow:0 4px 10px rgba(0,56,168,.25);
-    transition:filter .15s ease, transform .08s ease;
+    transition:filter .15s ease, transform .08s ease, background .15s ease, box-shadow .15s ease;
   }
   .btn-load:hover { filter:brightness(1.06); }
   .btn-load:active { transform:translateY(1px); }
   .btn-load:disabled { opacity:.55; cursor:not-allowed; filter:none; }
+  #btn-add-emp.saving {
+    background:linear-gradient(135deg, #1c8a4b 0%, #22a35a 100%);
+    box-shadow:0 4px 10px rgba(28,138,75,.30);
+  }
+
+  .btn-cancel {
+    display:none;
+    background:#fff; color:var(--ink-700);
+    border:1.5px solid var(--line); border-radius:var(--radius-sm);
+    padding:12px 22px; font-size:14px; font-weight:700; cursor:pointer;
+    height:46px; white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .btn-cancel:hover { background:var(--blue-50); border-color:#b8cbe3; color:var(--blue-700); }
 
   .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
   .emp-table-wrap { max-height:420px; overflow-y:auto; }
@@ -125,13 +139,14 @@
     background:linear-gradient(180deg,#f7fafd,#eef4fb);
     color:var(--ink-500); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
     padding:13px 10px; text-align:center; border-bottom:1.5px solid var(--line);
-    position:sticky; top:0;
+    position:sticky; top:0; z-index:1;
   }
   tbody td { padding:9px 8px; text-align:center; border-bottom:1px solid #eef2f7; }
   tbody td:first-child { text-align:left; font-weight:600; color:var(--ink-900); padding-left:16px; }
   tbody tr:nth-child(even) td { background:#fafcff; }
   tbody tr:hover td { background:var(--blue-50); }
   tbody tr:last-child td { border-bottom:0; }
+  tbody tr.editing td { background:#fff4e0 !important; }
 
   input[type="text"] {
     width:100%; padding:8px 10px; border:1.5px solid #dbe3ee; border-radius:8px;
@@ -157,6 +172,13 @@
     font-weight:800;
     letter-spacing:.06em;
   }
+  input.emp-input.editing {
+    background:#fff4e0;
+    border-color:#e0a800;
+    color:#7a4a00;
+    cursor:not-allowed;
+  }
+  input.emp-input.editing:focus { box-shadow:0 0 0 4px rgba(224,168,0,.20); }
 
   .info-banner {
     padding:10px 14px; border-radius:8px;
@@ -166,10 +188,21 @@
   }
   .info-banner b { color:var(--blue-700); }
 
+  .emp-edit-hint {
+    display:none;
+    padding:10px 14px; border-radius:8px;
+    background:#fff4e0; border:1px solid #ffd77a;
+    color:#7a4a00; font-size:12.5px; font-weight:600;
+    line-height:1.5; margin-bottom:14px;
+  }
+  .emp-edit-hint b { color:#7a4a00; }
+
   button { cursor:pointer; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; transition:filter .15s ease, transform .08s ease; }
   button:active { transform:translateY(1px); }
   .btn-save { background:linear-gradient(180deg,#25a35c 0%, var(--green-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(28,138,75,.25); }
   .btn-save:hover { filter:brightness(1.07); }
+  .btn-edit { background:linear-gradient(180deg,#3b82f6 0%, #2563eb 100%); color:#fff; box-shadow:0 2px 6px rgba(37,99,235,.25); }
+  .btn-edit:hover { filter:brightness(1.07); }
   .btn-del  { background:linear-gradient(180deg,#e05e5e 0%, var(--red-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(194,59,59,.22); }
   .btn-del:hover { filter:brightness(1.07); }
   td:last-child { white-space:nowrap; }
@@ -218,7 +251,7 @@
 </form>
 <iframe name="hidden_admin_post" id="hidden_admin_post" class="hidden-iframe"></iframe>
 
-<!-- ── NEW: Employee POST target ── -->
+<!-- ── Employee POST target (add / update / delete) ── -->
 <form id="empForm" method="POST" target="hidden_emp_post" class="hidden-iframe">
   <input type="hidden" name="action" id="ef_action">
   <input type="hidden" name="code" id="ef_code">
@@ -255,7 +288,7 @@
 <div class="wrap">
 
   <!-- ════════════ EMPLOYEES ════════════ -->
-  <div class="card">
+  <div class="card" id="employeesCard">
     <div class="card-header">
       <h2>Employees</h2>
       <button class="btn-refresh" id="btn-emp-refresh" onclick="loadEmployees()">
@@ -268,6 +301,8 @@
       Codes must be unique (e.g. <b>24</b>, <b>25</b>…).
     </div>
 
+    <div class="emp-edit-hint" id="emp-edit-hint"></div>
+
     <div class="filter-row" style="margin-bottom:20px;">
       <div style="flex:0 0 130px;">
         <label for="empCodeInput">Code</label>
@@ -279,8 +314,9 @@
         <input type="text" id="empNameInput" class="emp-input"
                placeholder="e.g. Juan Dela Cruz" autocomplete="off">
       </div>
-      <div style="flex:0 0 auto;">
-        <button class="btn-load" id="btn-add-emp" onclick="addEmployee()">➕ Add Employee</button>
+      <div style="flex:0 0 auto; display:flex; gap:8px;">
+        <button class="btn-load" id="btn-add-emp" onclick="handleEmployeeSubmit()">➕ Add Employee</button>
+        <button class="btn-cancel" id="btn-cancel-edit" onclick="exitEditMode()">✖ Cancel</button>
       </div>
     </div>
 
@@ -288,9 +324,9 @@
       <table>
         <thead>
           <tr>
-            <th style="width:12%;">Code</th>
+            <th style="width:10%;">Code</th>
             <th style="text-align:left;">Name</th>
-            <th style="width:15%;">Actions</th>
+            <th style="width:22%;">Actions</th>
           </tr>
         </thead>
         <tbody id="empTableBody">
@@ -360,6 +396,12 @@ var EMPLOYEES = [
 /* Active list — replaced by the Employees sheet when it loads. */
 var employees = EMPLOYEES.slice();
 
+/* Tracks current edit mode:
+ *   null                                 → adding a new employee
+ *   { code:"XX", originalName:"…" }       → editing employee XX
+ */
+var editState = null;
+
 var pendingEmpAction = null;
 
 function showToast(msg, type) {
@@ -391,7 +433,6 @@ function fetchEmployees() {
     }
     window[cbName] = function(data) {
       if (data && data.success && Array.isArray(data.data)) {
-        // normalise shape
         var cleaned = data.data
           .filter(function(e){ return e && e.code && e.name; })
           .map(function(e){ return { code: String(e.code).padStart(2,"0"), name: String(e.name) }; });
@@ -416,18 +457,26 @@ function renderEmployees() {
     return;
   }
   employees.forEach(function(emp) {
+    var isEditing = editState && editState.code === emp.code;
     var tr = document.createElement("tr");
+    if (isEditing) tr.className = "editing";
     tr.innerHTML =
       '<td style="text-align:left; font-weight:800; color:var(--blue-700); padding-left:16px;">' +
         escapeHtml(emp.code) +
       '</td>' +
       '<td style="text-align:left;">' + escapeHtml(emp.name) + '</td>' +
       '<td>' +
-        '<button class="btn-del" type="button" data-code="' + escapeHtml(emp.code) + '">Delete</button>' +
+        '<button class="btn-edit" type="button" data-act="edit"   data-code="' + escapeHtml(emp.code) + '">Edit</button>' +
+        '<button class="btn-del"  type="button" data-act="delete" data-code="' + escapeHtml(emp.code) + '">Delete</button>' +
       '</td>';
-    tr.querySelector("button").addEventListener("click", function() {
+
+    tr.querySelector('button[data-act="edit"]').addEventListener("click", function() {
+      enterEditMode(emp.code, emp.name);
+    });
+    tr.querySelector('button[data-act="delete"]').addEventListener("click", function() {
       deleteEmployee(emp.code);
     });
+
     tbody.appendChild(tr);
   });
 }
@@ -443,29 +492,69 @@ function suggestNextCode() {
   if (inp && !inp.value) inp.value = next;
 }
 
-/* ─────────── EMPLOYEES: PUBLIC ─────────── */
-window.loadEmployees = function() {
-  var btn = document.getElementById("btn-emp-refresh");
-  if (btn) btn.classList.add("loading");
-  var tbody = document.getElementById("empTableBody");
-  tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Loading employees…</td></tr>';
+/* ─────────── EMPLOYEES: EDIT MODE ─────────── */
+function enterEditMode(code, name) {
+  if (pendingEmpAction) {
+    return showToast("Please wait — previous save in progress.", "error");
+  }
+  editState = { code: code, originalName: name };
 
-  return fetchEmployees().then(function(list) {
-    if (list) {
-      employees = list.length > 0 ? list : EMPLOYEES.slice();
-    } else {
-      employees = EMPLOYEES.slice(); // backend not ready — fall back
-    }
-    renderEmployees();
-    suggestNextCode();
-    if (btn) btn.classList.remove("loading");
-    return employees;
-  });
+  var codeInput = document.getElementById("empCodeInput");
+  var nameInput = document.getElementById("empNameInput");
+  var addBtn    = document.getElementById("btn-add-emp");
+  var cancelBtn = document.getElementById("btn-cancel-edit");
+  var hint      = document.getElementById("emp-edit-hint");
+
+  codeInput.value = code;
+  codeInput.disabled = true;
+  codeInput.classList.add("editing");
+  nameInput.value = name;
+  addBtn.textContent = "💾 Save Changes";
+  addBtn.classList.add("saving");
+  cancelBtn.style.display = "inline-block";
+  hint.textContent = "✏️ Editing employee " + code + " — the code cannot be changed (it is used as a key in Logs, Skeletal, and Travel). Only the name is editable.";
+  hint.style.display = "block";
+
+  nameInput.focus();
+  nameInput.select();
+
+  var card = document.getElementById("employeesCard");
+  if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  renderEmployees();
+}
+
+window.exitEditMode = function() {
+  editState = null;
+
+  var codeInput = document.getElementById("empCodeInput");
+  var nameInput = document.getElementById("empNameInput");
+  var addBtn    = document.getElementById("btn-add-emp");
+  var cancelBtn = document.getElementById("btn-cancel-edit");
+  var hint      = document.getElementById("emp-edit-hint");
+
+  codeInput.disabled = false;
+  codeInput.classList.remove("editing");
+  codeInput.value = "";
+  nameInput.value = "";
+  addBtn.textContent = "➕ Add Employee";
+  addBtn.classList.remove("saving");
+  cancelBtn.style.display = "none";
+  hint.style.display = "none";
+  hint.textContent = "";
+
+  suggestNextCode();
+  renderEmployees();
 };
 
-window.addEmployee = function() {
+/* ─────────── EMPLOYEES: SUBMIT ─────────── */
+window.handleEmployeeSubmit = function() {
   if (pendingEmpAction) return showToast("Please wait — previous save in progress.", "error");
+  if (editState) return submitEmployeeUpdate();
+  return submitEmployeeAdd();
+};
 
+function submitEmployeeAdd() {
   var code = document.getElementById("empCodeInput").value.trim();
   var name = document.getElementById("empNameInput").value.trim();
 
@@ -486,7 +575,27 @@ window.addEmployee = function() {
   var addBtn = document.getElementById("btn-add-emp");
   if (addBtn) addBtn.disabled = true;
   showToast("⏳ Saving employee " + code + "…", "");
-};
+}
+
+function submitEmployeeUpdate() {
+  var code = editState.code;
+  var name = document.getElementById("empNameInput").value.trim();
+
+  if (!name) return showToast("Please enter the employee's full name.", "error");
+  if (name === editState.originalName) return showToast("No changes to save.", "");
+
+  pendingEmpAction = { type: "update", code: code, name: name };
+
+  document.getElementById("ef_action").value = "updateEmployee";
+  document.getElementById("ef_code").value   = code;
+  document.getElementById("ef_name").value   = name;
+  document.getElementById("empForm").action  = API_URL;
+  document.getElementById("empForm").submit();
+
+  var addBtn = document.getElementById("btn-add-emp");
+  if (addBtn) addBtn.disabled = true;
+  showToast("⏳ Saving changes for employee " + code + "…", "");
+}
 
 window.deleteEmployee = function(code) {
   if (pendingEmpAction) return showToast("Please wait — previous save in progress.", "error");
@@ -494,6 +603,11 @@ window.deleteEmployee = function(code) {
   if (!emp) return;
 
   if (!confirm("Delete employee " + code + " — " + emp.name + " from the Employees sheet?")) return;
+
+  /* If we were editing this employee, exit edit mode first */
+  if (editState && editState.code === code) {
+    exitEditMode();
+  }
 
   pendingEmpAction = { type: "delete", code: code };
 
@@ -504,6 +618,32 @@ window.deleteEmployee = function(code) {
   document.getElementById("empForm").submit();
 
   showToast("🗑️ Deleting employee " + code + "…", "");
+};
+
+/* ─────────── EMPLOYEES: REFRESH ─────────── */
+window.loadEmployees = function() {
+  var btn = document.getElementById("btn-emp-refresh");
+  if (btn) btn.classList.add("loading");
+  var tbody = document.getElementById("empTableBody");
+  tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Loading employees…</td></tr>';
+
+  return fetchEmployees().then(function(list) {
+    if (list) {
+      employees = list.length > 0 ? list : EMPLOYEES.slice();
+    } else {
+      employees = EMPLOYEES.slice();
+    }
+
+    /* If we were editing someone who no longer exists, exit edit mode */
+    if (editState && !employees.some(function(e){ return e.code === editState.code; })) {
+      exitEditMode();
+    }
+
+    renderEmployees();
+    if (!editState) suggestNextCode();
+    if (btn) btn.classList.remove("loading");
+    return employees;
+  });
 };
 
 /* ─────────── TIME LOGS ─────────── */
@@ -521,6 +661,11 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.key === "Enter") loadData();
   });
 
+  /* Esc = cancel edit */
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && editState) exitEditMode();
+  });
+
   document.getElementById("hidden_admin_post").onload = function() {
     setTimeout(loadData, 1000);
   };
@@ -536,8 +681,9 @@ document.addEventListener("DOMContentLoaded", function() {
     setTimeout(function() {
       fetchEmployees().then(function(list) {
         if (list) employees = list.length > 0 ? list : EMPLOYEES.slice();
+        else employees = EMPLOYEES.slice();
         renderEmployees();
-        suggestNextCode();
+        if (!editState) suggestNextCode();
         if (addBtn) addBtn.disabled = false;
 
         if (action.type === "add") {
@@ -549,6 +695,15 @@ document.addEventListener("DOMContentLoaded", function() {
             suggestNextCode();
           } else {
             showToast("⚠ Could not confirm save — check Apps Script.", "error");
+          }
+        } else if (action.type === "update") {
+          var emp = employees.find(function(e){ return e.code === action.code; });
+          if (emp && emp.name === action.name) {
+            showToast("✅ Employee " + action.code + " updated.", "success");
+            exitEditMode();
+          } else {
+            showToast("⚠ Could not confirm update — check Apps Script.", "error");
+            renderEmployees();
           }
         } else if (action.type === "delete") {
           var still = employees.some(function(e){ return e.code === action.code; });
