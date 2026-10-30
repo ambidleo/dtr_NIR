@@ -432,6 +432,8 @@
 
 <div id="print-area"></div>
 
+<!-- Datalist is rebuilt from the live Employees sheet after fetch. The static options
+     below are a graceful fallback if the backend hasn't been seeded yet. -->
 <datalist id="employeeNames">
   <option value="Elenita Paulina R. Cañete">
   <option value="Brechelle Grace P. Benotapa">
@@ -454,8 +456,8 @@
   <option value="Helen Mae B. Tandog">
   <option value="Leo Ambid">
   <option value="Earl Adrian Gallego">
-  <option value="Jelly Mae B. Benotapa">  
- <option value="Xenia Santillan">
+  <option value="Jelly Mae B. Benotapa">
+  <option value="Xenia Santillan">
 </datalist>
 
 <script>
@@ -465,6 +467,23 @@ var DEFAULT_RECOMMENDED_NAME  = "ELENITA PAULINA R. CAÑETE";
 var DEFAULT_RECOMMENDED_TITLE = "OIC-Regional Director";
 var DEFAULT_APPROVED_NAME     = "EDUARDO P. ROBLES, Jr.";
 var DEFAULT_APPROVED_TITLE    = "Senior Undersecretary";
+
+/* ─── Fallback list — used only if the Employees sheet isn't reachable yet ─── */
+var FALLBACK_EMPLOYEES = [
+  { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
+  { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
+  { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
+  { code:"07", name:"Katrina S. Amonares" }, { code:"08", name:"Lorie Ann A. Bantayan" },
+  { code:"09", name:"Daisy Mae T. Batuigas" }, { code:"10", name:"Marla Beth C. Deocadez" },
+  { code:"11", name:"Kimberly M. Enim" }, { code:"12", name:"Arnie Rose N. Famoso" },
+  { code:"13", name:"Debbie H. Felomira" }, { code:"14", name:"Philjoe M. Maghanoy" },
+  { code:"15", name:"Paul Ryan B. Pacardo" }, { code:"16", name:"Shaira June Rubia" },
+  { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
+  { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Adrian Gallego" }, { code:"22", name:"Jelly Mae B. Benotapa" }, { code:"23", name:"Xenia Santillan" }
+];
+
+/* Active list — replaced with sheet data once loaded. */
+var employees = FALLBACK_EMPLOYEES.slice();
 
 var allOrders         = [];
 var pendingAction     = null;
@@ -525,6 +544,48 @@ function escapeAttr(s) {
 }
 function escapeHtml(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ─────────── EMPLOYEES FETCH ─────────── */
+function fetchEmployees() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_travel_emp_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) {
+        var cleaned = data.data
+          .filter(function(e){ return e && e.code && e.name; })
+          .map(function(e){ return { code: String(e.code).padStart(2,"0"), name: String(e.name) }; });
+        finish(cleaned);
+      } else {
+        finish(null);
+      }
+    };
+    script.onerror = function() { finish(null); };
+    var timer = setTimeout(function() { finish(null); }, 12000);
+    script.src = API_URL + "?action=getEmployees&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+function populateDatalist() {
+  var dl = document.getElementById("employeeNames");
+  if (!dl) return;
+  dl.innerHTML = "";
+  employees.forEach(function(e) {
+    var opt = document.createElement("option");
+    opt.value = e.name;
+    dl.appendChild(opt);
+  });
 }
 
 function fetchTravelOrders() {
@@ -899,12 +960,29 @@ document.addEventListener("DOMContentLoaded", function() {
 
   resetForm();
 
-  loadAllOrders().then(function(orders) {
+  /* ─── BOOT SEQUENCE: load orders + employees in parallel ─── */
+  showLoading("Loading travel orders & employees…");
+  Promise.all([loadAllOrders(true), fetchEmployees()]).then(function(results) {
+    var orders  = results[0] || [];
+    var empList = results[1];
+
+    if (empList) {
+      employees = empList.length > 0 ? empList : FALLBACK_EMPLOYEES.slice();
+    } else {
+      employees = FALLBACK_EMPLOYEES.slice();
+    }
+    populateDatalist();
+
     backendReady = true;
     document.getElementById("btnPrint").disabled = false;
     document.getElementById("btnSave").disabled = false;
+    hideLoading();
+
     if (orders.length === 0) {
       showToast("ℹ️ No travel orders on the server yet — start by creating one.", "");
+    }
+    if (!empList) {
+      showToast("⚠ Could not load employee list — using default 23 names.", "error");
     }
   });
 });
