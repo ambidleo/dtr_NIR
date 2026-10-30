@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f4e79">
+<meta name="theme-color" content="#003087">
 <title>DHSUD NIR — DTR Print Generator</title>
 <style>
   :root {
-    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
-    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --blue-700:#003087; --blue-600:#0038A8; --blue-500:#2a6fc9;
+    --blue-100:#e6eefc; --blue-50:#f5f8fd;
     --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
     --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
     --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
@@ -19,29 +19,59 @@
     margin:0; color:var(--ink-900); min-height:100vh;
     background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
   }
-  header {
-    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
-    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
-    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+
+  /* ════════ GOVERNMENT MASTHEAD ════════ */
+  .gov-header {
+    background:#fff; border-bottom:3px solid #0038A8;
+    position:sticky; top:0; z-index:20;
+    box-shadow:0 2px 12px rgba(0,26,77,.10);
   }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .brand-mark {
-    width:40px; height:40px; border-radius:11px;
-    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
-    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  .gov-flag-strip {
+    height:5px;
+    background:linear-gradient(to right,
+      #0038A8 0% 33.33%,
+      #CE1126 33.33% 66.66%,
+      #FCD116 66.66% 100%);
   }
-  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
-  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
-  .nav-links { display:flex; gap:8px; flex-wrap:wrap; }
-  .nav-links a {
-    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
-    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-    padding:8px 14px; border-radius:999px;
+  .gov-masthead {
+    max-width:1200px; margin:0 auto; padding:12px 26px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
   }
-  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+  .gov-seal { width:62px; height:62px; flex-shrink:0;
+    filter:drop-shadow(0 1px 2px rgba(0,26,77,.18)); }
+  .gov-seal svg { display:block; width:100%; height:100%; }
+  .gov-masthead-text { flex:1; min-width:260px; line-height:1.2; }
+  .gov-republic {
+    font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:#5a6b80; font-weight:600; margin-bottom:3px;
+  }
+  .gov-dept-name {
+    margin:0; font-size:17px; font-weight:800; color:#001a4d;
+    font-family:Georgia,"Times New Roman",serif;
+    line-height:1.15; letter-spacing:-.2px;
+  }
+  .gov-region {
+    margin-top:3px; font-size:12px; font-weight:700; color:#0038A8;
+    letter-spacing:.12em; text-transform:uppercase;
+    font-family:Georgia,"Times New Roman",serif;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .gov-module {
+    display:inline-block; padding:2px 8px;
+    background:#0038A8; color:#FCD116; border-radius:3px;
+    font-size:9.5px; font-weight:800; letter-spacing:.1em;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    text-transform:uppercase;
+  }
+  .gov-nav { display:flex; gap:6px; flex-wrap:wrap; }
+  .gov-nav a {
+    color:#0038A8; background:#f4f8fd;
+    border:1px solid #c9d8ec; border-radius:6px;
+    padding:8px 13px; font-size:12.5px; font-weight:700;
+    text-decoration:none; white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .gov-nav a:hover { background:#0038A8; color:#fff; border-color:#0038A8; }
 
   .wrap { max-width:760px; margin:26px auto 40px; padding:0 18px; }
   .card {
@@ -59,11 +89,11 @@
   }
   select {
     appearance:none; padding-right:44px; cursor:pointer;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231f4e79' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230038A8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
     background-repeat:no-repeat; background-position:right 16px center; background-size:18px;
   }
   select:hover, input:hover { border-color:#b8cbe3; }
-  select:focus, input:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
+  select:focus, input:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(42,111,201,.18); }
 
   .field { margin-bottom:16px; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
@@ -72,10 +102,10 @@
     background:linear-gradient(135deg,var(--blue-600) 0%,var(--blue-500) 100%);
     color:#fff; width:100%; margin-top:8px; border:0; padding:16px;
     font-size:16px; font-weight:800; border-radius:var(--radius-sm); cursor:pointer;
-    box-shadow:0 6px 16px rgba(42,98,153,.30);
+    box-shadow:0 6px 16px rgba(0,56,168,.30);
     transition:filter .15s ease, transform .08s ease, box-shadow .15s ease;
   }
-  .primary:hover { filter:brightness(1.06); box-shadow:0 8px 20px rgba(42,98,153,.36); }
+  .primary:hover { filter:brightness(1.06); box-shadow:0 8px 20px rgba(0,56,168,.36); }
   .primary:active { transform:translateY(1px); }
 
   #dtrStatus {
@@ -89,12 +119,17 @@
 
   #print-area { display: none; }
 
+  @media (max-width:860px) {
+    .gov-masthead { padding:10px 16px; gap:12px; }
+    .gov-seal { width:50px; height:50px; }
+    .gov-dept-name { font-size:14.5px; }
+    .gov-region { font-size:10.5px; }
+    .gov-nav { width:100%; }
+    .gov-nav a { font-size:11.5px; padding:7px 11px; }
+  }
   @media (max-width:560px) {
     .row { grid-template-columns:1fr; }
-    .brand-sub { display:none; }
     .card { padding:18px; }
-    header { padding:12px 16px; }
-    .nav-links a { padding:7px 12px; font-size:12px; }
   }
 
   /* ═════════ PRINT LAYOUT ═════════ */
@@ -138,31 +173,16 @@
     .dtr-table .time-col { width:14%; }
     .dtr-table .ut-col { width:9%; }
 
-    /* Friday no-work row (non-skeletal) */
     .dtr-table td.do-row {
-      background:#f0f4f8 !important;
-      font-style:italic;
-      font-size:7px;
-      text-align:center;
-      color:#222;
+      background:#f0f4f8 !important; font-style:italic; font-size:7px;
+      text-align:center; color:#222;
     }
-    .dtr-table td.do-row b {
-      font-style:normal;
-      letter-spacing:.3px;
-    }
+    .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
 
-    /* Travel Order row — distinct blue tint */
     .dtr-table td.travel-row {
-      background:#e8f0ff !important;
-      font-size:7px;
-      text-align:center;
-      color:#0d2a5c;
+      background:#e8f0ff !important; font-size:7px; text-align:center; color:#0d2a5c;
     }
-    .dtr-table td.travel-row b {
-      font-style:normal;
-      letter-spacing:.3px;
-      text-transform:uppercase;
-    }
+    .dtr-table td.travel-row b { font-style:normal; letter-spacing:.3px; text-transform:uppercase; }
 
     .dtr-footer { margin-top:10px; font-size:8px; }
     .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
@@ -174,20 +194,48 @@
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <div class="brand-mark">DH</div>
-    <div class="brand-text">
-      <span class="brand-title">DHSUD NIR</span>
-      <span class="brand-sub">Print DTR</span>
+<header class="gov-header">
+  <div class="gov-flag-strip" aria-hidden="true"></div>
+  <div class="gov-masthead">
+    <div class="gov-seal" aria-hidden="true">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DHSUD seal">
+        <circle cx="50" cy="50" r="49" fill="#FCD116"/>
+        <circle cx="50" cy="50" r="46" fill="#0038A8"/>
+        <circle cx="50" cy="50" r="40" fill="#ffffff"/>
+        <g stroke="#FCD116" stroke-width="1.8" stroke-linecap="round">
+          <line x1="50" y1="13" x2="50" y2="19"/>
+          <line x1="39" y1="15" x2="41" y2="20"/>
+          <line x1="61" y1="15" x2="59" y2="20"/>
+          <line x1="30" y1="22" x2="33" y2="26"/>
+          <line x1="70" y1="22" x2="67" y2="26"/>
+        </g>
+        <circle cx="50" cy="33" r="7" fill="#FCD116"/>
+        <path d="M32 54 L50 39 L68 54 L68 74 L32 74 Z" fill="#0038A8"/>
+        <path d="M32 54 L50 39 L68 54" fill="none" stroke="#FCD116" stroke-width="1.8" stroke-linejoin="round"/>
+        <rect x="45.5" y="62" width="9" height="12" fill="#ffffff"/>
+        <rect x="36" y="58" width="5.5" height="5.5" fill="#FCD116"/>
+        <rect x="58.5" y="58" width="5.5" height="5.5" fill="#FCD116"/>
+        <text x="50" y="86" text-anchor="middle"
+              font-family="Arial, Helvetica, sans-serif"
+              font-weight="900" font-size="7.5"
+              fill="#0038A8" letter-spacing="1.6">DHSUD</text>
+      </svg>
     </div>
+    <div class="gov-masthead-text">
+      <div class="gov-republic">Republic of the Philippines</div>
+      <div class="gov-dept-name">Department of Human Settlements and Urban Development</div>
+      <div class="gov-region">
+        Negros Island Region
+        <span class="gov-module">Print DTR</span>
+      </div>
+    </div>
+    <nav class="gov-nav">
+      <a href="kiosk.html">🏠 Kiosk</a>
+      <a href="skeletal.html">👥 Skeletal</a>
+      <a href="travel.html">✈️ Travel</a>
+      <a href="index.html">⚙️ Admin</a>
+    </nav>
   </div>
-  <nav class="nav-links">
-    <a href="kiosk.html">🏠 Kiosk</a>
-    <a href="skeletal.html">👥 Skeletal</a>
-    <a href="travel.html">✈️ Travel</a>
-    <a href="index.html">⚙️ Admin</a>
-  </nav>
 </header>
 
 <div class="wrap">
@@ -238,14 +286,10 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Gallego" }
 ];
 
-/* ── Utility ─────────────────────────────────────────── */
 function pad2(n) { return String(n).padStart(2, '0'); }
 function escapeHtml(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
-
-/* Name normalizer for matching employee name → travel personnel name.
-   Uppercases, strips periods, removes common titles, collapses spaces. */
 function normalizeName(s) {
   return String(s || "")
     .toUpperCase()
@@ -254,8 +298,6 @@ function normalizeName(s) {
     .replace(/[,\s]+/g, ' ')
     .trim();
 }
-
-/* ── ISO week helper ─────────────────────────────────── */
 function getIsoWeekKey(date) {
   var d = new Date(date.getTime());
   d.setHours(0,0,0,0);
@@ -265,8 +307,6 @@ function getIsoWeekKey(date) {
   var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
 }
-
-/* ── JSONP fetchers ──────────────────────────────────── */
 function fetchSkeletal() {
   return new Promise(function(resolve) {
     var cbName = "jsonp_skelgen_" + Math.random().toString(36).slice(2);
@@ -290,7 +330,6 @@ function fetchSkeletal() {
     document.body.appendChild(script);
   });
 }
-
 function fetchTravelOrders() {
   return new Promise(function(resolve) {
     var cbName = "jsonp_travelgen_" + Math.random().toString(36).slice(2);
@@ -314,7 +353,6 @@ function fetchTravelOrders() {
     document.body.appendChild(script);
   });
 }
-
 function loadSkeletalLegacy() {
   try {
     var arr = JSON.parse(localStorage.getItem(LEGACY_KEY) || "[]");
@@ -323,10 +361,7 @@ function loadSkeletalLegacy() {
     return set;
   } catch(e) { return {}; }
 }
-
-/* ── Time math ───────────────────────────────────────── */
 function isFriday(y, m, d) { return new Date(y, m, d).getDay() === 5; }
-
 function parseMins(t) {
   if (!t) return null;
   var match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -336,7 +371,6 @@ function parseMins(t) {
   if (ap === "AM" && h === 12) h = 0;
   return h * 60 + m;
 }
-
 function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
   var inM = parseMins(amIn), outM = parseMins(amOut);
   var pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
@@ -356,9 +390,7 @@ function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
   return total;
 }
 
-/* ── Main ────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function () {
-  /* Startup guard */
   var requiredIds = [
     "dtrEmp", "period", "startDate", "endDate",
     "btn-print", "dtrStatus", "fatal", "print-area"
@@ -376,7 +408,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  /* Populate dropdown */
   var sel = document.getElementById("dtrEmp");
   EMPLOYEES.forEach(function(e){
     var o = document.createElement("option");
@@ -412,7 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     msg.textContent = "⏳ Fetching skeletal & travel data…";
-    msg.style.color = "#1f4e79";
+    msg.style.color = "#003087";
 
     buildDTR(code, start, end);
   });
@@ -448,7 +479,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var empNameNorm = normalizeName(emp.name);
 
-    /* Fetch all data in parallel */
     var results = await Promise.all([fetchSkeletal(), fetchTravelOrders()]);
     var skeletalByWeek = results[0] || {};
     var travelOrders   = results[1] || [];
@@ -466,7 +496,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return !!legacySet[empCode];
     }
 
-    /* Match by normalized name — handles case, punctuation, titles */
     function findTravelOn(dateStr) {
       for (var i = 0; i < travelOrders.length; i++) {
         var to = travelOrders[i];
@@ -492,7 +521,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("dtrStatus").textContent = "⏳ Downloading time logs…";
 
-    /* Fetch loop — travel days and blank Fridays are skipped */
     for (var d = startDay; d <= endDay; d++) {
       var cellDate = new Date(year, month, d);
       var dStr = year + "-" + pad2(month + 1) + "-" + pad2(d);
@@ -521,7 +549,6 @@ document.addEventListener("DOMContentLoaded", function () {
       m.textContent = "⚠ " + failedDates.length + " date(s) failed to load. Generating with partial data.";
     }
 
-    /* Row build — travel first, then Friday DO No., then times */
     for (var j = 1; j <= 31; j++) {
       var inPeriod = (j >= startDay && j <= endDay && j <= daysInMonth);
       if (!inPeriod) {
@@ -531,7 +558,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       var rec = byDay[j];
 
-      /* 1) Travel day — show TO number */
       if (rec && rec.travel) {
         var to = rec.travel;
         var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
@@ -543,7 +569,6 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      /* 2) Non-skeletal Friday — show DO No. message */
       if (rec && rec.skippedFriday) {
         rowsHTML += '<tr><td>' + j + '</td>' +
           '<td colspan="6" class="do-row">' +
@@ -552,7 +577,6 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      /* 3) Normal day — show punch times */
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
@@ -571,7 +595,6 @@ document.addEventListener("DOMContentLoaded", function () {
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
     }
 
-    /* Whether employee is skeletal for the printed "Employee Type" label */
     var anyFridaySkeletal = false;
     for (var fd = startDay; fd <= endDay; fd++) {
       if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
@@ -581,7 +604,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     var empIsSkeletal = anyFridaySkeletal;
 
-    /* Console diagnostic */
     var travelDaysInPeriod = [];
     for (var td = startDay; td <= endDay; td++) {
       var tdStr = year + "-" + pad2(month + 1) + "-" + pad2(td);
