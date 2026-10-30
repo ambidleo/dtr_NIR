@@ -182,7 +182,8 @@
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbyyaX_v0Nbvxm-QUyRSDEtY3d6CNRHu63fPqTSoz5ly0ixwZR5IX4hWbTD3hb3iHsSR/exec";
 
-var EMPLOYEES = [
+/* ─── Fallback list — used only if the Employees sheet isn't reachable yet ─── */
+var FALLBACK_EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
   { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
   { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
@@ -195,6 +196,9 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Adrian Gallego" }, { code:"22", name:"Jelly Mae B. Benotapa" }, { code:"23", name:"Xenia Santillan" }
 ];
 
+/* Active list — replaced with sheet data once loaded. */
+var employees = FALLBACK_EMPLOYEES.slice();
+
 function getTodayString() {
   var d = new Date();
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
@@ -204,7 +208,41 @@ function getCurrentTimeString() {
   return d.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
+/* ─────────── EMPLOYEES FETCH ─────────── */
+function fetchEmployees() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_kiosk_emp_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) {
+        var cleaned = data.data
+          .filter(function(e){ return e && e.code && e.name; })
+          .map(function(e){ return { code: String(e.code).padStart(2,"0"), name: String(e.name) }; });
+        finish(cleaned);
+      } else {
+        finish(null);
+      }
+    };
+    script.onerror = function() { finish(null); };
+    var timer = setTimeout(function() { finish(null); }, 12000);
+    script.src = API_URL + "?action=getEmployees&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  var sel = document.getElementById("employee");
+  var statusBox = document.getElementById("status");
+
   function tickClock(){
     var now = new Date();
     document.getElementById("liveClock").textContent = now.toLocaleTimeString("en-US");
@@ -212,20 +250,27 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   setInterval(tickClock, 1000); tickClock();
 
-  var sel = document.getElementById("employee");
-  EMPLOYEES.forEach(function(e){
-    var o = document.createElement("option");
-    o.value = e.code; o.textContent = e.code + " — " + e.name;
-    sel.appendChild(o);
-  });
+  function populateDropdown() {
+    var current = sel.value;
+    sel.innerHTML = '<option value="">— Tap here to select your name —</option>';
+    employees.forEach(function(e){
+      var o = document.createElement("option");
+      o.value = e.code;
+      o.textContent = e.code + " — " + e.name;
+      sel.appendChild(o);
+    });
+    /* Restore selection if the code still exists */
+    if (current && employees.some(function(e){ return e.code === current; })) {
+      sel.value = current;
+    }
+  }
 
   var SLOT_LABELS = { am_in:"AM Time In", am_out:"AM Time Out", pm_in:"PM Time In", pm_out:"PM Time Out" };
   var cachedLogs = {};
   var pending = null;
 
   function showMsg(cls, text){
-    var box = document.getElementById("status");
-    box.className = cls; box.textContent = text;
+    statusBox.className = cls; statusBox.textContent = text;
   }
   function shallowClone(o){
     var c = {};
@@ -346,7 +391,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (rec.pm_out) return showMsg("err", "PM Time Out already recorded.");
     }
 
-    var emp = EMPLOYEES.find(function(e){ return e.code === code; });
+    var emp = employees.find(function(e){ return e.code === code; });
+    if (!emp) return showMsg("err", "Employee " + code + " is not in the list. Please refresh.");
 
     var toSave = {
       am_in: rec.am_in || "", am_out: rec.am_out || "",
@@ -392,7 +438,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var tbody = document.querySelector("#todayTable tbody");
     tbody.innerHTML = "";
     var rows = 0;
-    EMPLOYEES.forEach(function(e){
+    employees.forEach(function(e){
       var r = cachedLogs[e.code];
       if (!r) return;
       if (!r.am_in && !r.am_out && !r.pm_in && !r.pm_out) return;
@@ -413,11 +459,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
   sel.addEventListener("change", function(){
     refreshButtons();
-    document.getElementById("status").className = "";
+    statusBox.className = "";
   });
   document.getElementById("halfDay").addEventListener("change", refreshButtons);
 
-  window.fetchLogsJSONP();
+  /* ─── BOOT SEQUENCE: employees → dropdown → today's logs ─── */
+  showMsg("ok", "⏳ Loading employees…");
+  fetchEmployees().then(function(list) {
+    if (list) {
+      employees = list.length > 0 ? list : FALLBACK_EMPLOYEES.slice();
+    } else {
+      employees = FALLBACK_EMPLOYEES.slice(); // backend not ready — use fallback
+    }
+    populateDropdown();
+    showMsg("", "");
+    window.fetchLogsJSONP();
+  });
 });
 </script>
 </body>
