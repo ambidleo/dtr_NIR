@@ -440,7 +440,8 @@
 var API_URL = "https://script.google.com/macros/s/AKfycbyyaX_v0Nbvxm-QUyRSDEtY3d6CNRHu63fPqTSoz5ly0ixwZR5IX4hWbTD3hb3iHsSR/exec";
 var LEGACY_KEY = "dhsud_skeletal_workforce";
 
-var EMPLOYEES = [
+/* ─── Fallback list — used only if the Employees sheet isn't reachable yet ─── */
+var FALLBACK_EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
   { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
   { code:"05", name:"Erika Joy S. Guiloreza" }, { code:"06", name:"Stanley S. Adraneda" },
@@ -452,6 +453,9 @@ var EMPLOYEES = [
   { code:"17", name:"Paul D. Sartorio" }, { code:"18", name:"Christalyn Tan" },
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Adrian Gallego" },  { code:"22", name:"Jelly Mae B. Benotapa" }, { code:"23", name:"Xenia Santillan" }
 ];
+
+/* Active list — replaced with sheet data once loaded. */
+var employees = FALLBACK_EMPLOYEES.slice();
 
 var serverData  = {};
 var monthData   = {};
@@ -540,6 +544,37 @@ function showLoading(text) {
 }
 function hideLoading() {
   document.getElementById("loadingOverlay").classList.remove("show");
+}
+
+/* ─────────── EMPLOYEES FETCH ─────────── */
+function fetchEmployees() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_skel_emp_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) {
+        var cleaned = data.data
+          .filter(function(e){ return e && e.code && e.name; })
+          .map(function(e){ return { code: String(e.code).padStart(2,"0"), name: String(e.name) }; });
+        finish(cleaned);
+      } else {
+        finish(null);
+      }
+    };
+    script.onerror = function() { finish(null); };
+    var timer = setTimeout(function() { finish(null); }, 12000);
+    script.src = API_URL + "?action=getEmployees&callback=" + cbName;
+    document.body.appendChild(script);
+  });
 }
 
 function fetchSkeletalJSONP() {
@@ -638,7 +673,7 @@ function renderWeekContent() {
   codes.forEach(function(c){ set[c] = true; });
   var grid = document.getElementById("empGrid");
   grid.innerHTML = "";
-  EMPLOYEES.forEach(function(emp) {
+  employees.forEach(function(emp) {
     var checked = !!set[emp.code];
     var lbl = document.createElement("label");
     lbl.className = "emp-item" + (checked ? " selected" : "");
@@ -808,16 +843,32 @@ document.getElementById("saveIframe").onload = function() {
 document.addEventListener("DOMContentLoaded", function() {
   var now = new Date();
   var defaultMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
-  showLoading("Loading skeletal data from Google Sheets…");
-  fetchSkeletalJSONP().then(function(data) {
+
+  /* ─── BOOT SEQUENCE: employees + skeletal data in parallel ─── */
+  showLoading("Loading employees & skeletal data…");
+  Promise.all([fetchEmployees(), fetchSkeletalJSONP()]).then(function(results) {
+    var empList  = results[0];
+    var skelData = results[1];
+
+    if (empList) {
+      employees = empList.length > 0 ? empList : FALLBACK_EMPLOYEES.slice();
+    } else {
+      employees = FALLBACK_EMPLOYEES.slice();
+    }
+
     initialLoadDone = true;
-    serverData = data || {};
+    serverData = skelData || {};
     hideLoading();
     loadMonth(defaultMonth);
-    if (!data) {
-      showToast("⚠ Could not load from backend — using empty state", "error");
+
+    if (!skelData) {
+      showToast("⚠ Could not load skeletal data — using empty state", "error");
+    }
+    if (!empList) {
+      showToast("⚠ Could not load employee list — using default 23", "error");
     }
   });
+
   document.getElementById("monthPicker").addEventListener("change", function(e) {
     if (!e.target.value) return;
     if (isDirty()) {
