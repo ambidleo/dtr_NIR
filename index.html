@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f4e79">
+<meta name="theme-color" content="#003087">
 <title>DHSUD NIR — Admin Panel</title>
 <style>
   :root {
-    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
-    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+    --blue-700:#003087; --blue-600:#0038A8; --blue-500:#2a6fc9;
+    --blue-100:#e6eefc; --blue-50:#f5f8fd;
     --green-600:#1c8a4b; --green-500:#22a35a;
     --red-600:#c23b3b; --red-500:#d9534f;
     --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
@@ -20,35 +20,61 @@
   * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
   body {
     margin:0; color:var(--ink-900); min-height:100vh;
-    background:
-      radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%),
-      var(--bg);
+    background:radial-gradient(1200px 600px at 50% -220px, #dbe8f7 0%, transparent 70%), var(--bg);
   }
 
-  /* Header */
-  header {
-    background:linear-gradient(135deg, var(--blue-700) 0%, var(--blue-600) 100%);
-    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
-    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
+  /* ════════ GOVERNMENT MASTHEAD ════════ */
+  .gov-header {
+    background:#fff; border-bottom:3px solid #0038A8;
+    position:sticky; top:0; z-index:20;
+    box-shadow:0 2px 12px rgba(0,26,77,.10);
   }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .brand-mark {
-    width:40px; height:40px; border-radius:11px;
-    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
-    color:var(--blue-700); font-weight:800; font-size:15px; letter-spacing:.5px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
+  .gov-flag-strip {
+    height:5px;
+    background:linear-gradient(to right,
+      #0038A8 0% 33.33%,
+      #CE1126 33.33% 66.66%,
+      #FCD116 66.66% 100%);
   }
-  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
-  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
-  .nav-links { display:flex; gap:8px; }
-  .nav-links a {
-    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
-    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-    padding:8px 14px; border-radius:999px; transition:background .15s ease, border-color .15s ease;
+  .gov-masthead {
+    max-width:1200px; margin:0 auto; padding:12px 26px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
   }
-  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
+  .gov-seal { width:62px; height:62px; flex-shrink:0;
+    filter:drop-shadow(0 1px 2px rgba(0,26,77,.18)); }
+  .gov-seal svg { display:block; width:100%; height:100%; }
+  .gov-masthead-text { flex:1; min-width:260px; line-height:1.2; }
+  .gov-republic {
+    font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:#5a6b80; font-weight:600; margin-bottom:3px;
+  }
+  .gov-dept-name {
+    margin:0; font-size:17px; font-weight:800; color:#001a4d;
+    font-family:Georgia,"Times New Roman",serif;
+    line-height:1.15; letter-spacing:-.2px;
+  }
+  .gov-region {
+    margin-top:3px; font-size:12px; font-weight:700; color:#0038A8;
+    letter-spacing:.12em; text-transform:uppercase;
+    font-family:Georgia,"Times New Roman",serif;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .gov-module {
+    display:inline-block; padding:2px 8px;
+    background:#0038A8; color:#FCD116; border-radius:3px;
+    font-size:9.5px; font-weight:800; letter-spacing:.1em;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    text-transform:uppercase;
+  }
+  .gov-nav { display:flex; gap:6px; flex-wrap:wrap; }
+  .gov-nav a {
+    color:#0038A8; background:#f4f8fd;
+    border:1px solid #c9d8ec; border-radius:6px;
+    padding:8px 13px; font-size:12.5px; font-weight:700;
+    text-decoration:none; white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .gov-nav a:hover { background:#0038A8; color:#fff; border-color:#0038A8; }
 
   .wrap { max-width:1140px; margin:26px auto 40px; padding:0 18px; }
   .card {
@@ -71,7 +97,6 @@
   .btn-refresh.loading span { display:inline-block; animation:spin 1s linear infinite; }
   @keyframes spin { 100% { transform:rotate(360deg); } }
 
-  /* Filter row */
   .filter-row { display:flex; gap:16px; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; }
   .filter-row > div { flex:1; min-width:180px; }
   label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
@@ -80,19 +105,18 @@
     font-size:15px; font-weight:600; color:var(--ink-900); background:#fff;
     transition:border-color .15s ease, box-shadow .15s ease;
   }
-  input[type="date"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
+  input[type="date"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(42,111,201,.18); }
 
   .btn-load {
     background:linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
     color:#fff; border:0; border-radius:var(--radius-sm); padding:12px 22px;
     font-size:14px; font-weight:700; cursor:pointer; height:46px; white-space:nowrap;
-    box-shadow:0 4px 10px rgba(42,98,153,.25);
+    box-shadow:0 4px 10px rgba(0,56,168,.25);
     transition:filter .15s ease, transform .08s ease;
   }
   .btn-load:hover { filter:brightness(1.06); }
   .btn-load:active { transform:translateY(1px); }
 
-  /* Table */
   .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
   table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; min-width:760px; }
   thead th {
@@ -113,7 +137,7 @@
     transition:border-color .15s ease, box-shadow .15s ease;
   }
   input[type="text"]:hover { border-color:#b8cbe3; }
-  input[type="text"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(74,144,217,.15); background:#fbfdff; }
+  input[type="text"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(42,111,201,.15); background:#fbfdff; }
   input[type="text"]::placeholder { color:#a6b3c4; font-weight:500; }
 
   button { cursor:pointer; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; transition:filter .15s ease, transform .08s ease; }
@@ -127,7 +151,6 @@
 
   .empty-state { text-align:center; color:var(--ink-500); padding:44px 20px; font-style:italic; font-size:14px; }
 
-  /* Toast */
   .toast {
     position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
     background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
@@ -141,11 +164,16 @@
 
   .hidden-iframe { display:none; }
 
+  @media (max-width:860px) {
+    .gov-masthead { padding:10px 16px; gap:12px; }
+    .gov-seal { width:50px; height:50px; }
+    .gov-dept-name { font-size:14.5px; }
+    .gov-region { font-size:10.5px; }
+    .gov-nav { width:100%; }
+    .gov-nav a { font-size:11.5px; padding:7px 11px; }
+  }
   @media (max-width:640px) {
-    .brand-sub { display:none; }
     .card { padding:18px; }
-    header { padding:12px 16px; }
-    .nav-links a { padding:7px 12px; font-size:12px; }
   }
 </style>
 </head>
@@ -165,20 +193,48 @@
 
 <div id="toast" class="toast"></div>
 
-<header>
-  <div class="brand">
-    <div class="brand-mark">DH</div>
-    <div class="brand-text">
-      <span class="brand-title">DHSUD NIR</span>
-      <span class="brand-sub">Admin Panel</span>
+<header class="gov-header">
+  <div class="gov-flag-strip" aria-hidden="true"></div>
+  <div class="gov-masthead">
+    <div class="gov-seal" aria-hidden="true">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DHSUD seal">
+        <circle cx="50" cy="50" r="49" fill="#FCD116"/>
+        <circle cx="50" cy="50" r="46" fill="#0038A8"/>
+        <circle cx="50" cy="50" r="40" fill="#ffffff"/>
+        <g stroke="#FCD116" stroke-width="1.8" stroke-linecap="round">
+          <line x1="50" y1="13" x2="50" y2="19"/>
+          <line x1="39" y1="15" x2="41" y2="20"/>
+          <line x1="61" y1="15" x2="59" y2="20"/>
+          <line x1="30" y1="22" x2="33" y2="26"/>
+          <line x1="70" y1="22" x2="67" y2="26"/>
+        </g>
+        <circle cx="50" cy="33" r="7" fill="#FCD116"/>
+        <path d="M32 54 L50 39 L68 54 L68 74 L32 74 Z" fill="#0038A8"/>
+        <path d="M32 54 L50 39 L68 54" fill="none" stroke="#FCD116" stroke-width="1.8" stroke-linejoin="round"/>
+        <rect x="45.5" y="62" width="9" height="12" fill="#ffffff"/>
+        <rect x="36" y="58" width="5.5" height="5.5" fill="#FCD116"/>
+        <rect x="58.5" y="58" width="5.5" height="5.5" fill="#FCD116"/>
+        <text x="50" y="86" text-anchor="middle"
+              font-family="Arial, Helvetica, sans-serif"
+              font-weight="900" font-size="7.5"
+              fill="#0038A8" letter-spacing="1.6">DHSUD</text>
+      </svg>
     </div>
+    <div class="gov-masthead-text">
+      <div class="gov-republic">Republic of the Philippines</div>
+      <div class="gov-dept-name">Department of Human Settlements and Urban Development</div>
+      <div class="gov-region">
+        Negros Island Region
+        <span class="gov-module">Admin Panel</span>
+      </div>
+    </div>
+    <nav class="gov-nav">
+      <a href="enroll.html">👤 Enroll Faces</a>
+      <a href="kiosk.html">🏠 Kiosk</a>
+      <a href="travel.html">✈️ Travel</a>
+      <a href="generator.html">🖨️ Print DTR</a>
+    </nav>
   </div>
-  <nav class="nav-links">
-    <a href="enroll.html">👤 Enroll Faces</a>
-    <a href="kiosk.html">🏠 Kiosk</a>
-     <a href="travel.html">Travel</a>
-    <a href="generator.html">🖨️ Print DTR</a>
-  </nav>
 </header>
 
 <div class="wrap">
