@@ -116,8 +116,10 @@
   }
   .btn-load:hover { filter:brightness(1.06); }
   .btn-load:active { transform:translateY(1px); }
+  .btn-load:disabled { opacity:.55; cursor:not-allowed; filter:none; }
 
   .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
+  .emp-table-wrap { max-height:420px; overflow-y:auto; }
   table { width:100%; border-collapse:separate; border-spacing:0; font-size:14px; min-width:760px; }
   thead th {
     background:linear-gradient(180deg,#f7fafd,#eef4fb);
@@ -139,6 +141,30 @@
   input[type="text"]:hover { border-color:#b8cbe3; }
   input[type="text"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(42,111,201,.15); background:#fbfdff; }
   input[type="text"]::placeholder { color:#a6b3c4; font-weight:500; }
+
+  /* Employee-form inputs — larger, left aligned */
+  input.emp-input {
+    padding:12px 14px;
+    font-size:15px;
+    border-radius:var(--radius-sm);
+    border:1.5px solid #ccd9e8;
+    text-align:left;
+  }
+  input.emp-input:hover { border-color:#b8cbe3; }
+  input.emp-input:focus { box-shadow:0 0 0 4px rgba(42,111,201,.18); }
+  input.emp-input.emp-code-input {
+    text-align:center;
+    font-weight:800;
+    letter-spacing:.06em;
+  }
+
+  .info-banner {
+    padding:10px 14px; border-radius:8px;
+    background:var(--blue-50); border:1px solid #d5e3f3;
+    color:var(--ink-500); font-size:12.5px; font-weight:600;
+    line-height:1.5; margin-bottom:16px;
+  }
+  .info-banner b { color:var(--blue-700); }
 
   button { cursor:pointer; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; transition:filter .15s ease, transform .08s ease; }
   button:active { transform:translateY(1px); }
@@ -179,6 +205,7 @@
 </head>
 <body>
 
+<!-- ── Existing time-log POST target ── -->
 <form id="adminForm" method="POST" target="hidden_admin_post" class="hidden-iframe">
   <input type="hidden" name="action" id="af_action">
   <input type="hidden" name="date" id="af_date">
@@ -190,6 +217,14 @@
   <input type="hidden" name="pm_out" id="af_pm_out">
 </form>
 <iframe name="hidden_admin_post" id="hidden_admin_post" class="hidden-iframe"></iframe>
+
+<!-- ── NEW: Employee POST target ── -->
+<form id="empForm" method="POST" target="hidden_emp_post" class="hidden-iframe">
+  <input type="hidden" name="action" id="ef_action">
+  <input type="hidden" name="code" id="ef_code">
+  <input type="hidden" name="name" id="ef_name">
+</form>
+<iframe name="hidden_emp_post" id="hidden_emp_post" class="hidden-iframe"></iframe>
 
 <div id="toast" class="toast"></div>
 
@@ -218,6 +253,54 @@
 </header>
 
 <div class="wrap">
+
+  <!-- ════════════ EMPLOYEES ════════════ -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Employees</h2>
+      <button class="btn-refresh" id="btn-emp-refresh" onclick="loadEmployees()">
+        <span>🔄</span> Refresh
+      </button>
+    </div>
+
+    <div class="info-banner">
+      Employees are synced from the <b>Employees</b> sheet in Google Sheets.
+      Codes must be unique (e.g. <b>24</b>, <b>25</b>…).
+    </div>
+
+    <div class="filter-row" style="margin-bottom:20px;">
+      <div style="flex:0 0 130px;">
+        <label for="empCodeInput">Code</label>
+        <input type="text" id="empCodeInput" class="emp-input emp-code-input"
+               maxlength="3" placeholder="24" autocomplete="off">
+      </div>
+      <div style="flex:1;">
+        <label for="empNameInput">Full Name</label>
+        <input type="text" id="empNameInput" class="emp-input"
+               placeholder="e.g. Juan Dela Cruz" autocomplete="off">
+      </div>
+      <div style="flex:0 0 auto;">
+        <button class="btn-load" id="btn-add-emp" onclick="addEmployee()">➕ Add Employee</button>
+      </div>
+    </div>
+
+    <div class="table-wrap emp-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:12%;">Code</th>
+            <th style="text-align:left;">Name</th>
+            <th style="width:15%;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="empTableBody">
+          <tr><td colspan="3" class="empty-state">Loading employees…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════ TIME LOGS ════════════ -->
   <div class="card">
     <div class="card-header">
       <h2>Manage Time Logs</h2>
@@ -254,11 +337,13 @@
       </table>
     </div>
   </div>
+
 </div>
 
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbyyaX_v0Nbvxm-QUyRSDEtY3d6CNRHu63fPqTSoz5ly0ixwZR5IX4hWbTD3hb3iHsSR/exec";
 
+/* Default fallback list — used only if the Employees sheet isn't reachable yet. */
 var EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
   { code:"03", name:"Engr. Precious Danica V. Valleramos" }, { code:"04", name:"Engr. Harrison C. Gudito, MPA" },
@@ -272,6 +357,11 @@ var EMPLOYEES = [
   { code:"19", name:"Helen Mae B. Tandog" }, { code:"20", name:"Leo Ambid" }, { code:"21", name:"Earl Adrian Gallego" }, { code:"22", name:"Jelly Mae B. Benotapa" }, { code:"23", name:"Xenia Santillan" }
 ];
 
+/* Active list — replaced by the Employees sheet when it loads. */
+var employees = EMPLOYEES.slice();
+
+var pendingEmpAction = null;
+
 function showToast(msg, type) {
   var t = document.getElementById("toast");
   t.textContent = msg;
@@ -279,7 +369,144 @@ function showToast(msg, type) {
   clearTimeout(t._timer);
   t._timer = setTimeout(function(){ t.className = "toast"; }, 3200);
 }
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
+/* ─────────── EMPLOYEES: FETCH ─────────── */
+function fetchEmployees() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_emp_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) {
+        // normalise shape
+        var cleaned = data.data
+          .filter(function(e){ return e && e.code && e.name; })
+          .map(function(e){ return { code: String(e.code).padStart(2,"0"), name: String(e.name) }; });
+        finish(cleaned);
+      } else {
+        finish(null);
+      }
+    };
+    script.onerror = function() { finish(null); };
+    var timer = setTimeout(function() { finish(null); }, 12000);
+    script.src = API_URL + "?action=getEmployees&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+/* ─────────── EMPLOYEES: RENDER ─────────── */
+function renderEmployees() {
+  var tbody = document.getElementById("empTableBody");
+  tbody.innerHTML = "";
+  if (!employees.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No employees yet. Add one above.</td></tr>';
+    return;
+  }
+  employees.forEach(function(emp) {
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td style="text-align:left; font-weight:800; color:var(--blue-700); padding-left:16px;">' +
+        escapeHtml(emp.code) +
+      '</td>' +
+      '<td style="text-align:left;">' + escapeHtml(emp.name) + '</td>' +
+      '<td>' +
+        '<button class="btn-del" type="button" data-code="' + escapeHtml(emp.code) + '">Delete</button>' +
+      '</td>';
+    tr.querySelector("button").addEventListener("click", function() {
+      deleteEmployee(emp.code);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function suggestNextCode() {
+  var max = 0;
+  employees.forEach(function(e) {
+    var n = parseInt(e.code, 10);
+    if (!isNaN(n) && n > max) max = n;
+  });
+  var next = String(max + 1).padStart(2, "0");
+  var inp = document.getElementById("empCodeInput");
+  if (inp && !inp.value) inp.value = next;
+}
+
+/* ─────────── EMPLOYEES: PUBLIC ─────────── */
+window.loadEmployees = function() {
+  var btn = document.getElementById("btn-emp-refresh");
+  if (btn) btn.classList.add("loading");
+  var tbody = document.getElementById("empTableBody");
+  tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Loading employees…</td></tr>';
+
+  return fetchEmployees().then(function(list) {
+    if (list) {
+      employees = list.length > 0 ? list : EMPLOYEES.slice();
+    } else {
+      employees = EMPLOYEES.slice(); // backend not ready — fall back
+    }
+    renderEmployees();
+    suggestNextCode();
+    if (btn) btn.classList.remove("loading");
+    return employees;
+  });
+};
+
+window.addEmployee = function() {
+  if (pendingEmpAction) return showToast("Please wait — previous save in progress.", "error");
+
+  var code = document.getElementById("empCodeInput").value.trim();
+  var name = document.getElementById("empNameInput").value.trim();
+
+  if (!code) return showToast("Please enter an employee code.", "error");
+  if (!/^\d{2,3}$/.test(code)) return showToast("Code must be 2–3 digits (e.g. 24).", "error");
+  if (!name) return showToast("Please enter the employee's full name.", "error");
+  if (employees.some(function(e){ return e.code === code; }))
+    return showToast("Code " + code + " already exists.", "error");
+
+  pendingEmpAction = { type: "add", code: code, name: name };
+
+  document.getElementById("ef_action").value = "addEmployee";
+  document.getElementById("ef_code").value   = code;
+  document.getElementById("ef_name").value   = name;
+  document.getElementById("empForm").action  = API_URL;
+  document.getElementById("empForm").submit();
+
+  var addBtn = document.getElementById("btn-add-emp");
+  if (addBtn) addBtn.disabled = true;
+  showToast("⏳ Saving employee " + code + "…", "");
+};
+
+window.deleteEmployee = function(code) {
+  if (pendingEmpAction) return showToast("Please wait — previous save in progress.", "error");
+  var emp = employees.find(function(e){ return e.code === code; });
+  if (!emp) return;
+
+  if (!confirm("Delete employee " + code + " — " + emp.name + " from the Employees sheet?")) return;
+
+  pendingEmpAction = { type: "delete", code: code };
+
+  document.getElementById("ef_action").value = "deleteEmployee";
+  document.getElementById("ef_code").value   = code;
+  document.getElementById("ef_name").value   = "";
+  document.getElementById("empForm").action  = API_URL;
+  document.getElementById("empForm").submit();
+
+  showToast("🗑️ Deleting employee " + code + "…", "");
+};
+
+/* ─────────── TIME LOGS ─────────── */
 document.addEventListener("DOMContentLoaded", function() {
   var dateInput = document.getElementById("filterDate");
   var tbody = document.getElementById("logTableBody");
@@ -296,6 +523,43 @@ document.addEventListener("DOMContentLoaded", function() {
 
   document.getElementById("hidden_admin_post").onload = function() {
     setTimeout(loadData, 1000);
+  };
+
+  /* Employee POST return → re-sync */
+  document.getElementById("hidden_emp_post").onload = function() {
+    if (!pendingEmpAction) return;
+    var action = pendingEmpAction;
+    pendingEmpAction = null;
+    var addBtn = document.getElementById("btn-add-emp");
+    if (addBtn) addBtn.disabled = true;
+
+    setTimeout(function() {
+      fetchEmployees().then(function(list) {
+        if (list) employees = list.length > 0 ? list : EMPLOYEES.slice();
+        renderEmployees();
+        suggestNextCode();
+        if (addBtn) addBtn.disabled = false;
+
+        if (action.type === "add") {
+          var found = employees.some(function(e){ return e.code === action.code; });
+          if (found) {
+            showToast("✅ Employee " + action.code + " saved.", "success");
+            document.getElementById("empCodeInput").value = "";
+            document.getElementById("empNameInput").value = "";
+            suggestNextCode();
+          } else {
+            showToast("⚠ Could not confirm save — check Apps Script.", "error");
+          }
+        } else if (action.type === "delete") {
+          var still = employees.some(function(e){ return e.code === action.code; });
+          if (!still) showToast("✅ Employee " + action.code + " deleted.", "success");
+          else showToast("⚠ Could not confirm delete — check Apps Script.", "error");
+        }
+
+        /* keep time log table in sync */
+        if (dateInput.value) loadData();
+      });
+    }, 1000);
   };
 
   window.loadData = function() {
@@ -315,7 +579,7 @@ document.addEventListener("DOMContentLoaded", function() {
       done = true;
       clearTimeout(timer);
       if (errMsg) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="color:#a92424; font-style:normal;">Error: ' + errMsg + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="color:#a92424; font-style:normal;">Error: ' + escapeHtml(errMsg) + '</td></tr>';
       }
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[callbackName];
@@ -346,24 +610,22 @@ document.addEventListener("DOMContentLoaded", function() {
     tbody.innerHTML = "";
     var hasRecords = false;
 
-    EMPLOYEES.forEach(function(emp) {
+    employees.forEach(function(emp) {
       var rec = logs[emp.code];
-      if (rec) {
-        hasRecords = true;
-        var tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${emp.name}</td>
-          <td><input type="text" id="amin-${emp.code}" value="${rec.am_in || ''}" placeholder="8:00 AM"></td>
-          <td><input type="text" id="amout-${emp.code}" value="${rec.am_out || ''}" placeholder="12:00 PM"></td>
-          <td><input type="text" id="pmin-${emp.code}" value="${rec.pm_in || ''}" placeholder="1:00 PM"></td>
-          <td><input type="text" id="pmout-${emp.code}" value="${rec.pm_out || ''}" placeholder="5:00 PM"></td>
-          <td>
-            <button class="btn-save" onclick="saveRow('${emp.code}', '${emp.name}', '${dateStr}')">Save</button>
-            <button class="btn-del" onclick="deleteRow('${emp.code}', '${dateStr}')">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
+      if (!rec) return;
+      hasRecords = true;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td>' + escapeHtml(emp.name) + '</td>' +
+        '<td><input type="text" id="amin-'   + emp.code + '" value="' + escapeHtml(rec.am_in  || "") + '" placeholder="8:00 AM"></td>' +
+        '<td><input type="text" id="amout-'  + emp.code + '" value="' + escapeHtml(rec.am_out || "") + '" placeholder="12:00 PM"></td>' +
+        '<td><input type="text" id="pmin-'   + emp.code + '" value="' + escapeHtml(rec.pm_in  || "") + '" placeholder="1:00 PM"></td>' +
+        '<td><input type="text" id="pmout-'  + emp.code + '" value="' + escapeHtml(rec.pm_out || "") + '" placeholder="5:00 PM"></td>' +
+        '<td>' +
+          '<button class="btn-save" onclick="saveRow(\'' + emp.code + '\', \'' + escapeHtml(emp.name).replace(/'/g,"\\'") + '\', \'' + dateStr + '\')">Save</button>' +
+          '<button class="btn-del"  onclick="deleteRow(\'' + emp.code + '\', \'' + dateStr + '\')">Delete</button>' +
+        '</td>';
+      tbody.appendChild(tr);
     });
 
     if (!hasRecords) {
@@ -397,7 +659,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   };
 
-  loadData();
+  /* ── INIT ── */
+  loadEmployees().then(function() {
+    loadData();
+  });
 });
 </script>
 </body>
