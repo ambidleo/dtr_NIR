@@ -3,172 +3,237 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f4e79">
+<meta name="theme-color" content="#0033a0">
 <title>DHSUD NIR — Travel Order</title>
 <style>
-  :root {
-    --blue-700:#1f4e79; --blue-600:#2a6299; --blue-500:#4a90d9;
-    --blue-100:#e8f1fb; --blue-50:#f4f8fd;
+  :root{
+    --gov-blue-900:#001a4d;
+    --gov-blue-800:#00205b;
+    --gov-blue-700:#0033a0;
+    --gov-blue-600:#0b46b8;
+    --gov-blue-500:#1f5fd0;
+    --gov-blue-300:#7fa4e6;
+    --gov-blue-100:#e6edfa;
+    --gov-blue-50:#f3f7fd;
+    --gold:#ffc72c; --gold-600:#b58900;
     --green-600:#1c8a4b; --green-100:#e3f6e8;
-    --red-600:#c23b3b; --red-100:#fde7e7;
-    --amber-500:#e08a00; --amber-100:#fff4e0;
-    --ink-900:#0e1825; --ink-700:#2c3a4c; --ink-500:#5a6b80;
-    --line:#dbe3ee; --bg:#eef2f8; --white:#fff;
-    --shadow-md:0 4px 12px rgba(15,42,71,.08),0 1px 3px rgba(15,42,71,.05);
-    --radius:16px; --radius-sm:12px;
+    --red-600:#b3261e; --red-100:#fdecea;
+    --amber-500:#b26a00; --amber-100:#fff4e0;
+    --ink-900:#101828; --ink-700:#344054; --ink-500:#667085;
+    --line:#d5ddeb; --bg:#eef2f8; --white:#fff;
+    --shadow-sm:0 1px 2px rgba(0,26,77,.06);
+    --shadow-md:0 2px 8px rgba(0,26,77,.08),0 1px 2px rgba(0,26,77,.05);
+    --radius:10px; --radius-sm:8px;
   }
-  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
-  body {
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
     margin:0; color:var(--ink-900); min-height:100vh;
-    background:radial-gradient(1200px 600px at 50% -220px,#dbe8f7 0%,transparent 70%),var(--bg);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,rgba(0,51,160,.07) 0%,rgba(0,51,160,0) 280px),var(--bg);
   }
-  header {
-    background:linear-gradient(135deg,var(--blue-700) 0%,var(--blue-600) 100%);
-    color:#fff; padding:14px 26px; display:flex; justify-content:space-between; align-items:center;
-    box-shadow:0 2px 12px rgba(15,42,71,.18); position:sticky; top:0; z-index:20;
-  }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .brand-mark {
-    width:40px; height:40px; border-radius:11px;
-    background:linear-gradient(135deg,#fff 0%,#e8f1fb 100%);
-    color:var(--blue-700); font-weight:800; font-size:15px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:inset 0 -2px 0 rgba(15,42,71,.12);
-  }
-  .brand-text { display:flex; flex-direction:column; line-height:1.1; }
-  .brand-title { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .brand-sub   { font-size:11px; font-weight:600; color:rgba(255,255,255,.72); letter-spacing:.6px; text-transform:uppercase; }
-  .nav-links { display:flex; gap:8px; flex-wrap:wrap; }
-  .nav-links a {
-    color:#fff; text-decoration:none; font-size:13px; font-weight:600;
-    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-    padding:8px 14px; border-radius:999px;
-  }
-  .nav-links a:hover { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.34); }
 
-  .wrap { max-width:1000px; margin:26px auto 40px; padding:0 18px; }
-  .card {
-    background:var(--white); border-radius:var(--radius); padding:26px;
-    box-shadow:var(--shadow-md); border:1px solid rgba(219,227,238,.7);
-    margin-bottom:22px;
+  /* ═════════ GOVERNMENT TOP STRIP ═════════ */
+  .gov-strip{
+    background:var(--gov-blue-900); color:#b9c8e6;
+    font-size:11px; font-weight:600; letter-spacing:.09em; text-transform:uppercase;
   }
-  h2 { margin:0 0 18px; font-size:17px; color:var(--blue-700); letter-spacing:-.2px; }
-  h2 span { color:var(--ink-500); font-weight:600; font-size:13px; }
+  .gov-strip-inner{
+    max-width:1080px; margin:0 auto; padding:6px 18px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .gov-strip strong{color:#fff; font-weight:800;}
+  .gov-strip .strip-right{color:var(--gold); font-weight:800;}
 
-  label { display:block; font-size:12px; font-weight:800; margin:0 0 6px; color:var(--ink-700); letter-spacing:.03em; text-transform:uppercase; }
-  input, select, textarea {
-    width:100%; padding:11px 13px; border:1.5px solid #ccd9e8; border-radius:var(--radius-sm);
+  /* ═════════ OFFICIAL HEADER ═════════ */
+  header.gov-header{
+    background:#fff;
+    border-bottom:3px solid var(--gov-blue-700);
+    box-shadow:0 2px 10px rgba(0,26,77,.10);
+    position:sticky; top:0; z-index:20;
+  }
+  .gov-header-inner{
+    max-width:1080px; margin:0 auto; padding:10px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:12px; min-width:0;}
+  .seal{width:54px; height:54px; flex:0 0 auto;}
+  .seal svg{width:100%; height:100%; display:block;}
+  .brand-text{display:flex; flex-direction:column; line-height:1.15; min-width:0;}
+  .brand-republic{
+    font-size:9.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-500);
+  }
+  .brand-title{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:15.5px; font-weight:700; color:var(--gov-blue-800); letter-spacing:.1px;
+  }
+  .brand-sub{
+    font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--gov-blue-600); margin-top:2px;
+  }
+  .nav-links{display:flex; gap:6px; flex-wrap:wrap;}
+  .nav-links a{
+    color:var(--gov-blue-700); text-decoration:none;
+    font-size:12.5px; font-weight:700; letter-spacing:.01em;
+    background:#fff; border:1px solid var(--line); border-radius:6px;
+    padding:8px 12px; transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .nav-links a:hover{
+    background:var(--gov-blue-50); border-color:var(--gov-blue-300); color:var(--gov-blue-800);
+  }
+
+  .wrap{max-width:1080px; margin:24px auto 44px; padding:0 18px;}
+  .card{
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius);
+    padding:24px; box-shadow:var(--shadow-md); margin-bottom:20px;
+  }
+  h2{
+    margin:0 0 16px; font-size:14px; font-weight:800; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--gov-blue-800);
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  h2::before{
+    content:""; flex:0 0 auto; width:4px; height:17px; border-radius:1px;
+    background:linear-gradient(180deg,var(--gov-blue-700),var(--gov-blue-500));
+  }
+  h2 span{color:var(--ink-500); font-weight:700; font-size:12px; letter-spacing:.04em;}
+
+  label{
+    display:block; font-size:10.5px; font-weight:800; margin:0 0 6px;
+    color:var(--ink-700); letter-spacing:.07em; text-transform:uppercase;
+  }
+  input, select, textarea{
+    width:100%; padding:10px 12px; border:1.5px solid #c2d0e6; border-radius:6px;
     font-size:14px; font-weight:600; color:var(--ink-900); background:#fff;
     transition:border-color .15s ease, box-shadow .15s ease; font-family:inherit;
   }
-  input:hover, select:hover, textarea:hover { border-color:#b8cbe3; }
-  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 4px rgba(74,144,217,.18); }
-  input[readonly] { background:#f7fafd; color:var(--ink-500); }
-  textarea { resize:vertical; min-height:60px; }
+  input:hover, select:hover, textarea:hover{border-color:var(--gov-blue-300);}
+  input:focus, select:focus, textarea:focus{
+    outline:none; border-color:var(--gov-blue-500); box-shadow:0 0 0 3px rgba(31,95,208,.18);
+  }
+  input[readonly]{background:#f7fafd; color:var(--ink-500);}
+  textarea{resize:vertical; min-height:60px;}
 
-  .row { display:grid; gap:14px; }
-  .row.cols-2 { grid-template-columns:1fr 1fr; }
-  .row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
-  .field { margin-bottom:14px; }
+  .row{display:grid; gap:14px;}
+  .row.cols-2{grid-template-columns:1fr 1fr;}
+  .row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+  .field{margin-bottom:14px;}
 
-  .section-label {
+  .section-label{
     margin:22px 0 12px; padding-bottom:6px;
-    font-size:12px; font-weight:800; letter-spacing:.08em;
+    font-size:10.5px; font-weight:800; letter-spacing:.1em;
     text-transform:uppercase; color:var(--ink-500);
     border-bottom:1px solid var(--line);
   }
 
-  .btn {
-    cursor:pointer; border:0; border-radius:var(--radius-sm);
-    padding:12px 22px; font-size:14px; font-weight:800;
-    transition:filter .15s ease, transform .08s ease;
+  .btn{
+    cursor:pointer; border:0; border-radius:6px;
+    padding:11px 20px; font-size:13.5px; font-weight:800;
+    transition:background .15s ease, filter .15s ease, transform .08s ease;
+    font-family:inherit; letter-spacing:.02em;
   }
-  .btn:active { transform:translateY(1px); }
-  .btn:disabled { opacity:.45; cursor:not-allowed; filter:none; }
-  .btn-primary {
-    background:linear-gradient(135deg,var(--blue-600),var(--blue-500)); color:#fff;
-    box-shadow:0 4px 12px rgba(42,98,153,.28);
+  .btn:active{transform:translateY(1px);}
+  .btn:disabled{opacity:.45; cursor:not-allowed; filter:none;}
+  .btn-primary{
+    background:var(--gov-blue-700); color:#fff;
+    box-shadow:0 2px 6px rgba(0,51,160,.30);
   }
-  .btn-primary:hover:not(:disabled) { filter:brightness(1.06); }
-  .btn-ghost { background:#fff; border:1.5px solid #dbe3ee; color:var(--ink-700); }
-  .btn-ghost:hover:not(:disabled) { background:#f7fafd; border-color:#b8cbe3; }
-  .btn-danger { background:linear-gradient(180deg,#e05e5e,var(--red-600)); color:#fff; }
-  .btn-danger:hover:not(:disabled) { filter:brightness(1.07); }
-  .btn-sm { padding:6px 12px; font-size:12px; }
+  .btn-primary:hover:not(:disabled){background:var(--gov-blue-600);}
+  .btn-ghost{background:#fff; border:1.5px solid var(--line); color:var(--ink-700);}
+  .btn-ghost:hover:not(:disabled){background:var(--gov-blue-50); border-color:var(--gov-blue-300); color:var(--gov-blue-800);}
+  .btn-danger{background:var(--red-600); color:#fff;}
+  .btn-danger:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-sm{padding:6px 10px; font-size:11.5px; border-radius:5px;}
 
-  .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
 
-  .personnel-row {
+  .personnel-row{
     display:grid; grid-template-columns:1fr 1fr auto; gap:10px;
     padding:12px; margin-bottom:10px;
-    background:#fafcff; border:1.5px solid #dbe3ee; border-radius:10px;
+    background:var(--gov-blue-50); border:1px solid #cfdcf2; border-radius:6px;
     align-items:end;
   }
-  .personnel-row .field { margin-bottom:0; }
+  .personnel-row .field{margin-bottom:0;}
 
-  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--line); }
-  table.history { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; min-width:800px; }
-  table.history thead th {
-    background:linear-gradient(180deg,#f7fafd,#eef4fb);
-    color:var(--ink-500); font-size:11px; font-weight:800;
-    letter-spacing:.06em; text-transform:uppercase;
-    padding:10px 10px; text-align:center; border-bottom:1.5px solid var(--line);
+  .table-wrap{overflow-x:auto; border-radius:6px; border:1px solid var(--line);}
+  table.history{width:100%; border-collapse:separate; border-spacing:0; font-size:13px; min-width:800px;}
+  table.history thead th{
+    background:var(--gov-blue-50);
+    color:var(--ink-500); font-size:10.5px; font-weight:800;
+    letter-spacing:.08em; text-transform:uppercase;
+    padding:10px; text-align:center; border-bottom:1.5px solid var(--line);
   }
-  table.history tbody td { padding:9px 10px; border-bottom:1px solid #eef2f7; text-align:center; }
-  table.history tbody td.txt-left { text-align:left; }
-  table.history tbody tr:hover td { background:var(--blue-50); }
-  table.history tbody tr:last-child td { border-bottom:0; }
-  .empty { text-align:center; color:var(--ink-500); padding:32px 20px; font-style:italic; font-size:13px; }
+  table.history tbody td{padding:9px 10px; border-bottom:1px solid #eef2f7; text-align:center;}
+  table.history tbody td.txt-left{text-align:left;}
+  table.history tbody tr:hover td{background:var(--gov-blue-50);}
+  table.history tbody tr:last-child td{border-bottom:0;}
+  .empty{text-align:center; color:var(--ink-500); padding:32px 20px; font-style:italic; font-size:13px;}
 
-  .toast {
-    position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
-    background:#0f2a47; color:#fff; padding:14px 24px; border-radius:999px;
-    font-size:14px; font-weight:700; box-shadow:0 10px 30px rgba(15,42,71,.35);
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%,20px);
+    background:var(--gov-blue-900); color:#fff; padding:14px 24px; border-radius:6px;
+    font-size:13.5px; font-weight:700; box-shadow:0 10px 30px rgba(0,26,77,.35);
     opacity:0; pointer-events:none; transition:all .25s ease; z-index:100;
     max-width:calc(100vw - 48px);
   }
-  .toast.show { opacity:1; transform:translate(-50%, 0); }
-  .toast.success { background:linear-gradient(135deg,#1c8a4b,#22a35a); }
-  .toast.error { background:linear-gradient(135deg,#b02a2a,#d9534f); }
+  .toast.show{opacity:1; transform:translate(-50%,0);}
+  .toast.success{background:linear-gradient(135deg,#1c8a4b,#22a35a);}
+  .toast.error{background:linear-gradient(135deg,#8f1d17,#b3261e);}
 
-  .loading-overlay {
-    position:fixed; inset:0; background:rgba(15,42,71,.5);
+  .loading-overlay{
+    position:fixed; inset:0; background:rgba(0,26,77,.55);
     display:none; align-items:center; justify-content:center; z-index:200;
     backdrop-filter:blur(4px);
   }
-  .loading-overlay.show { display:flex; }
-  .loading-card {
-    background:#fff; padding:24px 32px; border-radius:14px;
+  .loading-overlay.show{display:flex;}
+  .loading-card{
+    background:#fff; padding:22px 30px; border-radius:8px;
     display:flex; align-items:center; gap:16px;
+    border-top:4px solid var(--gov-blue-700);
     box-shadow:0 20px 60px rgba(0,0,0,.3);
   }
-  .loading-spinner {
-    width:32px; height:32px; border:3px solid #dbe3ee;
-    border-top-color:var(--blue-600); border-radius:50%;
+  .loading-spinner{
+    width:30px; height:30px; border:3px solid #dbe3ee;
+    border-top-color:var(--gov-blue-700); border-radius:50%;
     animation:spin .8s linear infinite;
   }
-  @keyframes spin { 100% { transform:rotate(360deg); } }
-  .loading-text { font-size:14px; font-weight:700; color:var(--ink-700); }
+  @keyframes spin{100%{transform:rotate(360deg);}}
+  .loading-text{font-size:13.5px; font-weight:700; color:var(--ink-700);}
 
-  #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; font-size:13px; }
+  #fatal{
+    display:none; background:var(--red-100); color:#9b1c1c; padding:12px;
+    border-radius:6px; margin-bottom:14px; white-space:pre-wrap;
+    font-family:monospace; border:1px solid #e7b8b3; font-size:13px;
+  }
 
-  #print-area { display: none; }
+  #print-area{display:none;}
+  .hidden-form{display:none;}
 
-  .hidden-form { display: none; }
+  .gov-footer{background:var(--gov-blue-800); color:#b9c8e6; font-size:11px; letter-spacing:.06em;}
+  .gov-footer-inner{
+    max-width:1080px; margin:0 auto; padding:14px 18px;
+    display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    text-transform:uppercase; font-weight:600;
+  }
 
-  @media (max-width:720px) {
-    .row.cols-2, .row.cols-3 { grid-template-columns:1fr; }
-    .personnel-row { grid-template-columns:1fr; }
-    .brand-sub { display:none; }
-    .card { padding:18px; }
-    header { padding:12px 16px; }
+  @media (max-width:720px){
+    header.gov-header{position:static;}
+    .row.cols-2, .row.cols-3{grid-template-columns:1fr;}
+    .personnel-row{grid-template-columns:1fr;}
+    .brand-title{font-size:13.5px;}
+    .brand-sub{font-size:10px;}
+    .seal{width:46px; height:46px;}
+    .card{padding:18px;}
+    .gov-header-inner{padding:10px 16px;}
+    .nav-links a{padding:7px 11px; font-size:12px;}
   }
 
   /* ═════════ PRINT LAYOUT ═════════ */
   @media print {
     @page { size: A4 portrait; margin: 0.35in 0.5in; }
     html, body { background:#fff !important; margin:0; padding:0; }
-    header, .wrap, #fatal, .toast, .loading-overlay, .hidden-form { display:none !important; }
+    header, .gov-strip, .gov-footer, .wrap, #fatal, .toast, .loading-overlay, .hidden-form { display:none !important; }
     #print-area { display:block !important; }
     #print-area {
       font-family: Calibri, "Segoe UI", Arial, sans-serif;
@@ -204,7 +269,6 @@
 </head>
 <body>
 
-<!-- Hidden form for POSTs -->
 <form id="saveForm" method="POST" target="hidden_save" class="hidden-form">
   <input type="hidden" name="action" id="sf_action" value="saveTravelOrder">
   <input type="hidden" name="controlNo" id="sf_controlNo">
@@ -231,20 +295,48 @@
 
 <div class="toast" id="toast"></div>
 
-<header>
-  <div class="brand">
-    <div class="brand-mark">DH</div>
-    <div class="brand-text">
-      <span class="brand-title">DHSUD NIR</span>
-      <span class="brand-sub">Travel Order</span>
-    </div>
+<div class="gov-strip">
+  <div class="gov-strip-inner">
+    <span><strong>Republic of the Philippines</strong></span>
+    <span class="strip-right">Travel Order</span>
   </div>
-  <nav class="nav-links">
-    <a href="kiosk.html">🏠 Kiosk</a>
-    <a href="skeletal.html">👥 Skeletal</a>
-    <a href="generator.html">🖨️ DTR</a>
-    <a href="index.html">⚙️ Admin</a>
-  </nav>
+</div>
+
+<header class="gov-header">
+  <div class="gov-header-inner">
+    <div class="brand">
+      <div class="seal">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DHSUD Seal">
+          <circle cx="32" cy="32" r="31" fill="#00205b"/>
+          <circle cx="32" cy="32" r="27" fill="#ffffff"/>
+          <circle cx="32" cy="32" r="24.5" fill="#0033a0"/>
+          <circle cx="32" cy="32" r="24.5" fill="none" stroke="#ffc72c" stroke-width="1.2"/>
+          <circle cx="32" cy="21.5" r="4.2" fill="#ffc72c"/>
+          <rect x="17" y="30" width="6" height="15" fill="#ffffff"/>
+          <rect x="25.5" y="25.5" width="13" height="19.5" fill="#ffffff"/>
+          <rect x="41" y="32" width="6" height="13" fill="#ffffff"/>
+          <rect x="28" y="29" width="2.2" height="2.2" fill="#0033a0"/>
+          <rect x="33.8" y="29" width="2.2" height="2.2" fill="#0033a0"/>
+          <rect x="28" y="34" width="2.2" height="2.2" fill="#0033a0"/>
+          <rect x="33.8" y="34" width="2.2" height="2.2" fill="#0033a0"/>
+          <rect x="28" y="39" width="2.2" height="2.2" fill="#0033a0"/>
+          <rect x="33.8" y="39" width="2.2" height="2.2" fill="#0033a0"/>
+          <rect x="14" y="45" width="36" height="2.2" fill="#ffc72c"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-republic">Republic of the Philippines</span>
+        <span class="brand-title">Department of Human Settlements and Urban Development</span>
+        <span class="brand-sub">Negros Island Region · Travel Order</span>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="kiosk.html">🏠 Kiosk</a>
+      <a href="skeletal.html">👥 Skeletal</a>
+      <a href="generator.html">🖨️ DTR</a>
+      <a href="index.html">⚙️ Admin</a>
+    </nav>
+  </div>
 </header>
 
 <div class="wrap">
@@ -349,6 +441,13 @@
   </div>
 </div>
 
+<footer class="gov-footer">
+  <div class="gov-footer-inner">
+    <span>DHSUD — Negros Island Region</span>
+    <span>Republic of the Philippines</span>
+  </div>
+</footer>
+
 <div id="print-area"></div>
 
 <datalist id="employeeNames">
@@ -383,14 +482,12 @@ var DEFAULT_RECOMMENDED_TITLE = "OIC-Regional Director";
 var DEFAULT_APPROVED_NAME     = "EDUARDO P. ROBLES, Jr.";
 var DEFAULT_APPROVED_TITLE    = "Senior Undersecretary";
 
-/* ── State ───────────────────────────────────────────── */
 var allOrders         = [];
-var pendingAction     = null;   // { type, order, controlNo }
+var pendingAction     = null;
 var backendReady      = false;
 var toPersonnel       = [];
 var pendingTimer      = null;
 
-/* ── Utilities ───────────────────────────────────────── */
 function showToast(msg, type) {
   var t = document.getElementById("toast");
   if (!t) return;
@@ -446,7 +543,6 @@ function escapeHtml(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/* ── Backend fetch (JSONP) ───────────────────────────── */
 function fetchTravelOrders() {
   return new Promise(function(resolve) {
     var cbName = "jsonp_travel_" + Math.random().toString(36).slice(2);
@@ -482,7 +578,6 @@ function loadAllOrders(silent) {
   });
 }
 
-/* ── Control number ──────────────────────────────────── */
 function previewNextControlNo() {
   var dateVal = document.getElementById("toDate").value || todayStr();
   var mk = monthKeyFromDate(dateVal);
@@ -502,7 +597,6 @@ function regenerateControlNo() {
   document.getElementById("controlNo").value = previewNextControlNo();
 }
 
-/* ── Personnel UI ────────────────────────────────────── */
 function renderPersonnelList() {
   var container = document.getElementById("personnelList");
   container.innerHTML = "";
@@ -541,7 +635,6 @@ function renderPersonnelList() {
   });
 }
 
-/* ── Form collection / validation ────────────────────── */
 function collectForm() {
   return {
     controlNo: document.getElementById("controlNo").value.trim(),
@@ -574,7 +667,6 @@ function validate(order) {
   return "";
 }
 
-/* ── Submit via form POST ────────────────────────────── */
 function submitSave(order) {
   var f = document.getElementById("saveForm");
   document.getElementById("sf_action").value        = "saveTravelOrder";
@@ -601,11 +693,9 @@ function submitDelete(controlNo) {
   f.submit();
 }
 
-/* ── Iframe onload — verify save / delete ────────────── */
 document.getElementById("hidden_save").onload = function() {
   if (!pendingAction) return;
   var action = pendingAction;
-
   clearTimeout(pendingTimer);
   pendingTimer = setTimeout(function() {
     loadAllOrders(true).then(function() {
@@ -632,18 +722,15 @@ document.getElementById("hidden_save").onload = function() {
   }, 1000);
 };
 
-/* ── History ─────────────────────────────────────────── */
 function renderHistory() {
   var tbody = document.querySelector("#historyTable tbody");
   tbody.innerHTML = "";
   document.getElementById("historyCount").textContent =
     allOrders.length === 0 ? "" : "(" + allOrders.length + " saved)";
-
   if (allOrders.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty">No travel orders yet.</td></tr>';
     return;
   }
-
   allOrders.forEach(function(o) {
     var names = o.personnel.map(function(p){ return p.name; }).join(", ");
     if (names.length > 70) names = names.slice(0, 70) + "…";
@@ -660,7 +747,6 @@ function renderHistory() {
       '</td>';
     tbody.appendChild(tr);
   });
-
   tbody.querySelectorAll("button[data-act]").forEach(function(b) {
     b.addEventListener("click", function() {
       var cn = b.dataset.cn;
@@ -679,7 +765,6 @@ function renderHistory() {
   });
 }
 
-/* ── Print builder ───────────────────────────────────── */
 function buildHeaderHtml() {
   return '' +
     '<table class="to-header"><tbody><tr>' +
@@ -698,11 +783,9 @@ function buildHeaderHtml() {
 function printOrder(order) {
   var personnelRows = "";
   var rowspan = order.personnel.length;
-
   order.personnel.forEach(function(p, i) {
     var combined = p.name;
     if (p.designation) combined += ", " + p.designation;
-
     personnelRows += '<tr>';
     personnelRows += '<td>' + escapeHtml(combined) + '</td>';
     if (i === 0) {
@@ -760,7 +843,6 @@ function printOrder(order) {
   setTimeout(function() { window.print(); }, 200);
 }
 
-/* ── Actions ─────────────────────────────────────────── */
 document.getElementById("btnAddPersonnel").addEventListener("click", function() {
   toPersonnel.push({ name: "", designation: "" });
   renderPersonnelList();
@@ -771,7 +853,6 @@ document.getElementById("btnPrint").addEventListener("click", function() {
   var order = collectForm();
   var err = validate(order);
   if (err) return showToast("⚠ " + err, "error");
-
   showLoading("Saving to Google Sheets…");
   pendingAction = { type: "saveAndPrint", order: order };
   submitSave(order);
@@ -783,7 +864,6 @@ document.getElementById("btnSave").addEventListener("click", function() {
   var order = collectForm();
   var err = validate(order);
   if (err) return showToast("⚠ " + err, "error");
-
   showLoading("Saving to Google Sheets…");
   pendingAction = { type: "saveOnly", order: order };
   submitSave(order);
@@ -814,9 +894,7 @@ function resetForm() {
   regenerateControlNo();
 }
 
-/* ── Boot ────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function() {
-  /* Startup guard */
   var requiredIds = [
     "toDate", "controlNo", "destination", "purpose",
     "periodStart", "periodEnd", "travelType",
