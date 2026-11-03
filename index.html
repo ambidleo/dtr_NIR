@@ -117,6 +117,18 @@
   .btn-load:hover { filter:brightness(1.06); }
   .btn-load:active { transform:translateY(1px); }
   .btn-load:disabled { opacity:.55; cursor:not-allowed; filter:none; }
+
+  .btn-add {
+    background:linear-gradient(135deg, #1c8a4b 0%, #22a35a 100%);
+    color:#fff; border:0; border-radius:var(--radius-sm);
+    padding:12px 22px; font-size:14px; font-weight:700;
+    cursor:pointer; height:46px; white-space:nowrap;
+    box-shadow:0 4px 10px rgba(28,138,75,.30);
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .btn-add:hover { filter:brightness(1.06); }
+  .btn-add:active { transform:translateY(1px); }
+
   #btn-add-emp.saving {
     background:linear-gradient(135deg, #1c8a4b 0%, #22a35a 100%);
     box-shadow:0 4px 10px rgba(28,138,75,.30);
@@ -131,6 +143,71 @@
     transition:background .15s ease, border-color .15s ease, color .15s ease;
   }
   .btn-cancel:hover { background:var(--blue-50); border-color:#b8cbe3; color:var(--blue-700); }
+
+  /* ════════ ADD TIME LOG PANEL ════════ */
+  .add-panel {
+    display:none;
+    background:linear-gradient(180deg, #f7fdf9 0%, #eff9f3 100%);
+    border:1.5px solid #b8e0c9;
+    border-radius:var(--radius-sm);
+    padding:20px;
+    margin-bottom:20px;
+    animation:fadeUp .25s ease both;
+  }
+  .add-panel-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:12px; gap:12px; flex-wrap:wrap;
+  }
+  .add-panel-title {
+    margin:0; font-size:15px; font-weight:800; color:#155e33;
+    display:flex; align-items:center; gap:8px;
+  }
+  .add-panel-date {
+    font-size:12.5px; font-weight:700; color:#1c6b32;
+    background:#d9f0e2; padding:4px 10px; border-radius:999px;
+    border:1px solid #b8e0c9;
+  }
+  .add-panel-close {
+    background:none; border:none; color:#5a6b80; font-size:22px;
+    cursor:pointer; padding:0 6px; line-height:1; border-radius:6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .add-panel-close:hover { background:rgba(0,0,0,.05); color:#1c6b32; }
+  .add-panel-info {
+    padding:10px 14px; border-radius:8px;
+    background:#fff; border:1px solid #c9e2d4;
+    color:#1c6b32; font-size:12.5px; font-weight:600;
+    line-height:1.5; margin-bottom:16px;
+  }
+  .add-panel-info b { color:#155e33; }
+  .add-panel select,
+  .add-panel input[type="text"] {
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid #ccd9e8;
+    border-radius:var(--radius-sm);
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink-900);
+    background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .add-panel input[type="text"] { text-align:center; }
+  .add-panel select { text-align:left; cursor:pointer; }
+  .add-panel select:hover,
+  .add-panel input[type="text"]:hover { border-color:#b8cbe3; }
+  .add-panel select:focus,
+  .add-panel input[type="text"]:focus {
+    outline:none; border-color:var(--blue-500);
+    box-shadow:0 0 0 4px rgba(42,111,201,.18);
+    background:#fbfdff;
+  }
+  .add-panel .add-actions {
+    display:flex; gap:8px; justify-content:flex-end;
+    margin-top:16px; flex-wrap:wrap;
+  }
+  .add-panel .add-actions button { height:46px; padding:12px 22px; font-size:14px; }
+  .add-panel .btn-cancel { display:inline-block; }
 
   .table-wrap { overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
   .emp-table-wrap { max-height:420px; overflow-y:auto; }
@@ -157,26 +234,15 @@
   input[type="text"]:focus { outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(42,111,201,.15); background:#fbfdff; }
   input[type="text"]::placeholder { color:#a6b3c4; font-weight:500; }
 
-  /* Employee-form inputs — larger, left aligned */
   input.emp-input {
-    padding:12px 14px;
-    font-size:15px;
-    border-radius:var(--radius-sm);
-    border:1.5px solid #ccd9e8;
-    text-align:left;
+    padding:12px 14px; font-size:15px; border-radius:var(--radius-sm);
+    border:1.5px solid #ccd9e8; text-align:left;
   }
   input.emp-input:hover { border-color:#b8cbe3; }
   input.emp-input:focus { box-shadow:0 0 0 4px rgba(42,111,201,.18); }
-  input.emp-input.emp-code-input {
-    text-align:center;
-    font-weight:800;
-    letter-spacing:.06em;
-  }
+  input.emp-input.emp-code-input { text-align:center; font-weight:800; letter-spacing:.06em; }
   input.emp-input.editing {
-    background:#fff4e0;
-    border-color:#e0a800;
-    color:#7a4a00;
-    cursor:not-allowed;
+    background:#fff4e0; border-color:#e0a800; color:#7a4a00; cursor:not-allowed;
   }
   input.emp-input.editing:focus { box-shadow:0 0 0 4px rgba(224,168,0,.20); }
 
@@ -189,8 +255,7 @@
   .info-banner b { color:var(--blue-700); }
 
   .emp-edit-hint {
-    display:none;
-    padding:10px 14px; border-radius:8px;
+    display:none; padding:10px 14px; border-radius:8px;
     background:#fff4e0; border:1px solid #ffd77a;
     color:#7a4a00; font-size:12.5px; font-weight:600;
     line-height:1.5; margin-bottom:14px;
@@ -205,10 +270,16 @@
   .btn-edit:hover { filter:brightness(1.07); }
   .btn-del  { background:linear-gradient(180deg,#e05e5e 0%, var(--red-600) 100%); color:#fff; box-shadow:0 2px 6px rgba(194,59,59,.22); }
   .btn-del:hover { filter:brightness(1.07); }
+  .btn-details {
+    background:linear-gradient(180deg,#8b5cf6 0%, #6d28d9 100%); color:#fff;
+    box-shadow:0 2px 6px rgba(109,40,217,.25);
+  }
+  .btn-details:hover { filter:brightness(1.07); }
   td:last-child { white-space:nowrap; }
   td:last-child button + button { margin-left:6px; }
 
   .empty-state { text-align:center; color:var(--ink-500); padding:44px 20px; font-style:italic; font-size:14px; }
+  .empty-state .btn-add { font-style:normal; margin-left:10px; height:auto; padding:8px 14px; font-size:12.5px; }
 
   .toast {
     position:fixed; bottom:24px; left:50%; transform:translate(-50%, 20px);
@@ -223,6 +294,159 @@
 
   .hidden-iframe { display:none; }
 
+  /* ════════════════ EMPLOYEE DETAILS MODAL ════════════════ */
+  .modal-overlay {
+    position:fixed; inset:0;
+    background:rgba(10,25,50,.60);
+    display:none; align-items:flex-start; justify-content:center;
+    z-index:200; padding:20px;
+    overflow-y:auto;
+    backdrop-filter:blur(3px);
+  }
+  .modal-overlay.show { display:flex; }
+
+  .modal-card {
+    background:#fff; border-radius:18px;
+    max-width:820px; width:100%;
+    margin:auto;
+    padding:0;
+    box-shadow:0 24px 60px rgba(0,20,50,.40);
+    animation:modalPop .2s ease-out;
+    border-top:4px solid #6d28d9;
+    overflow:hidden;
+  }
+  @keyframes modalPop {
+    from { transform:scale(.96) translateY(-8px); opacity:0; }
+    to   { transform:scale(1) translateY(0); opacity:1; }
+  }
+
+  .modal-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 26px;
+    background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);
+    border-bottom:1px solid #ddd6fe;
+    gap:12px; flex-wrap:wrap;
+  }
+  .modal-title {
+    margin:0; font-size:17px; font-weight:800; color:#5b21b6;
+    display:flex; align-items:center; gap:10px;
+  }
+  .modal-subtitle {
+    font-size:12.5px; font-weight:700; color:#6b21a8;
+    background:#ede9fe; padding:4px 12px; border-radius:999px;
+    border:1px solid #c4b5fd;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .modal-close {
+    background:none; border:none; color:#5a6b80; font-size:26px;
+    cursor:pointer; padding:0 8px; line-height:1; border-radius:8px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .modal-close:hover { background:rgba(109,40,217,.10); color:#5b21b6; }
+
+  .modal-body { padding:22px 26px 8px; }
+
+  .modal-info-banner {
+    padding:11px 15px; border-radius:10px;
+    background:#f5f3ff; border:1px solid #ddd6fe;
+    color:#5b21b6; font-size:12.5px; font-weight:600;
+    line-height:1.5; margin-bottom:18px;
+  }
+  .modal-info-banner b { color:#4c1d95; }
+
+  .modal-grid {
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+  }
+  .modal-grid .span-2 { grid-column:span 2; }
+  .modal-grid .span-3 { grid-column:span 3; }
+
+  .modal-field label {
+    display:block; font-size:11.5px; font-weight:800;
+    margin:0 0 6px; color:var(--ink-700);
+    letter-spacing:.04em; text-transform:uppercase;
+  }
+  .modal-field label .req { color:#c23b3b; }
+
+  .modal-field input[type="text"],
+  .modal-field input[type="number"],
+  .modal-field select,
+  .modal-field textarea {
+    width:100%;
+    padding:11px 13px;
+    border:1.5px solid #ccd9e8;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-900);
+    background:#fff;
+    text-align:left;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .modal-field textarea {
+    resize:vertical;
+    min-height:64px;
+    font-family:inherit;
+  }
+  .modal-field select { cursor:pointer; }
+  .modal-field input:hover,
+  .modal-field select:hover,
+  .modal-field textarea:hover { border-color:#b8cbe3; }
+  .modal-field input:focus,
+  .modal-field select:focus,
+  .modal-field textarea:focus {
+    outline:none; border-color:#8b5cf6;
+    box-shadow:0 0 0 4px rgba(139,92,246,.18);
+    background:#fbfaff;
+  }
+  .modal-field input::placeholder,
+  .modal-field textarea::placeholder { color:#a6b3c4; font-weight:500; }
+
+  .modal-divider {
+    grid-column:span 3;
+    margin:6px 0 2px;
+    border:0;
+    border-top:1px dashed #ddd6fe;
+  }
+  .modal-section-label {
+    grid-column:span 3;
+    font-size:11px; font-weight:800; color:#6d28d9;
+    letter-spacing:.10em; text-transform:uppercase;
+    padding-top:4px;
+  }
+
+  .modal-footer {
+    display:flex; justify-content:flex-end; gap:10px;
+    padding:18px 26px 22px;
+    background:#fafaff;
+    border-top:1px solid #ede9fe;
+    flex-wrap:wrap;
+  }
+  .modal-footer button {
+    height:46px; padding:12px 24px; font-size:14px; border-radius:12px;
+  }
+  .modal-btn-cancel {
+    background:#fff; color:var(--ink-700);
+    border:1.5px solid var(--line);
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .modal-btn-cancel:hover { background:var(--blue-50); border-color:#b8cbe3; color:var(--blue-700); }
+  .modal-btn-save {
+    background:linear-gradient(135deg,#8b5cf6 0%, #6d28d9 100%);
+    color:#fff;
+    box-shadow:0 6px 16px rgba(109,40,217,.30);
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .modal-btn-save:hover:not(:disabled) { filter:brightness(1.07); }
+  .modal-btn-save:disabled { opacity:.55; cursor:not-allowed; filter:none; }
+
+  .modal-loading {
+    grid-column:span 3;
+    text-align:center; padding:20px; color:#6d28d9; font-weight:600; font-size:13.5px;
+  }
+  .modal-loading span { display:inline-block; animation:spin 1s linear infinite; margin-right:6px; }
+
   @media (max-width:860px) {
     .gov-masthead { padding:10px 16px; gap:12px; }
     .gov-seal { width:50px; height:50px; }
@@ -230,15 +454,29 @@
     .gov-region { font-size:10.5px; }
     .gov-nav { width:100%; }
     .gov-nav a { font-size:11.5px; padding:7px 11px; }
+
+    .modal-grid { grid-template-columns:repeat(2, 1fr); }
+    .modal-grid .span-3 { grid-column:span 2; }
   }
   @media (max-width:640px) {
     .card { padding:18px; }
+    .add-panel { padding:16px; }
+    .add-panel .add-actions { justify-content:stretch; }
+    .add-panel .add-actions button { flex:1; }
+
+    .modal-grid { grid-template-columns:1fr; }
+    .modal-grid .span-2,
+    .modal-grid .span-3 { grid-column:span 1; }
+    .modal-body { padding:18px 18px 4px; }
+    .modal-header { padding:16px 18px; }
+    .modal-footer { padding:16px 18px 18px; }
+    .modal-footer button { flex:1; }
   }
 </style>
 </head>
 <body>
 
-<!-- ── Existing time-log POST target ── -->
+<!-- ── Time-log POST target ── -->
 <form id="adminForm" method="POST" target="hidden_admin_post" class="hidden-iframe">
   <input type="hidden" name="action" id="af_action">
   <input type="hidden" name="date" id="af_date">
@@ -258,6 +496,28 @@
   <input type="hidden" name="name" id="ef_name">
 </form>
 <iframe name="hidden_emp_post" id="hidden_emp_post" class="hidden-iframe"></iframe>
+
+<!-- ── Employee DETAILS POST target ── -->
+<form id="detailsForm" method="POST" target="hidden_details_post" class="hidden-iframe">
+  <input type="hidden" name="action"          value="saveEmployeeDetails">
+  <input type="hidden" name="code"            id="df_code">
+  <input type="hidden" name="name"            id="df_name">
+  <input type="hidden" name="age"             id="df_age">
+  <input type="hidden" name="address"         id="df_address">
+  <input type="hidden" name="position"        id="df_position">
+  <input type="hidden" name="salary_grade"    id="df_salary_grade">
+  <input type="hidden" name="division"        id="df_division">
+  <input type="hidden" name="employment_status" id="df_employment_status">
+  <input type="hidden" name="gsis_no"         id="df_gsis_no">
+  <input type="hidden" name="sss_no"          id="df_sss_no">
+  <input type="hidden" name="bir_no"          id="df_bir_no">
+  <input type="hidden" name="pagibig_no"      id="df_pagibig_no">
+  <input type="hidden" name="philhealth_no"   id="df_philhealth_no">
+  <input type="hidden" name="contact_no"      id="df_contact_no">
+  <input type="hidden" name="emergency_person" id="df_emergency_person">
+  <input type="hidden" name="emergency_contact_no" id="df_emergency_contact_no">
+</form>
+<iframe name="hidden_details_post" id="hidden_details_post" class="hidden-iframe"></iframe>
 
 <div id="toast" class="toast"></div>
 
@@ -298,7 +558,7 @@
 
     <div class="info-banner">
       Employees are synced from the <b>Employees</b> sheet in Google Sheets.
-      Codes must be unique (e.g. <b>24</b>, <b>25</b>…).
+      Codes must be unique (e.g. <b>24</b>, <b>25</b>…). Click <b>📋 Details</b> to enter personal &amp; employment information.
     </div>
 
     <div class="emp-edit-hint" id="emp-edit-hint"></div>
@@ -326,7 +586,7 @@
           <tr>
             <th style="width:10%;">Code</th>
             <th style="text-align:left;">Name</th>
-            <th style="width:22%;">Actions</th>
+            <th style="width:32%;">Actions</th>
           </tr>
         </thead>
         <tbody id="empTableBody">
@@ -350,8 +610,52 @@
         <label for="filterDate">Date to View / Edit</label>
         <input type="date" id="filterDate">
       </div>
-      <div style="flex:0 0 auto; min-width:0;">
+      <div style="flex:0 0 auto; min-width:0; display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn-load" id="btn-load" onclick="loadData()">📥 Load Data</button>
+        <button class="btn-add"  id="btn-add-details" onclick="toggleAddPanel()">➕ Add Time Log</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ ADD TIME LOG PANEL ═══════════ -->
+    <div class="add-panel" id="addPanel">
+      <div class="add-panel-header">
+        <h3 class="add-panel-title">➕ Add / Update Time Log</h3>
+        <span class="add-panel-date" id="addPanelDate">Date: —</span>
+        <button type="button" class="add-panel-close" onclick="toggleAddPanel()" aria-label="Close">×</button>
+      </div>
+
+      <div class="add-panel-info">
+        Select an employee and enter their times below, then click
+        <b>💾 Save to Google Sheets</b>. If the employee already has a record for this date,
+        it will be <b>updated</b>. Otherwise a <b>new</b> record is created.
+      </div>
+
+      <div class="filter-row" style="margin-bottom:0;">
+        <div style="flex:2; min-width:240px;">
+          <label for="addEmpSelect">Employee</label>
+          <select id="addEmpSelect"><option value="">— Select employee —</option></select>
+        </div>
+        <div style="flex:1; min-width:130px;">
+          <label for="add_am_in">AM In</label>
+          <input type="text" id="add_am_in" placeholder="8:00 AM" autocomplete="off">
+        </div>
+        <div style="flex:1; min-width:130px;">
+          <label for="add_am_out">AM Out</label>
+          <input type="text" id="add_am_out" placeholder="12:00 PM" autocomplete="off">
+        </div>
+        <div style="flex:1; min-width:130px;">
+          <label for="add_pm_in">PM In</label>
+          <input type="text" id="add_pm_in" placeholder="1:00 PM" autocomplete="off">
+        </div>
+        <div style="flex:1; min-width:130px;">
+          <label for="add_pm_out">PM Out</label>
+          <input type="text" id="add_pm_out" placeholder="5:00 PM" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="add-actions">
+        <button type="button" class="btn-cancel" onclick="toggleAddPanel()">✖ Cancel</button>
+        <button type="button" class="btn-save" onclick="saveNewDetails()">💾 Save to Google Sheets</button>
       </div>
     </div>
 
@@ -376,6 +680,109 @@
 
 </div>
 
+<!-- ══════════════ EMPLOYEE DETAILS MODAL ══════════════ -->
+<div class="modal-overlay" id="detailsModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title" id="detailsModalTitle">📋 Employee Details</h3>
+        <div class="modal-subtitle" id="detailsModalSubtitle" style="margin-top:6px;">—</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeDetailsModal()" aria-label="Close">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-info-banner">
+        Fill in the employee's personal &amp; employment details below. All fields are optional
+        and can be updated later. Data is saved to the <b>EmployeeDetails</b> sheet in Google Sheets.
+      </div>
+
+      <div class="modal-grid" id="detailsFormGrid">
+        <div class="modal-section-label">👤 Personal Information</div>
+
+        <div class="modal-field">
+          <label for="md_age">Age</label>
+          <input type="number" id="md_age" min="0" max="120" placeholder="e.g. 32" autocomplete="off">
+        </div>
+        <div class="modal-field span-2">
+          <label for="md_address">Complete Address</label>
+          <input type="text" id="md_address" placeholder="Street, Barangay, City, Province" autocomplete="off">
+        </div>
+
+        <div class="modal-field">
+          <label for="md_contact_no">Contact No.</label>
+          <input type="text" id="md_contact_no" placeholder="0917 123 4567" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_emergency_person">Emergency Contact Person</label>
+          <input type="text" id="md_emergency_person" placeholder="Full name" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_emergency_contact_no">Emergency Contact No.</label>
+          <input type="text" id="md_emergency_contact_no" placeholder="0917 123 4567" autocomplete="off">
+        </div>
+
+        <hr class="modal-divider">
+        <div class="modal-section-label">💼 Employment Information</div>
+
+        <div class="modal-field">
+          <label for="md_position">Position</label>
+          <input type="text" id="md_position" placeholder="e.g. Administrative Officer" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_salary_grade">Salary Grade</label>
+          <input type="text" id="md_salary_grade" placeholder="e.g. SG-10" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_division">Division</label>
+          <input type="text" id="md_division" placeholder="e.g. Administrative Division" autocomplete="off">
+        </div>
+
+        <div class="modal-field">
+          <label for="md_employment_status">Employment Status</label>
+          <select id="md_employment_status">
+            <option value="">— Select —</option>
+            <option value="Regular">Regular</option>
+            <option value="COS">COS (Contract of Service)</option>
+          </select>
+        </div>
+        <div class="modal-field span-2"></div>
+
+        <hr class="modal-divider">
+        <div class="modal-section-label">🏛️ Government Numbers</div>
+
+        <div class="modal-field">
+          <label for="md_gsis_no">GSIS No.</label>
+          <input type="text" id="md_gsis_no" placeholder="GSIS number" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_sss_no">SSS No.</label>
+          <input type="text" id="md_sss_no" placeholder="SSS number" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_bir_no">BIR No.</label>
+          <input type="text" id="md_bir_no" placeholder="BIR number" autocomplete="off">
+        </div>
+
+        <div class="modal-field">
+          <label for="md_pagibig_no">Pag-IBIG No.</label>
+          <input type="text" id="md_pagibig_no" placeholder="Pag-IBIG number" autocomplete="off">
+        </div>
+        <div class="modal-field">
+          <label for="md_philhealth_no">PhilHealth No.</label>
+          <input type="text" id="md_philhealth_no" placeholder="PhilHealth number" autocomplete="off">
+        </div>
+        <div class="modal-field"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="modal-btn-cancel" onclick="closeDetailsModal()">✖ Cancel</button>
+      <button type="button" class="modal-btn-save" id="btn-save-details" onclick="saveEmployeeDetails()">💾 Save Details</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbx2BmCBypQx189EDOQwgpQIt_KaoXNBZblItCrmpkTxYmCC5jFsyTFYE0ywTkjFxqU0/exec";
 
@@ -396,13 +803,20 @@ var EMPLOYEES = [
 /* Active list — replaced by the Employees sheet when it loads. */
 var employees = EMPLOYEES.slice();
 
-/* Tracks current edit mode:
+/* Holds the current date's loaded log records — used to pre-fill the Add Time Log panel. */
+var currentLogs = {};
+
+/* Tracks current edit mode for the inline employee form:
  *   null                                 → adding a new employee
  *   { code:"XX", originalName:"…" }       → editing employee XX
  */
 var editState = null;
 
 var pendingEmpAction = null;
+
+/* Tracks the modal state */
+var pendingDetailsAction = null;
+var currentDetailsEmp = null;
 
 function showToast(msg, type) {
   var t = document.getElementById("toast");
@@ -466,10 +880,14 @@ function renderEmployees() {
       '</td>' +
       '<td style="text-align:left;">' + escapeHtml(emp.name) + '</td>' +
       '<td>' +
-        '<button class="btn-edit" type="button" data-act="edit"   data-code="' + escapeHtml(emp.code) + '">Edit</button>' +
-        '<button class="btn-del"  type="button" data-act="delete" data-code="' + escapeHtml(emp.code) + '">Delete</button>' +
+        '<button class="btn-details" type="button" data-act="details" data-code="' + escapeHtml(emp.code) + '">📋 Details</button>' +
+        '<button class="btn-edit"    type="button" data-act="edit"    data-code="' + escapeHtml(emp.code) + '">Edit</button>' +
+        '<button class="btn-del"     type="button" data-act="delete"  data-code="' + escapeHtml(emp.code) + '">Delete</button>' +
       '</td>';
 
+    tr.querySelector('button[data-act="details"]').addEventListener("click", function() {
+      openDetailsModal(emp.code, emp.name);
+    });
     tr.querySelector('button[data-act="edit"]').addEventListener("click", function() {
       enterEditMode(emp.code, emp.name);
     });
@@ -604,7 +1022,6 @@ window.deleteEmployee = function(code) {
 
   if (!confirm("Delete employee " + code + " — " + emp.name + " from the Employees sheet?")) return;
 
-  /* If we were editing this employee, exit edit mode first */
   if (editState && editState.code === code) {
     exitEditMode();
   }
@@ -634,7 +1051,6 @@ window.loadEmployees = function() {
       employees = EMPLOYEES.slice();
     }
 
-    /* If we were editing someone who no longer exists, exit edit mode */
     if (editState && !employees.some(function(e){ return e.code === editState.code; })) {
       exitEditMode();
     }
@@ -642,11 +1058,236 @@ window.loadEmployees = function() {
     renderEmployees();
     if (!editState) suggestNextCode();
     if (btn) btn.classList.remove("loading");
+
+    populateAddEmpSelect();
     return employees;
   });
 };
 
-/* ─────────── TIME LOGS ─────────── */
+/* ═══════════ ADD TIME LOG PANEL ═══════════ */
+function populateAddEmpSelect() {
+  var sel = document.getElementById("addEmpSelect");
+  if (!sel) return;
+  var current = sel.value;
+  sel.innerHTML = '<option value="">— Select employee —</option>';
+  employees.forEach(function(e) {
+    var o = document.createElement("option");
+    o.value = e.code;
+    o.textContent = e.code + " — " + e.name;
+    sel.appendChild(o);
+  });
+  if (current && employees.some(function(e){ return e.code === current; })) {
+    sel.value = current;
+  }
+}
+
+window.toggleAddPanel = function() {
+  var panel = document.getElementById("addPanel");
+  var btn   = document.getElementById("btn-add-details");
+  var dateLbl = document.getElementById("addPanelDate");
+  if (!panel || !btn) return;
+
+  var isOpen = (panel.style.display === "block");
+
+  if (isOpen) {
+    panel.style.display = "none";
+    btn.textContent = "➕ Add Time Log";
+  } else {
+    populateAddEmpSelect();
+    var dateStr = document.getElementById("filterDate").value;
+    if (dateLbl) dateLbl.textContent = "Date: " + (dateStr || "—");
+    panel.style.display = "block";
+    btn.textContent = "✖ Close Panel";
+    var sel = document.getElementById("addEmpSelect");
+    if (sel) sel.focus({ preventScroll: true });
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+};
+
+window.saveNewDetails = function() {
+  var code    = document.getElementById("addEmpSelect").value;
+  var dateStr = document.getElementById("filterDate").value;
+
+  if (!dateStr) return showToast("Please select a date first.", "error");
+  if (!code)    return showToast("Please select an employee.", "error");
+
+  var emp = employees.find(function(e){ return e.code === code; });
+  if (!emp) return showToast("Employee not found. Please refresh.", "error");
+
+  var amIn  = document.getElementById("add_am_in").value.trim();
+  var amOut = document.getElementById("add_am_out").value.trim();
+  var pmIn  = document.getElementById("add_pm_in").value.trim();
+  var pmOut = document.getElementById("add_pm_out").value.trim();
+
+  if (!amIn && !amOut && !pmIn && !pmOut) {
+    return showToast("Please enter at least one time value.", "error");
+  }
+
+  document.getElementById("af_action").value = "saveLog";
+  document.getElementById("af_date").value   = dateStr;
+  document.getElementById("af_code").value   = code;
+  document.getElementById("af_name").value   = emp.name;
+  document.getElementById("af_am_in").value  = amIn;
+  document.getElementById("af_am_out").value = amOut;
+  document.getElementById("af_pm_in").value  = pmIn;
+  document.getElementById("af_pm_out").value = pmOut;
+  document.getElementById("adminForm").action = API_URL;
+  document.getElementById("adminForm").submit();
+
+  showToast("✅ Saving time log for " + emp.name + " — " + dateStr, "success");
+
+  document.getElementById("addPanel").style.display = "none";
+  document.getElementById("btn-add-details").textContent = "➕ Add Time Log";
+  document.getElementById("add_am_in").value  = "";
+  document.getElementById("add_am_out").value = "";
+  document.getElementById("add_pm_in").value  = "";
+  document.getElementById("add_pm_out").value = "";
+  document.getElementById("addEmpSelect").value = "";
+};
+
+/* ═══════════ EMPLOYEE DETAILS MODAL ═══════════ */
+var DETAIL_FIELDS = [
+  "age", "address", "position", "salary_grade", "division",
+  "employment_status", "gsis_no", "sss_no", "bir_no",
+  "pagibig_no", "philhealth_no", "contact_no",
+  "emergency_person", "emergency_contact_no"
+];
+
+function clearDetailsFields() {
+  DETAIL_FIELDS.forEach(function(f) {
+    var el = document.getElementById("md_" + f);
+    if (el) el.value = "";
+  });
+}
+
+function populateDetailsFields(data) {
+  DETAIL_FIELDS.forEach(function(f) {
+    var el = document.getElementById("md_" + f);
+    if (!el) return;
+    if (data && data[f] != null) {
+      el.value = data[f];
+    } else {
+      el.value = "";
+    }
+  });
+}
+
+/* Try to fetch existing details for an employee — graceful fallback if backend
+ * doesn't support this action yet. */
+function fetchEmployeeDetails(code) {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_details_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r || null);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && data.data) finish(data.data);
+      else finish(null);
+    };
+    script.onerror = function() { finish(null); };
+    var timer = setTimeout(function() { finish(null); }, 8000);
+    script.src = API_URL + "?action=getEmployeeDetails&code=" +
+                 encodeURIComponent(code) + "&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+window.openDetailsModal = function(code, name) {
+  if (pendingDetailsAction) {
+    return showToast("Please wait — previous save in progress.", "error");
+  }
+  currentDetailsEmp = { code: code, name: name };
+
+  var modal = document.getElementById("detailsModal");
+  var subtitle = document.getElementById("detailsModalSubtitle");
+  var saveBtn = document.getElementById("btn-save-details");
+
+  subtitle.textContent = "Employee " + code + " — " + name;
+  clearDetailsFields();
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "⏳ Loading…";
+  }
+
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+
+  /* Focus first input */
+  setTimeout(function() {
+    var first = document.getElementById("md_age");
+    if (first) first.focus({ preventScroll: true });
+  }, 60);
+
+  /* Try to pre-fill existing details */
+  fetchEmployeeDetails(code).then(function(details) {
+    populateDetailsFields(details);
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "💾 Save Details";
+    }
+  });
+};
+
+window.closeDetailsModal = function() {
+  if (pendingDetailsAction) {
+    return showToast("Please wait — saving in progress.", "error");
+  }
+  var modal = document.getElementById("detailsModal");
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  currentDetailsEmp = null;
+  clearDetailsFields();
+};
+
+window.saveEmployeeDetails = function() {
+  if (!currentDetailsEmp) return;
+  if (pendingDetailsAction) return showToast("Please wait — save in progress.", "error");
+
+  var code = currentDetailsEmp.code;
+  var name = currentDetailsEmp.name;
+
+  /* Collect values from modal inputs */
+  var values = {};
+  DETAIL_FIELDS.forEach(function(f) {
+    var el = document.getElementById("md_" + f);
+    values[f] = el ? String(el.value).trim() : "";
+  });
+
+  /* Basic validation on age if provided */
+  if (values.age !== "" && (isNaN(values.age) || values.age < 0 || values.age > 120)) {
+    return showToast("Please enter a valid age (0–120).", "error");
+  }
+
+  pendingDetailsAction = { code: code, name: name, values: values };
+
+  document.getElementById("df_code").value = code;
+  document.getElementById("df_name").value = name;
+  DETAIL_FIELDS.forEach(function(f) {
+    var hid = document.getElementById("df_" + f);
+    if (hid) hid.value = values[f];
+  });
+
+  document.getElementById("detailsForm").action = API_URL;
+  document.getElementById("detailsForm").submit();
+
+  var saveBtn = document.getElementById("btn-save-details");
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "⏳ Saving…";
+  }
+  showToast("⏳ Saving details for " + name + "…", "");
+};
+
+/* ═══════════ TIME LOGS ═══════════ */
 document.addEventListener("DOMContentLoaded", function() {
   var dateInput = document.getElementById("filterDate");
   var tbody = document.getElementById("logTableBody");
@@ -661,10 +1302,49 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.key === "Enter") loadData();
   });
 
-  /* Esc = cancel edit */
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape" && editState) exitEditMode();
+  dateInput.addEventListener("change", function() {
+    var lbl = document.getElementById("addPanelDate");
+    if (lbl) lbl.textContent = "Date: " + (dateInput.value || "—");
   });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      var modal = document.getElementById("detailsModal");
+      if (modal && modal.classList.contains("show")) {
+        closeDetailsModal();
+        return;
+      }
+      if (editState) { exitEditMode(); return; }
+      var panel = document.getElementById("addPanel");
+      if (panel && panel.style.display === "block") toggleAddPanel();
+    }
+  });
+
+  /* Click on the overlay (but not the modal card) closes the modal */
+  var modalOverlay = document.getElementById("detailsModal");
+  if (modalOverlay) {
+    modalOverlay.addEventListener("click", function(ev) {
+      if (ev.target === modalOverlay) closeDetailsModal();
+    });
+  }
+
+  var addEmpSelect = document.getElementById("addEmpSelect");
+  if (addEmpSelect) {
+    addEmpSelect.addEventListener("change", function() {
+      var code = this.value;
+      var rec = currentLogs[code] || null;
+      if (rec) {
+        document.getElementById("add_am_in").value  = rec.am_in  || "";
+        document.getElementById("add_am_out").value = rec.am_out || "";
+        document.getElementById("add_pm_in").value  = rec.pm_in  || "";
+        document.getElementById("add_pm_out").value = rec.pm_out || "";
+      } else {
+        ["add_am_in", "add_am_out", "add_pm_in", "add_pm_out"].forEach(function(id){
+          document.getElementById(id).value = "";
+        });
+      }
+    });
+  }
 
   document.getElementById("hidden_admin_post").onload = function() {
     setTimeout(loadData, 1000);
@@ -683,6 +1363,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (list) employees = list.length > 0 ? list : EMPLOYEES.slice();
         else employees = EMPLOYEES.slice();
         renderEmployees();
+        populateAddEmpSelect();
         if (!editState) suggestNextCode();
         if (addBtn) addBtn.disabled = false;
 
@@ -711,10 +1392,34 @@ document.addEventListener("DOMContentLoaded", function() {
           else showToast("⚠ Could not confirm delete — check Apps Script.", "error");
         }
 
-        /* keep time log table in sync */
         if (dateInput.value) loadData();
       });
     }, 1000);
+  };
+
+  /* Employee DETAILS POST return → confirm & close modal */
+  document.getElementById("hidden_details_post").onload = function() {
+    if (!pendingDetailsAction) return;
+    var action = pendingDetailsAction;
+    pendingDetailsAction = null;
+
+    var saveBtn = document.getElementById("btn-save-details");
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "💾 Save Details";
+    }
+
+    /* Best-effort confirmation: try fetching again to see if data round-trips */
+    setTimeout(function() {
+      fetchEmployeeDetails(action.code).then(function(details) {
+        if (details) {
+          showToast("✅ Details saved for " + action.name + ".", "success");
+        } else {
+          showToast("✅ Details submitted for " + action.name + ".", "success");
+        }
+        closeDetailsModal();
+      });
+    }, 900);
   };
 
   window.loadData = function() {
@@ -762,6 +1467,7 @@ document.addEventListener("DOMContentLoaded", function() {
   };
 
   function renderTable(logs, dateStr) {
+    currentLogs = logs || {};
     tbody.innerHTML = "";
     var hasRecords = false;
 
@@ -784,7 +1490,11 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     if (!hasRecords) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No records found for this date.</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="6" class="empty-state">' +
+          'No records found for this date. ' +
+          '<button type="button" class="btn-add" onclick="toggleAddPanel()">➕ Add Time Log</button>' +
+        '</td></tr>';
     }
   }
 
