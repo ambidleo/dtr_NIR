@@ -175,7 +175,7 @@
     .dtr-table .ut-col { width:9%; }
 
     .dtr-table td.do-row {
-      background:#f0f4f8 !important; font-style:italic; font-size:7px;
+      background:#FFFFFF !important; font-style:italic; font-size:7px;
       text-align:center; color:#222;
     }
     .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
@@ -719,7 +719,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var wLabel = (rec.dow === 6) ? "SATURDAY" : "SUNDAY";
         rowsHTML += '<tr>' +
           '<td class="weekend-day">' + j + '</td>' +
-          '<td colspan="6" class="weekend-row"><b>' + wLabel + '</b> — REST DAY (No Work)</td>' +
+          '<td colspan="6" class="weekend-row"><b>' + wLabel + '</b></td>' +
         '</tr>';
         continue;
       }
@@ -728,7 +728,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (rec && rec.skippedFriday) {
         rowsHTML += '<tr><td>' + j + '</td>' +
           '<td colspan="6" class="do-row">' +
-            '<b>DO No. 2026-015</b> — No work on Fridays (Compressed Workweek)' +
+            '<b>DO No. 2026-015</b>(Compressed Workweek)' +
           '</td></tr>';
         continue;
       }
