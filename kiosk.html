@@ -107,6 +107,74 @@
     .gov-nav { width:100%; }
     .gov-nav a { font-size:11.5px; padding:7px 11px; }
   }
+
+  /* ════════ PUNCH CONFIRMATION MODAL ════════ */
+  .modal-overlay {
+    position:fixed; inset:0;
+    background:rgba(0,20,50,.55);
+    display:none; align-items:center; justify-content:center;
+    z-index:100; padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .modal-overlay.show { display:flex; }
+  .modal-card {
+    background:#fff; border-radius:18px;
+    max-width:440px; width:100%;
+    padding:30px 26px 24px;
+    text-align:center;
+    box-shadow:0 24px 60px rgba(0,20,50,.35);
+    animation:modalPop .18s ease-out;
+    border-top:4px solid #0038A8;
+  }
+  @keyframes modalPop {
+    from { transform:scale(.92); opacity:0; }
+    to   { transform:scale(1);   opacity:1; }
+  }
+  .modal-icon { font-size:56px; line-height:1; margin-bottom:10px; }
+  .modal-title {
+    font-size:18px; font-weight:800; color:#003087;
+    letter-spacing:.02em; margin-bottom:14px;
+  }
+  .modal-name {
+    font-size:19px; font-weight:800; color:#0e1825;
+    margin-bottom:4px; line-height:1.25;
+  }
+  .modal-slot {
+    font-size:12px; font-weight:800; color:#5a6b80;
+    letter-spacing:.14em; text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .modal-time {
+    font-size:38px; font-weight:800; color:#0038A8;
+    font-variant-numeric:tabular-nums;
+    line-height:1; margin:6px 0 6px;
+  }
+  .modal-date { font-size:13px; color:#5a6b80; font-weight:600; }
+  .modal-msg {
+    margin-top:14px; font-size:14px; font-weight:600;
+    min-height:18px;
+  }
+  .modal-msg.ok   { color:#1c8a4b; }
+  .modal-msg.err  { color:#9b1c1c; }
+  .modal-msg.wait { color:#5a6b80; }
+  .modal-hint {
+    margin-top:8px; font-size:13px; color:#5a6b80;
+    line-height:1.4;
+  }
+  .modal-btn {
+    margin-top:20px; width:100%; padding:15px;
+    border-radius:12px; border:0; cursor:pointer;
+    background:linear-gradient(135deg,#0038A8 0%,#2a6fc9 100%);
+    color:#fff; font-size:16px; font-weight:800;
+    box-shadow:0 6px 16px rgba(0,56,168,.30);
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .modal-btn:hover:not(:disabled)  { filter:brightness(1.06); }
+  .modal-btn:active:not(:disabled) { transform:translateY(1px); }
+  .modal-btn:disabled {
+    background:#c8d4e6; color:#5a6b80;
+    cursor:wait; box-shadow:none;
+  }
 </style>
 </head>
 <body>
@@ -179,6 +247,21 @@
   </div>
 </div>
 
+<!-- ════════════════ PUNCH CONFIRMATION MODAL ════════════════ -->
+<div class="modal-overlay" id="punchModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="punchTitle">
+    <div class="modal-icon" id="punchIcon">⏳</div>
+    <div class="modal-title" id="punchTitle">Saving…</div>
+    <div class="modal-name" id="punchName">—</div>
+    <div class="modal-slot" id="punchSlot">—</div>
+    <div class="modal-time" id="punchTime">--:--</div>
+    <div class="modal-date" id="punchDate">—</div>
+    <div class="modal-msg" id="punchMsg"></div>
+    <div class="modal-hint" id="punchHint"></div>
+    <button type="button" class="modal-btn" id="punchCloseBtn" disabled>Please wait…</button>
+  </div>
+</div>
+
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbzbup1x4BWZsy-N5DejhBs7L4NHjeHDN4UnmT9U-1khpexgtR7E5G9MN3kT3s2pXd63/exec";
 
@@ -239,6 +322,23 @@ function fetchEmployees() {
   });
 }
 
+/* ─────────── SIMPLE BEEP (kiosk audio feedback) ─────────── */
+function beep(freq, dur) {
+  try {
+    var ctx = window.__audioCtx || (window.__audioCtx =
+      new (window.AudioContext || window.webkitAudioContext)());
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq || 880;
+    gain.gain.value = 0.07;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + (dur || 0.15));
+  } catch (e) { /* audio unavailable — ignore */ }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   var sel = document.getElementById("employee");
   var statusBox = document.getElementById("status");
@@ -266,6 +366,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   var SLOT_LABELS = { am_in:"AM Time In", am_out:"AM Time Out", pm_in:"PM Time In", pm_out:"PM Time Out" };
+  var NEXT_HINTS = {
+    am_in:  "Please remember to tap AM Time Out before lunch.",
+    am_out: "Please tap PM Time In after lunch.",
+    pm_in:  "Please remember to tap PM Time Out before leaving.",
+    pm_out: "Have a great day! Your log for today is complete."
+  };
   var cachedLogs = {};
   var pending = null;
 
@@ -288,6 +394,105 @@ document.addEventListener("DOMContentLoaded", function () {
     return display;
   }
 
+  /* ═══════════ PUNCH CONFIRMATION MODAL ═══════════ */
+  var punchState = "idle";          // idle | saving | ok | err
+  var punchAutoTimer = null;
+
+  var elModal      = document.getElementById("punchModal");
+  var elIcon       = document.getElementById("punchIcon");
+  var elTitle      = document.getElementById("punchTitle");
+  var elName       = document.getElementById("punchName");
+  var elSlot       = document.getElementById("punchSlot");
+  var elTime       = document.getElementById("punchTime");
+  var elDate       = document.getElementById("punchDate");
+  var elMsg        = document.getElementById("punchMsg");
+  var elHint       = document.getElementById("punchHint");
+  var elModalBtn   = document.getElementById("punchCloseBtn");
+
+  function punchModalOpen(info){
+    punchState = "saving";
+    clearTimeout(punchAutoTimer);
+
+    elIcon.textContent  = "⏳";
+    elTitle.textContent = "Saving…";
+    elName.textContent  = info.name;
+    elSlot.textContent  = info.slotLabel;
+    elTime.textContent  = info.time;
+    elDate.textContent  = info.dateLabel;
+
+    elMsg.className = "modal-msg wait";
+    elMsg.textContent = "Please wait while your time is being recorded…";
+    elHint.textContent = "";
+
+    elModalBtn.disabled = true;
+    elModalBtn.textContent = "Please wait…";
+
+    elModal.classList.add("show");
+    elModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    elModalBtn.focus({ preventScroll: true });
+  }
+
+  function punchModalResult(ok, message, hint){
+    if (ok) {
+      punchState = "ok";
+      elIcon.textContent  = "✅";
+      elTitle.textContent = "Time Recorded";
+      elMsg.className = "modal-msg ok";
+      elMsg.textContent = message || "Your time has been saved successfully.";
+      elHint.textContent = hint || "";
+      elModalBtn.disabled = false;
+
+      beep(880, 0.12);
+      setTimeout(function(){ beep(1320, 0.16); }, 150);
+
+      /* Auto-close countdown */
+      var countdown = 5;
+      elModalBtn.textContent = "Done (" + countdown + ")";
+      clearTimeout(punchAutoTimer);
+      (function tick(){
+        countdown--;
+        if (punchState !== "ok") return;          // user closed already
+        if (countdown <= 0) { punchModalClose(); return; }
+        elModalBtn.textContent = "Done (" + countdown + ")";
+        punchAutoTimer = setTimeout(tick, 1000);
+      })();
+    } else {
+      punchState = "err";
+      elIcon.textContent  = "⚠️";
+      elTitle.textContent = "Not Saved";
+      elMsg.className = "modal-msg err";
+      elMsg.textContent = message || "The record could not be saved. Please try again.";
+      elHint.textContent = "";
+      elModalBtn.disabled = false;
+      elModalBtn.textContent = "Close";
+      clearTimeout(punchAutoTimer);
+      beep(220, 0.30);
+    }
+  }
+
+  function punchModalClose(){
+    clearTimeout(punchAutoTimer);
+    elModal.classList.remove("show");
+    elModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    punchState = "idle";
+  }
+
+  elModalBtn.addEventListener("click", function(){
+    if (punchState === "saving") return;
+    punchModalClose();
+  });
+  elModal.addEventListener("click", function(ev){
+    if (ev.target === elModal && punchState !== "saving") punchModalClose();
+  });
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === "Escape" && punchState !== "saving" && punchState !== "idle") {
+      punchModalClose();
+    }
+  });
+
+  /* ═══════════ FETCH TODAY'S LOGS ═══════════ */
   window.fetchLogsJSONP = function(onDone, silent){
     var todayStr = getTodayString();
     document.getElementById("todayLabel").textContent = todayStr;
@@ -347,6 +552,9 @@ document.addEventListener("DOMContentLoaded", function () {
         var rec = raw[saved.code] || {};
         if (rec[saved.slot] === saved.time) {
           showMsg("ok", "✅ " + saved.name + " — " + SLOT_LABELS[saved.slot] + " at " + saved.time);
+          punchModalResult(true,
+            SLOT_LABELS[saved.slot] + " has been recorded successfully.",
+            NEXT_HINTS[saved.slot] || "");
           pending = null;
           if (saved.slot === "pm_in") document.getElementById("halfDay").checked = false;
           refreshButtons();
@@ -358,6 +566,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
           pending = null;
           showMsg("err", "⚠ Save was not confirmed by the server. Please refresh and try again.");
+          punchModalResult(false, "The server did not confirm the save. Please refresh and try again.");
           window.fetchLogsJSONP();
         }
       }, true);
@@ -418,6 +627,17 @@ document.addEventListener("DOMContentLoaded", function () {
     showMsg("ok", "⏳ Saving " + emp.name + " — " + SLOT_LABELS[slot] + "...");
     renderToday();
     refreshButtons();
+
+    /* ★ Show the confirmation window with name, slot & time ★ */
+    var dateLabel = new Date().toLocaleDateString("en-US", {
+      weekday: "short", month: "short", day: "numeric", year: "numeric"
+    });
+    punchModalOpen({
+      name: emp.name,
+      slotLabel: SLOT_LABELS[slot],
+      time: currentTimeStr,
+      dateLabel: dateLabel
+    });
 
     document.getElementById("saveForm").action = API_URL;
     document.getElementById("saveForm").submit();
