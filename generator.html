@@ -185,6 +185,25 @@
     }
     .dtr-table td.travel-row b { font-style:normal; letter-spacing:.3px; text-transform:uppercase; }
 
+    /* ── SATURDAY / SUNDAY REST-DAY ROWS ── */
+    .dtr-table td.weekend-day {
+      background:#e9edf3 !important;
+      font-weight:bold;
+      color:#333;
+    }
+    .dtr-table td.weekend-row {
+      background:#f4f6f9 !important;
+      font-size:7px;
+      text-align:center;
+      color:#444;
+      letter-spacing:.45px;
+    }
+    .dtr-table td.weekend-row b {
+      font-style:normal;
+      letter-spacing:.55px;
+      color:#1b2b44;
+    }
+
     .dtr-footer { margin-top:10px; font-size:8px; }
     .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
     .signature-block { text-align:center; width:45%; }
@@ -240,6 +259,7 @@
 
     <div id="dtrStatus">
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
+      <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Friday rows without skeletal coverage show <b>DO No. 2026‑015</b>. Days with an approved Travel Order show <b>TO No.</b> instead of times.
     </div>
   </div>
@@ -376,6 +396,12 @@ function loadSkeletalLegacy() {
   } catch(e) { return {}; }
 }
 function isFriday(y, m, d) { return new Date(y, m, d).getDay() === 5; }
+function isSaturday(y, m, d) { return new Date(y, m, d).getDay() === 6; }
+function isSunday(y, m, d) { return new Date(y, m, d).getDay() === 0; }
+function isWeekend(y, m, d) {
+  var dow = new Date(y, m, d).getDay();
+  return dow === 0 || dow === 6;
+}
 function parseMins(t) {
   if (!t) return null;
   var match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -541,22 +567,36 @@ document.addEventListener("DOMContentLoaded", function () {
     var startDay = start.getDate();
     var endDay = end.getDate();
     var daysInMonth = new Date(year, month + 1, 0).getDate();
+    if (endDay > daysInMonth) endDay = daysInMonth;
 
     document.getElementById("dtrStatus").textContent = "⏳ Downloading time logs…";
 
+    /* ── PASS 1: collect data for every day in the period ── */
     for (var d = startDay; d <= endDay; d++) {
       var cellDate = new Date(year, month, d);
       var dStr = year + "-" + pad2(month + 1) + "-" + pad2(d);
 
+      // 1) Approved Travel Order always wins
       var travel = findTravelOn(dStr);
       if (travel) {
         byDay[d] = { success: true, data: {}, travel: travel };
         continue;
       }
+
+      // 2) Saturday / Sunday → rest day, no fetch needed
+      var dow = cellDate.getDay();
+      if (dow === 0 || dow === 6) {
+        byDay[d] = { success: true, data: {}, weekend: true, dow: dow };
+        continue;
+      }
+
+      // 3) Friday without skeletal coverage → DO No. 2026-015
       if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
         byDay[d] = { success: true, data: {}, skippedFriday: true };
         continue;
       }
+
+      // 4) Normal working day → fetch logs
       var data = await fetchDateDataJSONP(dStr);
       if (!data || !data.success) {
         failedDates.push(dStr);
@@ -572,6 +612,7 @@ document.addEventListener("DOMContentLoaded", function () {
       m.textContent = "⚠ " + failedDates.length + " date(s) failed to load. Generating with partial data.";
     }
 
+    /* ── PASS 2: build the 1..31 table rows ── */
     for (var j = 1; j <= 31; j++) {
       var inPeriod = (j >= startDay && j <= endDay && j <= daysInMonth);
       if (!inPeriod) {
@@ -581,6 +622,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       var rec = byDay[j];
 
+      // Travel Order row
       if (rec && rec.travel) {
         var to = rec.travel;
         var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
@@ -592,6 +634,17 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
+      // ★ SATURDAY / SUNDAY → REST DAY row
+      if (rec && rec.weekend) {
+        var wLabel = (rec.dow === 6) ? "SATURDAY" : "SUNDAY";
+        rowsHTML += '<tr>' +
+          '<td class="weekend-day">' + j + '</td>' +
+          '<td colspan="6" class="weekend-row"><b>' + wLabel + '</b> — REST DAY (No Work)</td>' +
+        '</tr>';
+        continue;
+      }
+
+      // Friday compressed-workweek row
       if (rec && rec.skippedFriday) {
         rowsHTML += '<tr><td>' + j + '</td>' +
           '<td colspan="6" class="do-row">' +
@@ -600,6 +653,7 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
+      // Normal row
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
@@ -645,6 +699,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
     }
+    var weekendDaysInPeriod = [];
+    for (var wd = startDay; wd <= endDay; wd++) {
+      if (isWeekend(year, month, wd)) {
+        weekendDaysInPeriod.push(wd + "/" + (month + 1) + (isSaturday(year, month, wd) ? " (Sat)" : " (Sun)"));
+      }
+    }
+
     console.log("═══ DTR BUILD ═══");
     console.log("Employee:", code, emp.name);
     console.log("Period:", startDay + "–" + endDay + " of " + (month + 1) + "/" + year);
@@ -652,6 +713,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Travel orders fetched:", travelOrders.length);
     console.log("Travel days in period:", travelDaysInPeriod);
     console.log("Fridays in period:", fridaysInPeriod);
+    console.log("Weekend rest days in period:", weekendDaysInPeriod);
     console.log("Classification:", empIsSkeletal ? "SKELETAL (header)" : "REGULAR (header)");
 
     generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
