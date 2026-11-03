@@ -204,6 +204,28 @@
       color:#1b2b44;
     }
 
+    /* ── OUT-OF-PERIOD (OTHER CUT-OFF) ROWS → GREY SHADE ── */
+    .dtr-table td.op-cell {
+      background:#dfe3e9 !important;
+      color:#7a8597 !important;
+    }
+    .dtr-table td.op-label {
+      font-size:7px;
+      font-style:italic;
+      letter-spacing:.4px;
+      text-align:center;
+    }
+
+    /* Ensure background colours actually print */
+    .dtr-table td.do-row,
+    .dtr-table td.travel-row,
+    .dtr-table td.weekend-day,
+    .dtr-table td.weekend-row,
+    .dtr-table td.op-cell {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
     .dtr-footer { margin-top:10px; font-size:8px; }
     .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
     .signature-block { text-align:center; width:45%; }
@@ -246,13 +268,22 @@
     </div>
 
     <div class="field">
+      <label for="cutoff">Cut-off Period</label>
+      <select id="cutoff">
+        <option value="1">1st Cut-off (1–15)</option>
+        <option value="2">2nd Cut-off (16–End of Month)</option>
+        <option value="full">Full Month (1–End)</option>
+      </select>
+    </div>
+
+    <div class="field">
       <label for="period">Period Text (appears on form)</label>
-      <input type="text" id="period" value="August 1-31, 2026">
+      <input type="text" id="period" value="August 1-15, 2026">
     </div>
 
     <div class="row">
       <div><label for="startDate">Start date</label><input type="date" id="startDate" value="2026-08-01"></div>
-      <div><label for="endDate">End date</label><input type="date" id="endDate" value="2026-08-31"></div>
+      <div><label for="endDate">End date</label><input type="date" id="endDate" value="2026-08-15"></div>
     </div>
 
     <button type="button" class="primary" id="btn-print" disabled>🖨️ Generate &amp; Print DTR</button>
@@ -260,7 +291,7 @@
     <div id="dtrStatus">
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
-      Friday rows without skeletal coverage show <b>DO No. 2026‑015</b>. Days with an approved Travel Order show <b>TO No.</b> instead of times.
+      Days <b>outside the selected cut-off</b> are shaded grey. Days with an approved Travel Order show <b>TO No.</b> instead of times.
     </div>
   </div>
 </div>
@@ -309,6 +340,9 @@ function getIsoWeekKey(date) {
   var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   return d.getFullYear() + "-W" + String(weekNo).padStart(2, '0');
 }
+
+var MONTH_NAMES = ["January","February","March","April","May","June",
+                   "July","August","September","October","November","December"];
 
 /* ─────────── EMPLOYEES FETCH ─────────── */
 function fetchEmployees() {
@@ -430,9 +464,29 @@ function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
   return total;
 }
 
+/* ═══════════ AUTO CUT-OFF HELPERS ═══════════ */
+function getLastDayOfMonth(year, monthIndex) {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+function applyCutoff(cutoff, refDate) {
+  var y = refDate.getFullYear();
+  var m = refDate.getMonth();
+  var last = getLastDayOfMonth(y, m);
+  var sD, eD;
+  if (cutoff === "1")      { sD = 1;  eD = 15; }
+  else if (cutoff === "2") { sD = 16; eD = last; }
+  else                     { sD = 1;  eD = last; }
+  document.getElementById("startDate").value = y + "-" + pad2(m + 1) + "-" + pad2(sD);
+  document.getElementById("endDate").value   = y + "-" + pad2(m + 1) + "-" + pad2(eD);
+  document.getElementById("period").value    = MONTH_NAMES[m] + " " + sD + "-" + eD + ", " + y;
+}
+function cutoffForDay(day) {
+  return day <= 15 ? "1" : "2";
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   var requiredIds = [
-    "dtrEmp", "period", "startDate", "endDate",
+    "dtrEmp", "period", "startDate", "endDate", "cutoff",
     "btn-print", "dtrStatus", "fatal", "print-area"
   ];
   var missing = requiredIds.filter(function(id) { return !document.getElementById(id); });
@@ -448,8 +502,25 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  var sel = document.getElementById("dtrEmp");
-  var printBtn = document.getElementById("btn-print");
+  var sel         = document.getElementById("dtrEmp");
+  var printBtn    = document.getElementById("btn-print");
+  var cutoffSel   = document.getElementById("cutoff");
+  var startInput  = document.getElementById("startDate");
+  var endInput    = document.getElementById("endDate");
+  var periodInput = document.getElementById("period");
+
+  /* ─── Auto cut-off wiring ─── */
+  cutoffSel.addEventListener("change", function() {
+    var ref = startInput.value ? new Date(startInput.value + "T00:00:00") : new Date();
+    applyCutoff(cutoffSel.value, ref);
+  });
+  startInput.addEventListener("change", function() {
+    if (!startInput.value) return;
+    var d = new Date(startInput.value + "T00:00:00");
+    var c = cutoffForDay(d.getDate());
+    cutoffSel.value = c;
+    applyCutoff(c, d);
+  });
 
   function populateDropdown() {
     var current = sel.value;
@@ -467,8 +538,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   printBtn.addEventListener("click", function(){
     var code   = sel.value;
-    var startV = document.getElementById("startDate").value;
-    var endV   = document.getElementById("endDate").value;
+    var startV = startInput.value;
+    var endV   = endInput.value;
     var msg    = document.getElementById("dtrStatus");
 
     if (!code || !startV || !endV) {
@@ -486,7 +557,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var end   = new Date(endV   + "T00:00:00");
 
     if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) {
-      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per-month form — print one DTR per month.";
+      msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b><br>CSC Form No. 48 is a per-month form — print one DTR per cut-off.";
       msg.style.color = "#9b1c1c";
       return;
     }
@@ -590,13 +661,7 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // 3) Friday without skeletal coverage → DO No. 2026-015
-      if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
-        byDay[d] = { success: true, data: {}, skippedFriday: true };
-        continue;
-      }
-
-      // 4) Normal working day → fetch logs
+      // 3) Normal working day (including Fridays) → fetch logs
       var data = await fetchDateDataJSONP(dStr);
       if (!data || !data.success) {
         failedDates.push(dStr);
@@ -615,8 +680,17 @@ document.addEventListener("DOMContentLoaded", function () {
     /* ── PASS 2: build the 1..31 table rows ── */
     for (var j = 1; j <= 31; j++) {
       var inPeriod = (j >= startDay && j <= endDay && j <= daysInMonth);
+
+      /* ── OUT-OF-PERIOD (other cut-off) → GREY SHADED ── */
       if (!inPeriod) {
-        rowsHTML += '<tr><td>' + j + '</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+        var opLabel = "";
+        if (j <= daysInMonth) {
+          opLabel = (j <= 15 ? "1st Cut-off" : "2nd Cut-off") + " — not part of this DTR";
+        }
+        rowsHTML += '<tr>' +
+          '<td class="op-cell">' + j + '</td>' +
+          '<td colspan="6" class="op-cell op-label">' + opLabel + '</td>' +
+        '</tr>';
         continue;
       }
 
@@ -644,16 +718,7 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // Friday compressed-workweek row
-      if (rec && rec.skippedFriday) {
-        rowsHTML += '<tr><td>' + j + '</td>' +
-          '<td colspan="6" class="do-row">' +
-            '<b>DO No. 2026-015</b> — No work on Fridays (Compressed Workweek)' +
-          '</td></tr>';
-        continue;
-      }
-
-      // Normal row
+      // Normal row (weekdays, including Fridays — no DO No. row anymore)
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
