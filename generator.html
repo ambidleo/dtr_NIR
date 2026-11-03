@@ -291,7 +291,7 @@
     <div id="dtrStatus">
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
-      Days <b>outside the selected cut-off</b> are shaded grey. Days with an approved Travel Order show <b>TO No.</b> instead of times.
+      Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays. Days with an approved Travel Order show <b>TO No.</b> instead of times.
     </div>
   </div>
 </div>
@@ -661,7 +661,13 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // 3) Normal working day (including Fridays) → fetch logs
+      // 3) Friday for NON‑skeletal employee → will render DO No. row (no fetch needed)
+      if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
+        byDay[d] = { success: true, data: {}, skippedFriday: true };
+        continue;
+      }
+
+      // 4) Normal working day (including Fridays for skeletal employees) → fetch logs
       var data = await fetchDateDataJSONP(dStr);
       if (!data || !data.success) {
         failedDates.push(dStr);
@@ -718,7 +724,16 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
-      // Normal row (weekdays, including Fridays — no DO No. row anymore)
+      // ★ FRIDAY for NON‑skeletal employee → DO No. row
+      if (rec && rec.skippedFriday) {
+        rowsHTML += '<tr><td>' + j + '</td>' +
+          '<td colspan="6" class="do-row">' +
+            '<b>DO No. 2026-015</b> — No work on Fridays (Compressed Workweek)' +
+          '</td></tr>';
+        continue;
+      }
+
+      // Normal row (weekdays; Fridays for skeletal employees also land here)
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
