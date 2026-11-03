@@ -691,7 +691,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!inPeriod) {
         var opLabel = "";
         if (j <= daysInMonth) {
-          opLabel = (j <= 15 ? "1st Cut-off" : "2nd Cut-off") + " — not part of this DTR";
+          opLabel = (j <= 15 ? "" : "") + ";
         }
         rowsHTML += '<tr>' +
           '<td class="op-cell">' + j + '</td>' +
