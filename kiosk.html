@@ -94,6 +94,7 @@
   th,td { border:1px solid #d9e1ea; padding:8px; text-align:center; }
   th { background:#f3f6fa; }
   .muted { color:#6b7a8d; font-size:13px; text-align:center; margin-top:14px; }
+  .muted b { color:#2c3a4c; }
   .override-box { margin-top: 15px; background: #fff3cd; padding: 12px; border-radius: 6px; border: 1px solid #ffe08a; display: flex; align-items: center; gap: 10px; }
   .override-box input { width: 20px; height: 20px; cursor: pointer; }
   .override-box label { margin: 0; font-size: 14px; color: #664d03; cursor: pointer; }
@@ -230,7 +231,12 @@
       <button type="button" class="btn-pm" id="btn-pm-out">🟧 PM — Time Out</button>
     </div>
     <div id="status"></div>
-    <div class="muted">Timestamps are taken automatically from this computer's clock.<br>Office hours: <b>7:00 AM – 6:00 PM</b>.</div>
+    <div class="muted">
+      Timestamps are taken automatically from this computer's clock.<br>
+      Office hours: <b>7:00 AM – 6:00 PM</b>.<br>
+      Cut-offs — AM In <b>11:59 AM</b> · AM Out <b>12:29 PM</b> ·
+      PM In <b>12:59 PM</b> · PM Out <b>11:59 PM</b>
+    </div>
   </div>
 
   <div class="card">
@@ -366,6 +372,62 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   var SLOT_LABELS = { am_in:"AM Time In", am_out:"AM Time Out", pm_in:"PM Time In", pm_out:"PM Time Out" };
+
+  /* ═══════════════════════════════════════════════════════════
+     ⏰  TIME-WINDOW RULES
+     Each slot has a CUT-OFF. Until that time the button stays
+     usable even if an earlier punch was forgotten.
+        AM In   → until 11:59 AM
+        AM Out  → until 12:29 PM
+        PM In   → until 12:59 PM
+        PM Out  → until 11:59 PM
+     ═══════════════════════════════════════════════════════════ */
+  var SLOT_RULES = {
+    am_in:  { cutoff:{h:11,m:59}, cutoffLabel:"11:59 AM", prev:null     },
+    am_out: { cutoff:{h:12,m:29}, cutoffLabel:"12:29 PM", prev:"am_in"  },
+    pm_in:  { cutoff:{h:12,m:59}, cutoffLabel:"12:59 PM", prev:"am_out" },
+    pm_out: { cutoff:{h:23,m:59}, cutoffLabel:"11:59 PM", prev:"pm_in"  }
+  };
+  var SLOT_ORDER = ["am_in","am_out","pm_in","pm_out"];
+  var BTN_IDS = {
+    am_in:"btn-am-in", am_out:"btn-am-out",
+    pm_in:"btn-pm-in", pm_out:"btn-pm-out"
+  };
+
+  function cutoffMoment(slot){
+    var c = SLOT_RULES[slot].cutoff;
+    var n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate(), c.h, c.m, 59, 999);
+  }
+  function isPastCutoff(slot){
+    return Date.now() > cutoffMoment(slot).getTime();
+  }
+
+  /* A slot may be punched when:
+       1. it is not yet recorded,
+       2. it is not an AM slot skipped via Half-Day,
+       3. its own cut-off has not passed, AND
+       4. the previous punch is recorded  OR  the previous cut-off already
+          passed (grace window — lets people recover from a missed punch). */
+  function slotAllowed(slot, rec, isHalfDay){
+    var rule = SLOT_RULES[slot];
+    if (rec[slot]) return false;
+    if (isHalfDay && (slot === "am_in" || slot === "am_out")) return false;
+    if (isPastCutoff(slot)) return false;
+    if (slot === "am_in") return true;
+    if (slot === "pm_in" && isHalfDay) return true;
+    if (rec[rule.prev]) return true;
+    return isPastCutoff(rule.prev);
+  }
+
+  function buttonHint(slot, rec, isHalfDay){
+    var rule = SLOT_RULES[slot];
+    if (rec[slot]) return "Already recorded at " + rec[slot];
+    if (isHalfDay && (slot === "am_in" || slot === "am_out")) return "Skipped (Half-Day)";
+    if (isPastCutoff(slot)) return "Locked — cut-off was " + rule.cutoffLabel;
+    return "Open until " + rule.cutoffLabel;
+  }
+
   var NEXT_HINTS = {
     am_in:  "Please remember to tap AM Time Out before lunch.",
     am_out: "Please tap PM Time In after lunch.",
@@ -584,21 +646,17 @@ document.addEventListener("DOMContentLoaded", function () {
     var todayStr = getTodayString();
     var currentTimeStr = getCurrentTimeString();
     var rec = cachedLogs[code] || {};
+    var rule = SLOT_RULES[slot];
 
-    if (slot === "am_in") {
-      if (isHalfDay) return showMsg("err", "AM is blocked for Half-Day.");
-      if (rec.am_in) return showMsg("err", "AM Time In already recorded.");
-    } else if (slot === "am_out") {
-      if (isHalfDay) return showMsg("err", "AM is blocked for Half-Day.");
-      if (!rec.am_in) return showMsg("err", "Please log AM Time In first.");
-      if (rec.am_out) return showMsg("err", "AM Time Out already recorded.");
-    } else if (slot === "pm_in") {
-      if (rec.pm_in) return showMsg("err", "PM Time In already recorded.");
-      if (!isHalfDay && !rec.am_out) return showMsg("err", "Please log AM Time Out first (or check Half-Day).");
-    } else if (slot === "pm_out") {
-      if (!rec.pm_in) return showMsg("err", "Please log PM Time In first.");
-      if (rec.pm_out) return showMsg("err", "PM Time Out already recorded.");
-    }
+    /* ── Time-window + duplicate guards ── */
+    if (isHalfDay && (slot === "am_in" || slot === "am_out"))
+      return showMsg("err", "AM slots are skipped for Half-Day.");
+    if (rec[slot])
+      return showMsg("err", SLOT_LABELS[slot] + " already recorded at " + rec[slot] + ".");
+    if (isPastCutoff(slot))
+      return showMsg("err", "The cut-off for " + SLOT_LABELS[slot] + " (" + rule.cutoffLabel + ") has passed. Please ask the Admin to adjust your log.");
+    if (!slotAllowed(slot, rec, isHalfDay))
+      return showMsg("err", "Please log " + SLOT_LABELS[rule.prev] + " first (open until " + SLOT_RULES[rule.prev].cutoffLabel + ").");
 
     var emp = employees.find(function(e){ return e.code === code; });
     if (!emp) return showMsg("err", "Employee " + code + " is not in the list. Please refresh.");
@@ -643,16 +701,23 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("saveForm").submit();
   }
 
+  /* ═══════════ BUTTON STATE (time-window based) ═══════════ */
   function refreshButtons(){
     var code = sel.value;
     var isHalfDay = document.getElementById("halfDay").checked;
     var rec = cachedLogs[code] || {};
 
-    document.getElementById("btn-am-in").disabled  = isHalfDay || !!rec.am_in;
-    document.getElementById("btn-am-out").disabled = isHalfDay || !rec.am_in || !!rec.am_out;
-    document.getElementById("btn-pm-in").disabled  = !!rec.pm_in || (!isHalfDay && !rec.am_out);
-    document.getElementById("btn-pm-out").disabled = !rec.pm_in || !!rec.pm_out;
+    SLOT_ORDER.forEach(function(slot){
+      var btn = document.getElementById(BTN_IDS[slot]);
+      if (!btn) return;
+      btn.disabled = !slotAllowed(slot, rec, isHalfDay);
+      btn.title = buttonHint(slot, rec, isHalfDay);
+    });
   }
+
+  /* Re-evaluate every 15 s so buttons unlock/lock as cut-offs pass,
+     even if nobody touches the kiosk. */
+  setInterval(refreshButtons, 15000);
 
   function renderToday(){
     var tbody = document.querySelector("#todayTable tbody");
