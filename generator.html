@@ -498,6 +498,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var r = sorted[i];
         if (!r || !r.dateStart || !r.dateEnd) continue;
         if (dateStr < r.dateStart || dateStr > r.dateEnd) continue;
+        /* Ensure we check r.code, not r.employeeCode */
         var codeMatch = r.code && String(r.code).padStart(2,"0") === String(code).padStart(2,"0");
         var nameMatch = r.name && normalizeName(r.name) === empNameNorm;
         if (codeMatch || nameMatch) return r;
