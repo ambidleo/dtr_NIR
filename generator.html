@@ -102,8 +102,12 @@
     .dtr-footer { margin-top:10px; font-size:8px; }
     .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
     .signature-block { text-align:center; width:45%; }
+       .signature-area { margin-top:10px; }
+    .signature-block { text-align:center; width:60%; margin-bottom:18px; }
     .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:8px; }
     .signature-title { border-top:1px solid #000; padding-top:2px; font-size:8px; }
+    .verified-block { text-align:center; width:60%; }
+    .verified-line { font-size:8px; font-style:italic; margin-bottom:14px; }
   }
 </style>
 </head>
@@ -652,9 +656,16 @@ document.addEventListener("DOMContentLoaded", function () {
         '</div>' +
         '<div class="dtr-footer">' +
           '<div class="certify-text">I certify on my honor that the above is correct of the hours of work performed. Record of which was made daily at the time of arrival and departure from the office.</div>' +
-          '<div style="display:flex; justify-content:space-between; margin-top:10px;">' +
-            '<div class="signature-block"><div class="signature-name">' + emp.name + '</div><div class="signature-title">Employee Signature</div></div>' +
-            '<div class="signature-block"><div class="signature-name">ELENITA PAULINA R. CAÑETE</div><div class="signature-title">OIC-REGIONAL DIRECTOR</div></div>' +
+                    '<div class="signature-area">' +
+            '<div class="signature-block">' +
+              '<div class="signature-name">' + emp.name + '</div>' +
+              '<div class="signature-title">Employee Signature</div>' +
+            '</div>' +
+            '<div class="verified-block">' +
+              '<div class="verified-line">VERIFIED as to the prescribed office hours.</div>' +
+              '<div class="signature-name">ELENITA PAULINA R. CAÑETE</div>' +
+              '<div class="signature-title">OIC-Regional Director</div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
