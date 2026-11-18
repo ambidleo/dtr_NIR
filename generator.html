@@ -171,7 +171,7 @@
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
       <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
-      <b>Late minutes are added to the Undertime Mins column.</b> Regular &amp; Skeletal Mon–Thu late after <b>7:01 AM</b>; Skeletal Friday late after <b>8:01 AM</b>. Lunch 12:00–1:00 excluded from work hours.
+      <b>Undertime and Late are combined and shown fully in the Mins column</b> (Hours remains 0). Regular &amp; Skeletal Mon–Thu late after <b>7:01 AM</b>; Skeletal Friday late after <b>8:01 AM</b>. Lunch 12:00–1:00 excluded.
     </div>
   </div>
 </div>
@@ -606,28 +606,17 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (amIn || amOut || pmIn || pmOut) {
-        /* Undertime = 8h target − worked (shortfall), in minutes */
         var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
         var shortfallMin = Math.max(0, 480 - worked);
 
-        /* Late minutes (from 7:00 or 8:00 threshold) */
         var isFridayDay = isFriday(year, month, j);
         var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
 
-        /* Undertime HOURS = whole hours of the shortfall only.
-           Undertime MINS  = remaining minutes of shortfall + ALL late minutes. */
-        var utHours = Math.floor(shortfallMin / 60);
-        var utMins  = (shortfallMin % 60) + lateMin;
+        var totalMin = shortfallMin + lateMin;
 
-        /* Carry overflow minutes into hours if >= 60 */
-        if (utMins >= 60) {
-          utHours += Math.floor(utMins / 60);
-          utMins   = utMins % 60;
-        }
-
-        utH = utHours;
-        utM = utMins;
-        totalUT += (utHours * 60 + utMins);
+        utH = "0";
+        utM = totalMin;
+        totalUT += totalMin;
       }
       rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
                   '</td><td>' + pmIn + '</td><td>' + pmOut +
@@ -639,8 +628,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
     var period = document.getElementById("period").value.trim();
-    var totalUTH = Math.floor(totalUT / 60);
-    var totalUTM = totalUT % 60;
+    
+    /* All minutes go into the Mins column — Hours stays 0 */
+    var totalUTH = "0";
+    var totalUTM = totalUT;
 
     var typeLabel = empIsSkeletal ? "Skeletal Workforce" : "Regular (Non-Skeletal)";
     var officialHoursTxt = empIsSkeletal
