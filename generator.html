@@ -171,7 +171,7 @@
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
       <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
-      <b>Undertime and Late are combined and shown fully in the Mins column</b> (Hours remains 0). Regular &amp; Skeletal Mon–Thu late after <b>7:01 AM</b>; Skeletal Friday late after <b>8:01 AM</b>. Lunch 12:00–1:00 excluded.
+      <b>Late arrivals and early departures are combined into the Mins column.</b> Lunch 12:00–1:00 excluded.
     </div>
   </div>
 </div>
@@ -260,6 +260,40 @@ function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
   if (inM === null) return 0;
   var expectedStart = (isSkeletal && isFridayDay) ? SKELETAL_FRI : AM_START;
   return Math.max(0, inM - expectedStart);
+}
+
+function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFridayDay) {
+  var inM = parseMins(amIn);
+  var outM = parseMins(amOut);
+  var pmInM = parseMins(pmIn);
+  var pmOutM = parseMins(pmOut);
+
+  /* Determine target PM out */
+  var targetPmOut = 16 * 60; // 4:00 PM (Skeletal default)
+  if (isSkeletal && isFridayDay) {
+    targetPmOut = 17 * 60; // 5:00 PM (Skeletal Friday)
+  } else if (!isSkeletal) {
+    targetPmOut = 18 * 60; // 6:00 PM (Regular)
+  }
+
+  var ut = 0;
+
+  /* AM Time Out earlier than 12:00 NN */
+  if (outM !== null && outM < 720) {
+    ut += (720 - outM);
+  }
+  
+  /* PM Time In later than 1:00 PM */
+  if (pmInM !== null && pmInM > 780) {
+    ut += (pmInM - 780);
+  }
+
+  /* PM Time Out earlier than target end of shift */
+  if (pmOutM !== null && pmOutM < targetPmOut) {
+    ut += (targetPmOut - pmOutM);
+  }
+
+  return ut;
 }
 
 function fetchEmployees() {
@@ -606,13 +640,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (amIn || amOut || pmIn || pmOut) {
-        var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
-        var shortfallMin = Math.max(0, 480 - worked);
-
         var isFridayDay = isFriday(year, month, j);
+        
         var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
-
-        var totalMin = shortfallMin + lateMin;
+        var utMin = calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
+        
+        var totalMin = lateMin + utMin;
 
         utH = "0";
         utM = totalMin;
@@ -629,7 +662,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
     var period = document.getElementById("period").value.trim();
     
-    /* All minutes go into the Mins column — Hours stays 0 */
     var totalUTH = "0";
     var totalUTM = totalUT;
 
