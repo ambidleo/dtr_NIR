@@ -84,6 +84,8 @@
     .dtr-table .day-col { width:5%; }
     .dtr-table .time-col { width:14%; }
     .dtr-table .ut-col { width:9%; }
+        .dtr-table .late-col { width:7%; }
+    .dtr-table td.late-cell { font-size:7px; color:#9b1c1c; font-weight:700; }
     .dtr-table td.do-row { background:#FFFFFF !important; font-style:italic; font-size:7px; text-align:center; color:#222; }
     .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
     .dtr-table td.travel-row { background:#e8f0ff !important; font-size:7px; text-align:center; color:#0d2a5c; }
@@ -329,20 +331,66 @@ function isSaturday(y, m, d) { return new Date(y, m, d).getDay() === 6; }
 function isSunday(y, m, d) { return new Date(y, m, d).getDay() === 0; }
 function isWeekend(y, m, d) { var dow = new Date(y, m, d).getDay(); return dow === 0 || dow === 6; }
 function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
-  var inM = parseMins(amIn), outM = parseMins(amOut);
-  var pmInM = parseMins(pmIn), pmOutM = parseMins(pmOut);
+/* ─── Time constants (minutes from midnight) ─── */
+var AM_START      = 7 * 60;   // 07:00 — regular arrival
+var SKELETAL_FRI  = 8 * 60;   // 08:00 — skeletal Friday arrival
+var LUNCH_START   = 12 * 60;  // 12:00 NN
+var LUNCH_END     = 13 * 60;  // 13:00 — lunch break excluded from work hours
+var AM_CUTOFF     = 12 * 60;  // AM ends at 12:00
+var PM_START      = 13 * 60;  // PM begins at 13:00
+
+/*
+ * Returns total minutes of work performed, EXCLUDING the 12:00–13:00 lunch.
+ *  - If only PM is present, PM time is counted (minus lunch if it overlaps).
+ *  - If AM ends after 12:00, the portion beyond 12:00 is clipped.
+ *  - If PM starts before 13:00, the portion before 13:00 is clipped.
+ */
+function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
+  var inM   = parseMins(amIn);
+  var outM  = parseMins(amOut);
+  var pmInM = parseMins(pmIn);
+  var pmOutM = parseMins(pmOut);
   var total = 0;
-  if (inM === null && pmInM !== null && pmOutM !== null) return Math.max(0, pmOutM - pmInM);
-  if (inM === null) return 0;
-  if (outM !== null && outM <= 749 && (pmInM === null || pmOutM === null)) return Math.max(0, outM - inM);
-  if (outM !== null && outM >= 750 && outM <= 779) {
-    total += Math.max(0, 720 - inM);
-    if (pmOutM !== null) total += Math.max(0, pmOutM - outM);
-    return total;
+
+  /* AM segment */
+  if (inM !== null && outM !== null && outM > inM) {
+    var amEnd = Math.min(outM, AM_CUTOFF);         // clip at 12:00
+    if (amEnd > inM) total += (amEnd - inM);
   }
-  if (outM !== null) total += Math.max(0, Math.min(720, outM) - inM);
-  if (pmInM !== null && pmOutM !== null) total += Math.max(0, pmOutM - Math.max(780, pmInM));
+
+  /* PM segment */
+  if (pmInM !== null && pmOutM !== null && pmOutM > pmInM) {
+    var pmStart = Math.max(pmInM, PM_START);       // clip at 13:00
+    if (pmOutM > pmStart) total += (pmOutM - pmStart);
+  } else if (inM === null && pmInM !== null && pmOutM !== null) {
+    /* PM only — count from max(13:00, pm_in) to pm_out */
+    var pStart = Math.max(pmInM, PM_START);
+    if (pmOutM > pStart) total += (pmOutM - pStart);
+  }
+
   return total;
+}
+
+/*
+ * Returns the late-arrival minutes based on schedule:
+ *  - Regular employees: late if AM In > 07:00
+ *  - Skeletal employees on Friday: late if AM In > 08:00
+ *  - Skeletal employees Mon–Thu: late if AM In > 07:00
+ */
+function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
+  var inM = parseMins(amIn);
+  if (inM === null) return 0;
+
+  var expectedStart = (isSkeletal && isFridayDay) ? SKELETAL_FRI : AM_START;
+  return Math.max(0, inM - expectedStart);
+}
+
+/* Format a minute count as "H:MM" or "" if zero */
+function formatLate(minutes) {
+  if (!minutes || minutes <= 0) return "";
+  var h = Math.floor(minutes / 60);
+  var m = minutes % 60;
+  return h + ":" + pad2(m);
 }
 
 function getLastDayOfMonth(year, monthIndex) { return new Date(year, monthIndex + 1, 0).getDate(); }
@@ -493,8 +541,17 @@ document.addEventListener("DOMContentLoaded", function () {
     var month = start.getMonth();
     var startDay = start.getDate();
     var endDay = end.getDate();
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
+       var daysInMonth = new Date(year, month + 1, 0).getDate();
     if (endDay > daysInMonth) endDay = daysInMonth;
+
+    /* ── Skeletal determination (must run BEFORE PASS 2 so late calc can use it) ── */
+    var anyFridaySkeletal = false;
+    for (var fd = startDay; fd <= endDay; fd++) {
+      if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
+        anyFridaySkeletal = true; break;
+      }
+    }
+    var empIsSkeletal = anyFridaySkeletal;
 
     document.getElementById("dtrStatus").textContent = "⏳ Downloading time logs…";
 
@@ -541,7 +598,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var inPeriod = (j >= startDay && j <= endDay && j <= daysInMonth);
 
       if (!inPeriod) {
-        rowsHTML += '<tr><td class="op-cell">' + j + '</td><td colspan="6" class="op-cell op-label"></td></tr>';
+        rowsHTML += '<tr><td class="op-cell">' + j + '</td><td colspan="7" class="op-cell op-label"></td></tr>';
         continue;
       }
 
@@ -551,18 +608,18 @@ document.addEventListener("DOMContentLoaded", function () {
         var to = rec.travel;
         var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
         if (to.destination) travelNote += ' — ' + escapeHtml(to.destination);
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="travel-row">' + travelNote + '</td></tr>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="7" class="travel-row">' + travelNote + '</td></tr>';
         continue;
       }
 
       if (rec && rec.weekend) {
         var wLabel = (rec.dow === 6) ? "SATURDAY" : "SUNDAY";
-        rowsHTML += '<tr><td class="weekend-day">' + j + '</td><td colspan="6" class="weekend-row"><b>' + wLabel + '</b></td></tr>';
+        rowsHTML += '<tr><td class="weekend-day">' + j + '</td><td colspan="7" class="weekend-row"><b>' + wLabel + '</b></td></tr>';
         continue;
       }
 
       if (rec && rec.skippedFriday) {
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row"><b>DO No. 2026-015</b>(Compressed Workweek)</td></tr>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="7" class="do-row"><b>DO No. 2026-015</b>(Compressed Workweek)</td></tr>';
         continue;
       }
 
@@ -583,25 +640,23 @@ document.addEventListener("DOMContentLoaded", function () {
         continue;
       }
 
+          var lateStr = "";
       if (amIn || amOut || pmIn || pmOut) {
         var worked = calculateWorkedMinutes(amIn, amOut, pmIn, pmOut);
         var ut = Math.max(0, 480 - worked);
         totalUT += ut;
         utH = Math.floor(ut / 60);
         utM = ut % 60;
+
+        var isFridayDay = isFriday(year, month, j);
+        var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
+        lateStr = formatLate(lateMin);
       }
       rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
                   '</td><td>' + pmIn + '</td><td>' + pmOut +
-                  '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
+                  '</td><td>' + utH + '</td><td>' + utM +
+                  '</td><td>' + lateStr + '</td></tr>';
     }
-
-    var anyFridaySkeletal = false;
-    for (var fd = startDay; fd <= endDay; fd++) {
-      if (isFriday(year, month, fd) && isSkeletalOn(code, new Date(year, month, fd))) {
-        anyFridaySkeletal = true; break;
-      }
-    }
-    var empIsSkeletal = anyFridaySkeletal;
 
     generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
   }
@@ -641,14 +696,14 @@ document.addEventListener("DOMContentLoaded", function () {
             '<div class="info-col" style="text-align:right;"><b>' + departureTxt + '</b></div>' +
           '</div>' +
           '<table class="dtr-table">' +
-            '<thead>' +
-              '<tr><th rowspan="2" class="day-col">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th></tr>' +
+                       '<thead>' +
+              '<tr><th rowspan="2" class="day-col">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th><th rowspan="2" class="late-col">Late</th></tr>' +
               '<tr><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="time-col">Arrival</th><th class="time-col">Departure</th><th class="ut-col">Hours</th><th class="ut-col">Mins.</th></tr>' +
             '</thead>' +
             '<tbody>' + rowsHTML + '</tbody>' +
             '<tfoot>' +
-              '<tr><td colspan="5" style="text-align:right; font-weight:bold; padding-right:5px;">TOTAL UNDERTIME</td><td style="font-weight:bold;">' + totalUTH + '</td><td style="font-weight:bold;">' + totalUTM + '</td></tr>' +
-              '<tr><td colspan="7" style="text-align:left; font-size:7px; padding:3px;"><b>Leave:</b> &nbsp; VL - _____ &nbsp; SL - _____ &nbsp; SpL - _____ &nbsp; UT - _____</td></tr>' +
+              '<tr><td colspan="5" style="text-align:right; font-weight:bold; padding-right:5px;">TOTAL UNDERTIME</td><td style="font-weight:bold;">' + totalUTH + '</td><td style="font-weight:bold;">' + totalUTM + '</td><td></td></tr>' +
+              '<tr><td colspan="8" style="text-align:left; font-size:7px; padding:3px;"><b>Leave:</b> &nbsp; VL - _____ &nbsp; SL - _____ &nbsp; SpL - _____ &nbsp; UT - _____</td></tr>' +
             '</tfoot>' +
           '</table>' +
         '</div>' +
