@@ -104,8 +104,8 @@
     .signature-block { text-align:center; width:60%; margin-bottom:18px; }
     .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:8px; }
     .signature-title { border-top:1px solid #000; padding-top:2px; font-size:8px; }
-    .verified-block { text-align:center; width:60%; }
-    .verified-line { font-size:8px; font-style:italic; margin-bottom:6px; }
+    .verified-block { text-align:center; width:60%; margin-top: 6px; }
+    .verified-line { font-size:8px; font-style:italic; margin-bottom:4px; }
   }
 </style>
 </head>
@@ -171,7 +171,7 @@
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
       <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
-      <b>Late arrivals and early departures are combined into the Mins column.</b> Lunch 12:00–1:00 excluded.
+      <b>Late and early departures are combined into the Mins column.</b>
     </div>
   </div>
 </div>
@@ -226,74 +226,55 @@ function parseMins(t) {
   return h * 60 + m;
 }
 
-/* ─── Time constants (minutes from midnight) ─── */
-var AM_START     = 7 * 60;   // 07:00 — regular arrival
-var SKELETAL_FRI = 8 * 60;   // 08:00 — skeletal Friday arrival
-var AM_CUTOFF    = 12 * 60;  // AM ends at 12:00
-var PM_START     = 13 * 60;  // PM begins at 13:00 (lunch 12:00–13:00 excluded)
-
-function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
+/* ─── Calculate combined Late & Undertime based on exact block schedule ─── */
+function calculateLateUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFridayDay) {
   var inM    = parseMins(amIn);
   var outM   = parseMins(amOut);
   var pmInM  = parseMins(pmIn);
   var pmOutM = parseMins(pmOut);
-  var total  = 0;
 
-  if (inM !== null && outM !== null && outM > inM) {
-    var amEnd = Math.min(outM, AM_CUTOFF);
-    if (amEnd > inM) total += (amEnd - inM);
-  }
-
-  if (pmInM !== null && pmOutM !== null && pmOutM > pmInM) {
-    var pmStart = Math.max(pmInM, PM_START);
-    if (pmOutM > pmStart) total += (pmOutM - pmStart);
-  } else if (inM === null && pmInM !== null && pmOutM !== null) {
-    var pStart = Math.max(pmInM, PM_START);
-    if (pmOutM > pStart) total += (pmOutM - pStart);
-  }
-
-  return total;
-}
-
-function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
-  var inM = parseMins(amIn);
-  if (inM === null) return 0;
-  var expectedStart = (isSkeletal && isFridayDay) ? SKELETAL_FRI : AM_START;
-  return Math.max(0, inM - expectedStart);
-}
-
-function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFridayDay) {
-  var inM = parseMins(amIn);
-  var outM = parseMins(amOut);
-  var pmInM = parseMins(pmIn);
-  var pmOutM = parseMins(pmOut);
-
-  /* Determine target PM out */
-  var targetPmOut = 16 * 60; // 4:00 PM (Skeletal default)
-  if (isSkeletal && isFridayDay) {
-    targetPmOut = 17 * 60; // 5:00 PM (Skeletal Friday)
-  } else if (!isSkeletal) {
-    targetPmOut = 18 * 60; // 6:00 PM (Regular)
-  }
-
-  var ut = 0;
-
-  /* AM Time Out earlier than 12:00 NN */
-  if (outM !== null && outM < 720) {
-    ut += (720 - outM);
-  }
+  /* Rule definitions (in minutes from midnight) */
+  var targetAmIn, targetAmOut, targetPmIn, targetPmOut;
   
-  /* PM Time In later than 1:00 PM */
-  if (pmInM !== null && pmInM > 780) {
-    ut += (pmInM - 780);
+  if (isSkeletal) {
+    if (isFridayDay) {
+      // Friday Skeletal: 8:00 AM to 5:00 PM
+      targetAmIn = 8 * 60;         // 08:00
+      targetAmOut = 12 * 60;       // 12:00
+      targetPmIn = 12 * 60 + 31;   // 12:31 PM
+      targetPmOut = 17 * 60;       // 5:00 PM
+    } else {
+      // Mon-Thu Skeletal: 7:00 AM to 4:00 PM
+      targetAmIn = 7 * 60;         // 07:00
+      targetAmOut = 12 * 60;       // 12:00
+      targetPmIn = 12 * 60 + 31;   // 12:31 PM
+      targetPmOut = 16 * 60;       // 4:00 PM
+    }
+  } else {
+    // Non-Skeletal: 7:00 AM to 6:00 PM
+    targetAmIn = 7 * 60;           // 07:00
+    targetAmOut = 12 * 60;         // 12:00
+    targetPmIn = 12 * 60 + 31;     // 12:31 PM
+    targetPmOut = 18 * 60;         // 6:00 PM
   }
 
-  /* PM Time Out earlier than target end of shift */
-  if (pmOutM !== null && pmOutM < targetPmOut) {
-    ut += (targetPmOut - pmOutM);
+  var deficit = 0;
+
+  /* Check AM */
+  if (inM !== null) {
+    if (inM > targetAmIn) deficit += (inM - targetAmIn); // Late Morning
+    if (outM !== null && outM < targetAmOut) deficit += (targetAmOut - outM); // Early Out Morning
   }
 
-  return ut;
+  /* Check PM */
+  if (pmInM !== null) {
+    if (pmInM > targetPmIn) deficit += (pmInM - targetPmIn); // Late PM In
+  }
+  if (pmOutM !== null) {
+    if (pmOutM < targetPmOut) deficit += (targetPmOut - pmOutM); // Early Out PM
+  }
+
+  return deficit;
 }
 
 function fetchEmployees() {
@@ -642,10 +623,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (amIn || amOut || pmIn || pmOut) {
         var isFridayDay = isFriday(year, month, j);
         
-        var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
-        var utMin = calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
-        
-        var totalMin = lateMin + utMin;
+        /* Calculate block-by-block deficit (Late + Early Out) */
+        var totalMin = calculateLateUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
 
         utH = "0";
         utM = totalMin;
