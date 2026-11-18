@@ -75,6 +75,8 @@
     .dtr-header h3 { margin:0; font-size:9px; font-weight:normal; }
     .dtr-header h2 { margin:0; font-size:10px; font-weight:bold; }
     .dtr-header h4 { margin:0; font-size:9px; font-weight:normal; }
+    .dtr-header { position: relative; }
+    .dtr-logo { position: absolute; right: 10px; top: 0; width: 60px; height: 60px; object-fit: contain; }
     .form-title { font-size:12px; margin-bottom:2px; }
     .info-row { display:flex; margin-bottom:2px; font-size:8px; }
     .info-col { flex:1; }
@@ -676,6 +678,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div class="dtr-copy">' +
         '<div>' +
           '<div class="dtr-header">' +
+          '<img src="dhsud-logo.png" class="dtr-logo" alt="Logo">' + 
             '<h3>Republic of the Philippines</h3>' +
             '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
             '<h4>Negros Island Region</h4>' +
