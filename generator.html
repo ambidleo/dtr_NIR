@@ -70,44 +70,51 @@
     body { background:#fff; margin:0; padding:0; }
     header, .wrap, #fatal { display:none !important; }
     #print-area { display:flex; flex-direction:row; justify-content:space-between; align-items:stretch; width:100%; gap:10px; font-family:Arial, sans-serif; color:#000; }
-    .dtr-copy { flex:1; font-size:8px; display:flex; flex-direction:column; justify-content:space-between; }
-    .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; }
-    .dtr-header h3 { margin:0; font-size:9px; font-weight:normal; }
-    .dtr-header h2 { margin:0; font-size:10px; font-weight:bold; }
-    .dtr-header h4 { margin:0; font-size:9px; font-weight:normal; }
+    .dtr-copy { flex:1; font-size:8.5px; display:flex; flex-direction:column; justify-content:space-between; }
+    
     .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; padding: 0 70px; position: relative; min-height: 65px; }
-        .dtr-logo { position: absolute; left: 11px; top: 0; width: 65px; height: 65px; object-fit: contain; mix-blend-mode: multiply; }
+    .dtr-logo { position: absolute; left: 11px; top: 0; width: 65px; height: 65px; object-fit: contain; mix-blend-mode: multiply; }
+    .dtr-header h3 { margin:0; font-size:9.5px; font-weight:normal; }
+    .dtr-header h2 { margin:0; font-size:10.5px; font-weight:bold; }
+    .dtr-header h4 { margin:0; font-size:9.5px; font-weight:normal; }
+    
     .form-title { font-size:12px; margin-bottom:2px; }
-    .info-row { display:flex; margin-bottom:2px; font-size:8px; }
+    .info-row { display:flex; margin-bottom:2px; font-size:8.5px; }
     .info-col { flex:1; }
+    
     .dtr-table { width:100%; border-collapse:collapse; margin-top:5px; }
-    .dtr-table th, .dtr-table td { border:1px solid #000; text-align:center; padding:1px 2px; font-size:10px; }
-    .dtr-table th { font-weight:bold; }
+    .dtr-table th, .dtr-table td { border:1px solid #000; text-align:center; padding:2px 2px; font-size:10px; }
+    .dtr-table th { font-weight:bold; font-size:9.5px; }
+    
     .dtr-table .day-col { width:5%; }
     .dtr-table .time-col { width:14%; }
     .dtr-table .ut-col { width:9%; }
-    .dtr-table td.do-row { background:#FFFFFF !important; font-style:italic; font-size:8px; text-align:center; color:#222; }
+    
+    /* Special rows (DO No., Weekend, OB/TO/RSO) */
+    .dtr-table td.do-row { background:#FFFFFF !important; font-style:italic; font-size:9px; text-align:center; color:#222; }
     .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
-    .dtr-table td.travel-row { background:#e8f0ff !important; font-size:7px; text-align:center; color:#0d2a5c; }
-    .dtr-table td.travel-row b { font-style:normal; letter-spacing:.3px; text-transform:uppercase; }
-    .dtr-table td.otr-row { background:#fff5d6 !important; font-size:7px; text-align:center; color:#5a3d00; font-style:italic; }
+    .dtr-table td.otr-row { background:#fff5d6 !important; font-size:9px; text-align:center; color:#5a3d00; font-style:italic; font-weight:bold; }
     .dtr-table td.otr-row b { font-style:normal; letter-spacing:.35px; text-transform:uppercase; color:#3d2800; }
+    
     .dtr-table td.weekend-day { background:#FFFFFF !important; font-weight:bold; color:#333; }
-    .dtr-table td.weekend-row { background:#FFFFFF !important; font-size:7px; text-align:center; color:#444; letter-spacing:.45px; }
+    .dtr-table td.weekend-row { background:#FFFFFF !important; font-size:8.5px; text-align:center; color:#444; letter-spacing:.45px; }
     .dtr-table td.weekend-row b { font-style:normal; letter-spacing:.55px; color:#1b2b44; }
     .dtr-table td.op-cell { background:#dfe3e9 !important; color:#7a8597 !important; }
-    .dtr-table td.op-label { font-size:7px; font-style:italic; letter-spacing:.4px; text-align:center; }
-    .dtr-table td.do-row, .dtr-table td.travel-row, .dtr-table td.otr-row,
+    .dtr-table td.op-label { font-size:8px; font-style:italic; letter-spacing:.4px; text-align:center; }
+    
+    .dtr-table td.do-row, .dtr-table td.otr-row,
     .dtr-table td.weekend-day, .dtr-table td.weekend-row, .dtr-table td.op-cell {
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
-    .dtr-footer { margin-top:10px; font-size:8px; }
+    
+    .dtr-footer { margin-top:10px; font-size:8.5px; }
+    .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
     .signature-area { margin-top:10px; display:flex; flex-direction:column; align-items:center; text-align:center; }
     .signature-block { text-align:center; width:60%; margin-bottom:18px; }
     .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:10px; }
     .signature-title { border-top:1px solid #000; padding-top:2px; font-size:9px; }
-    .verified-block { text-align:center; width:60%; }
-    .verified-line { font-size:8px; font-style:italic; margin-bottom:6px; }
+    .verified-block { text-align:center; width:60%; margin-top: 6px; }
+    .verified-line { font-size:8.5px; font-style:italic; margin-bottom:4px; }
   }
 </style>
 </head>
@@ -172,8 +179,7 @@
       ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
-      <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
-      <b>Late arrivals and early departures are combined into the Mins column.</b> Lunch 12:00–1:00 excluded.
+      <b>OB / TO / RSO</b> entries are merged across the middle columns just like DO No. 2026-015.
     </div>
   </div>
 </div>
@@ -228,39 +234,10 @@ function parseMins(t) {
   return h * 60 + m;
 }
 
-/* ─── Time constants (minutes from midnight) ─── */
-var AM_START     = 7 * 60;   // 07:00 — regular arrival
-var SKELETAL_FRI = 8 * 60;   // 08:00 — skeletal Friday arrival
-var AM_CUTOFF    = 12 * 60;  // AM ends at 12:00
-var PM_START     = 13 * 60;  // PM begins at 13:00 (lunch 12:00–13:00 excluded)
-
-function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
-  var inM    = parseMins(amIn);
-  var outM   = parseMins(amOut);
-  var pmInM  = parseMins(pmIn);
-  var pmOutM = parseMins(pmOut);
-  var total  = 0;
-
-  if (inM !== null && outM !== null && outM > inM) {
-    var amEnd = Math.min(outM, AM_CUTOFF);
-    if (amEnd > inM) total += (amEnd - inM);
-  }
-
-  if (pmInM !== null && pmOutM !== null && pmOutM > pmInM) {
-    var pmStart = Math.max(pmInM, PM_START);
-    if (pmOutM > pmStart) total += (pmOutM - pmStart);
-  } else if (inM === null && pmInM !== null && pmOutM !== null) {
-    var pStart = Math.max(pmInM, PM_START);
-    if (pmOutM > pStart) total += (pmOutM - pStart);
-  }
-
-  return total;
-}
-
 function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
   var inM = parseMins(amIn);
   if (inM === null) return 0;
-  var expectedStart = (isSkeletal && isFridayDay) ? SKELETAL_FRI : AM_START;
+  var expectedStart = (isSkeletal && isFridayDay) ? 8 * 60 : 7 * 60;
   return Math.max(0, inM - expectedStart);
 }
 
@@ -270,7 +247,6 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   var pmInM = parseMins(pmIn);
   var pmOutM = parseMins(pmOut);
 
-  /* Determine target PM out */
   var targetPmOut = 16 * 60; // 4:00 PM (Skeletal default)
   if (isSkeletal && isFridayDay) {
     targetPmOut = 17 * 60; // 5:00 PM (Skeletal Friday)
@@ -279,21 +255,9 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   }
 
   var ut = 0;
-
-  /* AM Time Out earlier than 12:00 NN */
-  if (outM !== null && outM < 720) {
-    ut += (720 - outM);
-  }
-  
-  /* PM Time In later than 1:00 PM */
-  if (pmInM !== null && pmInM > 780) {
-    ut += (pmInM - 780);
-  }
-
-  /* PM Time Out earlier than target end of shift */
-  if (pmOutM !== null && pmOutM < targetPmOut) {
-    ut += (targetPmOut - pmOutM);
-  }
+  if (outM !== null && outM < 720) ut += (720 - outM);
+  if (pmInM !== null && pmInM > 780) ut += (pmInM - 780);
+  if (pmOutM !== null && pmOutM < targetPmOut) ut += (targetPmOut - pmOutM);
 
   return ut;
 }
@@ -567,23 +531,24 @@ document.addEventListener("DOMContentLoaded", function () {
       var cellDate = new Date(year, month, d);
       var dStr = isoDate(year, month + 1, d);
 
+      // 1) Approved Travel Order wins
       var travel = findTravelOn(dStr);
       if (travel) { byDay[d] = { success: true, data: {}, travel: travel }; continue; }
 
+      // 2) OB / TO / RSO — checked BEFORE weekends/DO
       var entry = findEntryOn(dStr);
-      if (entry) {
-        var dataE = await fetchDateDataJSONP(dStr);
-        byDay[d] = { success: !!(dataE && dataE.success), data: (dataE && dataE.data) || {}, entry: entry };
-        continue;
-      }
+      if (entry) { byDay[d] = { success: true, data: {}, entry: entry }; continue; }
 
+      // 3) Weekend rest day
       var dow = cellDate.getDay();
       if (dow === 0 || dow === 6) { byDay[d] = { success: true, data: {}, weekend: true, dow: dow }; continue; }
 
+      // 4) Friday DO No. for non-skeletal
       if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
         byDay[d] = { success: true, data: {}, skippedFriday: true }; continue;
       }
 
+      // 5) Normal working day
       var data = await fetchDateDataJSONP(dStr);
       if (!data || !data.success) { failedDates.push(dStr); byDay[d] = { success: false, data: {} }; }
       else { byDay[d] = data; }
@@ -610,7 +575,15 @@ document.addEventListener("DOMContentLoaded", function () {
         var to = rec.travel;
         var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
         if (to.destination) travelNote += ' — ' + escapeHtml(to.destination);
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="travel-row">' + travelNote + '</td></tr>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row">' + travelNote + '</td></tr>';
+        continue;
+      }
+
+      if (rec && rec.entry) {
+        var entry = rec.entry;
+        var prefix = entry.type === "RSO" ? "SO" : (entry.type || "");
+        var label = '<b>' + escapeHtml(prefix) + ' # ' + escapeHtml(entry.refNo || "") + '</b>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
         continue;
       }
 
@@ -626,33 +599,23 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
-      var entry = rec && rec.entry;
-
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
         amIn = dd.am_in || ""; amOut = dd.am_out || "";
         pmIn = dd.pm_in || ""; pmOut = dd.pm_out || "";
       }
 
-      if (entry) {
-        var prefix = entry.type === "RSO" ? "SO" : (entry.type || "");
-        var label = '<b>' + escapeHtml(prefix) + ' # ' + escapeHtml(entry.refNo || "") + '</b>';
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
-        continue;
-      }
-
       if (amIn || amOut || pmIn || pmOut) {
         var isFridayDay = isFriday(year, month, j);
-        
         var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
         var utMin = calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
-        
         var totalMin = lateMin + utMin;
 
         utH = "0";
         utM = totalMin;
         totalUT += totalMin;
       }
+      
       rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
                   '</td><td>' + pmIn + '</td><td>' + pmOut +
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
