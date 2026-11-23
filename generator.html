@@ -181,7 +181,7 @@
 <div id="print-area"></div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbxtVJCwbZYsX1g7OIGVvqFT8aWAJBAYfu1D9IehLVTDZnx5LwMSQ9IodFmRrymD4SMu/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbwhRLnsDBwWgCEtf0v2NoI44fxeB67-mtG5-WpzvdJrkMcxinu4piJ6EwhCbqAE7IBU/exec";
 var LEGACY_KEY = "dhsud_skeletal_workforce";
 
 var FALLBACK_EMPLOYEES = [
@@ -502,7 +502,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var obToRsoEntries = includeChk.checked ? fetchedEntries : [];
     var legacySet = loadSkeletalLegacy();
     document.getElementById("dtrStatus").textContent =
-      "Loaded " + fetchedEntries.length + " OB/TO/RSO record(s) from the entry sheet" +
+      "Loaded " + fetchedEntries.length + " entry record(s) from the entry sheet" +
       (includeChk.checked ? ". Matching records to the selected employee and dates…" : ". Entry printing is unchecked.");
     var backendHasData = Object.keys(skeletalByWeek).length > 0;
 
@@ -651,7 +651,11 @@ document.addEventListener("DOMContentLoaded", function () {
           var ref = String(entry.refNo || "").trim();
           // Avoid duplicated labels when entry.html already stores "RSO No. ...".
           ref = ref.replace(/^(OB|TO|RSO|SO)\s*(NO\.?|#)\s*/i, "");
-          var label = '<b>' + escapeHtml(type) + ' No. ' + escapeHtml(ref) + '</b>';
+          var displayLabel;
+          if (type === "WELLNESS" || type === "WELLNESS LEAVE") displayLabel = "Wellness Leave";
+          else if (type === "CTO") displayLabel = "CTO";
+          else displayLabel = type + ' No. ' + ref;
+          var label = '<b>' + escapeHtml(displayLabel) + '</b>';
           rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
         });
         continue;
@@ -691,9 +695,9 @@ document.addEventListener("DOMContentLoaded", function () {
         emp.code + " / " + emp.name + " within " + isoDate(year, month + 1, startDay) +
         " to " + isoDate(year, month + 1, endDay) + ". Check the employee code/name and dates in OB_TO_Log.";
     } else if (includeChk.checked && matchedEntryCount > 0) {
-      entryStatus = "Loaded " + fetchedEntries.length + " record(s); printed " + matchedEntryCount + " matching OB/TO/RSO row(s).";
+      entryStatus = "Loaded " + fetchedEntries.length + " record(s); printed " + matchedEntryCount + " matching entry row(s).";
     } else if (includeChk.checked) {
-      entryStatus = "No OB/TO/RSO records were returned by the Apps Script API. Check the deployed Apps Script version and OB_TO_Log sheet.";
+      entryStatus = "No entry records were returned by the Apps Script API. Check the deployed Apps Script version and OB_TO_Log sheet.";
     }
     generatePrint(emp, rowsHTML, totalUT, empIsSkeletal, entryStatus);
   }
