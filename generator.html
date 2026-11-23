@@ -90,7 +90,6 @@
     .dtr-table .time-col { width:14%; }
     .dtr-table .ut-col { width:9%; }
     
-    /* Special rows (DO No., Weekend, OB/TO/RSO) */
     .dtr-table td.do-row { background:#FFFFFF !important; font-style:italic; font-size:9px; text-align:center; color:#222; }
     .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
     .dtr-table td.otr-row { background:#fff5d6 !important; font-size:9px; text-align:center; color:#5a3d00; font-style:italic; font-weight:bold; }
@@ -247,11 +246,11 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   var pmInM = parseMins(pmIn);
   var pmOutM = parseMins(pmOut);
 
-  var targetPmOut = 16 * 60; // 4:00 PM (Skeletal default)
+  var targetPmOut = 16 * 60;
   if (isSkeletal && isFridayDay) {
-    targetPmOut = 17 * 60; // 5:00 PM (Skeletal Friday)
+    targetPmOut = 17 * 60;
   } else if (!isSkeletal) {
-    targetPmOut = 18 * 60; // 6:00 PM (Regular)
+    targetPmOut = 18 * 60;
   }
 
   var ut = 0;
@@ -498,7 +497,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var r = sorted[i];
         if (!r || !r.dateStart || !r.dateEnd) continue;
         if (dateStr < r.dateStart || dateStr > r.dateEnd) continue;
-        /* Ensure we check r.code, not r.employeeCode */
         var codeMatch = r.code && String(r.code).padStart(2,"0") === String(code).padStart(2,"0");
         var nameMatch = r.name && normalizeName(r.name) === empNameNorm;
         if (codeMatch || nameMatch) return r;
@@ -532,24 +530,19 @@ document.addEventListener("DOMContentLoaded", function () {
       var cellDate = new Date(year, month, d);
       var dStr = isoDate(year, month + 1, d);
 
-      // 1) Approved Travel Order wins
       var travel = findTravelOn(dStr);
       if (travel) { byDay[d] = { success: true, data: {}, travel: travel }; continue; }
 
-      // 2) OB / TO / RSO — checked BEFORE weekends/DO
       var entry = findEntryOn(dStr);
       if (entry) { byDay[d] = { success: true, data: {}, entry: entry }; continue; }
 
-      // 3) Weekend rest day
       var dow = cellDate.getDay();
       if (dow === 0 || dow === 6) { byDay[d] = { success: true, data: {}, weekend: true, dow: dow }; continue; }
 
-      // 4) Friday DO No. for non-skeletal
       if (isFriday(year, month, d) && !isSkeletalOn(code, cellDate)) {
         byDay[d] = { success: true, data: {}, skippedFriday: true }; continue;
       }
 
-      // 5) Normal working day
       var data = await fetchDateDataJSONP(dStr);
       if (!data || !data.success) { failedDates.push(dStr); byDay[d] = { success: false, data: {} }; }
       else { byDay[d] = data; }
@@ -574,16 +567,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (rec && rec.travel) {
         var to = rec.travel;
-        var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
-        if (to.destination) travelNote += ' — ' + escapeHtml(to.destination);
+        var travelNote = '<b>TO No. ' + escapeHtml(to.controlNo || "") + '</b>';
         rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row">' + travelNote + '</td></tr>';
         continue;
       }
 
       if (rec && rec.entry) {
         var entry = rec.entry;
-        var prefix = entry.type === "RSO" ? "SO" : (entry.type || "");
-        var label = '<b>' + escapeHtml(prefix) + ' # ' + escapeHtml(entry.refNo || "") + '</b>';
+        /* Show ONLY the reference number, e.g. "RSO No. 2026-11-040" */
+        var refText = String(entry.refNo || "").trim();
+        var typeTxt = String(entry.type || "").toUpperCase();
+        var label;
+        if (refText) {
+          if (/^(OB|TO|RSO|SO)\b/i.test(refText)) {
+            label = '<b>' + escapeHtml(refText) + '</b>';
+          } else {
+            label = '<b>' + escapeHtml(typeTxt) + ' No. ' + escapeHtml(refText) + '</b>';
+          }
+        } else {
+          label = '<b>' + escapeHtml(typeTxt || "ENTRY") + '</b>';
+        }
         rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
         continue;
       }
@@ -595,7 +598,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (rec && rec.skippedFriday) {
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row"><b>DO No. 2026-015</b>(Compressed Workweek)</td></tr>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row"><b>DO No. 2026-015</b> (Compressed Workweek)</td></tr>';
         continue;
       }
 
