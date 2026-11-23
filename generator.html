@@ -71,7 +71,9 @@
     header, .wrap, #fatal { display:none !important; }
     #print-area { display:flex; flex-direction:row; justify-content:space-between; align-items:stretch; width:100%; gap:10px; font-family:Arial, sans-serif; color:#000; }
     .dtr-copy { flex:1; font-size:8px; display:flex; flex-direction:column; justify-content:space-between; }
-    .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; }
+    .dtr-header { display:flex; align-items:flex-start; gap:5px; text-align:center; margin-bottom:5px; line-height:1.1; }
+    .dtr-print-logo { display:block; width:34px; height:34px; object-fit:contain; flex:0 0 34px; }
+    .dtr-header-text { flex:1; min-width:0; text-align:center; }
     .dtr-header h3 { margin:0; font-size:9px; font-weight:normal; }
     .dtr-header h2 { margin:0; font-size:10px; font-weight:bold; }
     .dtr-header h4 { margin:0; font-size:9px; font-weight:normal; }
@@ -713,11 +715,14 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div class="dtr-copy">' +
         '<div>' +
           '<div class="dtr-header">' +
-            '<h3>Republic of the Philippines</h3>' +
-            '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
-            '<h4>Negros Island Region</h4>' +
-            '<h4>(Robinsons Supermarket Villamonte) 2/F East 3 Center,</h4>' +
-            '<h4>Narra Extension, Burgos Avenue, Brgy. Villamonte, Bacolod City</h4>' +
+            '<img class="dtr-print-logo" src="dhsud-logo.png" alt="DHSUD logo">' +
+            '<div class="dtr-header-text">' +
+              '<h3>Republic of the Philippines</h3>' +
+              '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
+              '<h4>Negros Island Region</h4>' +
+              '<h4>(Robinsons Supermarket Villamonte) 2/F East 3 Center,</h4>' +
+              '<h4>Narra Extension, Burgos Avenue, Brgy. Villamonte, Bacolod City</h4>' +
+            '</div>' +
           '</div>' +
           '<div class="form-title">CSC Form No. 48</div>' +
           '<div class="form-title" style="text-align:center; font-weight:bold;">DAILY TIME RECORD</div>' +
