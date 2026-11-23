@@ -640,13 +640,6 @@ document.addEventListener("DOMContentLoaded", function () {
         pmIn = dd.pm_in || ""; pmOut = dd.pm_out || "";
       }
 
-      if (entry) {
-        var prefix = entry.type === "RSO" ? "SO" : (entry.type || "");
-        var label = '<b>' + escapeHtml(prefix) + ' # ' + escapeHtml(entry.refNo || "") + '</b>';
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
-        continue;
-      }
-
       if (amIn || amOut || pmIn || pmOut) {
         var isFridayDay = isFriday(year, month, j);
         
