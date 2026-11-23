@@ -48,6 +48,10 @@
   .ref-field { margin-top:4px; }
   .ref-field.hidden { display:none; }
   .time-field.hidden { display:none; }
+  .action-btn { padding:7px 10px; font-size:12px; margin:2px; border-radius:5px; }
+  .btn-edit { background:#e8f0ff; color:#003087; }
+  .btn-cancel { background:#eef1f5; color:#39485a; }
+  .editing-note { display:none; margin-top:10px; padding:9px; background:#fff6dc; color:#765400; border-radius:6px; font-size:13px; }
   .section-note { margin-top:6px; font-size:12px; color:#5a6b80; font-weight:500; display:flex; align-items:center; gap:6px; }
   @media (max-width:860px) {
     .gov-masthead { padding:10px 16px; gap:12px; }
@@ -72,6 +76,7 @@
   <input type="hidden" name="timeFrom" id="f_time_from">
   <input type="hidden" name="timeTo" id="f_time_to">
   <input type="hidden" name="refNo" id="f_ref_no">
+  <input type="hidden" name="entryId" id="f_entry_id">
 </form>
 <iframe name="hidden_post_iframe" id="hidden_post_iframe" class="hidden-iframe"></iframe>
 
@@ -106,6 +111,8 @@
       <option value="OB">Official Business (OB)</option>
       <option value="TO">Travel Order (TO)</option>
       <option value="RSO">Regional Special Order (RSO)</option>
+      <option value="WELLNESS">Wellness Leave</option>
+      <option value="CTO">Compensatory Time Off (CTO)</option>
     </select>
 
     <label for="employee">Employee Name</label>
@@ -115,10 +122,10 @@
 
     <div class="grid2">
       <div>
-        <label for="dateStart">Date Start</label>
+        <label for="dateStart" id="dateStartLabel">Date Start</label>
         <input type="date" id="dateStart">
       </div>
-      <div>
+      <div id="dateEndWrap">
         <label for="dateEnd">Date End</label>
         <input type="date" id="dateEnd">
       </div>
@@ -137,7 +144,9 @@
       <input type="text" id="refNo" placeholder="Enter number…">
     </div>
 
+    <div id="editingNote" class="editing-note">✏️ Editing a saved entry. Save your changes or cancel editing.</div>
     <button type="button" class="btn-submit" id="btnSubmit">💾 Save Entry</button>
+    <button type="button" class="action-btn btn-cancel" id="btnCancelEdit" style="display:none;width:100%;margin-top:8px;padding:11px;">Cancel Edit</button>
     <div id="status"></div>
   </div>
 
@@ -158,17 +167,18 @@
           <th style="border:1px solid #d9e1ea;padding:8px;">Time From</th>
           <th style="border:1px solid #d9e1ea;padding:8px;">Time To</th>
           <th style="border:1px solid #d9e1ea;padding:8px;">Ref No</th>
+          <th style="border:1px solid #d9e1ea;padding:8px;">Action</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td colspan="7" style="text-align:center;color:#6b7a8d;padding:14px;">Loading…</td></tr>
+        <tr><td colspan="8" style="text-align:center;color:#6b7a8d;padding:14px;">Loading…</td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbxtVJCwbZYsX1g7OIGVvqFT8aWAJBAYfu1D9IehLVTDZnx5LwMSQ9IodFmRrymD4SMu/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbwhRLnsDBwWgCEtf0v2NoI44fxeB67-mtG5-WpzvdJrkMcxinu4piJ6EwhCbqAE7IBU/exec";
 
 var FALLBACK_EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -240,10 +250,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function updateTypeUI() {
     var t = typeSel.value;
+    var isSingleDayLeave = (t === "WELLNESS" || t === "CTO");
+    var dateEndWrap = document.getElementById("dateEndWrap");
+    var dateStartLabel = document.getElementById("dateStartLabel");
+
     if (t === "OB")      { refLabel.textContent = "OB Number";  refInput.placeholder = "Enter OB number…";  refField.classList.remove("hidden"); }
     else if (t === "TO") { refLabel.textContent = "TO Number";  refInput.placeholder = "Enter TO number…";  refField.classList.remove("hidden"); }
     else if (t === "RSO"){ refLabel.textContent = "RSO Number"; refInput.placeholder = "Enter RSO number…"; refField.classList.remove("hidden"); }
-    else                 { refField.classList.add("hidden"); refInput.value = ""; }
+    else { refField.classList.add("hidden"); refInput.value = ""; }
+
+    if (isSingleDayLeave) {
+      dateStartLabel.textContent = t === "WELLNESS" ? "Date of Wellness Leave" : "Date of CTO";
+      dateEndWrap.style.display = "none";
+      dateEndWrap.querySelector("input").value = "";
+    } else {
+      dateStartLabel.textContent = "Date Start";
+      dateEndWrap.style.display = "";
+    }
 
     if (t === "OB") timeFields.classList.remove("hidden");
     else { timeFields.classList.add("hidden"); timeFrom.value = ""; timeTo.value = ""; }
@@ -255,15 +278,15 @@ document.addEventListener("DOMContentLoaded", function () {
     var type = typeSel.value;
     var code = sel.value;
     var ds = document.getElementById("dateStart").value;
-    var de = document.getElementById("dateEnd").value;
+    var de = (type === "WELLNESS" || type === "CTO") ? ds : document.getElementById("dateEnd").value;
     var ref = refInput.value.trim();
 
     if (!type) return "Please select OB, TO, or RSO.";
     if (!code) return "Please select an employee.";
     if (!ds) return "Please select a Date Start.";
-    if (!de) return "Please select a Date End.";
+    if (type !== "WELLNESS" && type !== "CTO" && !de) return "Please select a Date End.";
     if (de < ds) return "Date End cannot be earlier than Date Start.";
-    if (!ref) return "Please enter the " + type + " number.";
+    if (["OB","TO","RSO"].indexOf(type) !== -1 && !ref) return "Please enter the " + type + " number.";
     if (type === "OB") {
       if (!timeFrom.value) return "Please enter Time From for Official Business.";
       if (!timeTo.value) return "Please enter Time To for Official Business.";
@@ -283,7 +306,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!emp) return showMsg("err", "Employee not found. Please refresh.");
 
     var ds = document.getElementById("dateStart").value;
-    var de = document.getElementById("dateEnd").value;
+    var de = (type === "WELLNESS" || type === "CTO") ? ds : document.getElementById("dateEnd").value;
 
     /* ── Normalize refNo so the DTR always shows "RSO No. 2026-11-040" ── */
     var ref = refInput.value.trim();
@@ -299,8 +322,10 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("f_time_from").value = (type === "OB" ? timeFrom.value : "");
     document.getElementById("f_time_to").value = (type === "OB" ? timeTo.value : "");
     document.getElementById("f_ref_no").value = ref;
+    document.getElementById("f_entry_id").value = editingEntryId;
+    document.querySelector('#entryForm input[name="action"]').value = editingEntryId ? "updateEntry" : "saveEntry";
 
-    pending = true; btnSubmit.disabled = true; btnSubmit.textContent = "Saving…";
+    pending = true; btnSubmit.disabled = true; btnSubmit.textContent = editingEntryId ? "Saving Changes…" : "Saving…";
     showMsg("ok", "⏳ Saving entry…");
     document.getElementById("entryForm").action = API_URL;
     document.getElementById("entryForm").submit();
@@ -311,7 +336,12 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("hidden_post_iframe").onload = function () {
     if (!pending) return;
     pending = false; btnSubmit.disabled = false; btnSubmit.textContent = "💾 Save Entry";
-    showMsg("ok", "✅ Entry saved successfully.");
+    showMsg("ok", editingEntryId ? "✅ Changes saved successfully." : "✅ Entry saved successfully.");
+    editingEntryId = "";
+    document.getElementById("f_entry_id").value = "";
+    btnSubmit.textContent = "💾 Save Entry";
+    document.getElementById("editingNote").style.display = "none";
+    document.getElementById("btnCancelEdit").style.display = "none";
     fetchEntriesJSONP();
     document.getElementById("dateStart").value = "";
     document.getElementById("dateEnd").value = "";
@@ -321,7 +351,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.fetchEntriesJSONP = function () {
     var tbody = document.querySelector("#entriesTable tbody");
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7a8d;padding:14px;">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6b7a8d;padding:14px;">Loading…</td></tr>';
 
     var cbName = "jsonp_entry_list_" + Math.random().toString(36).slice(2);
     var script = document.createElement("script");
@@ -331,7 +361,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (done) return; done = true; clearTimeout(timer);
       if (script.parentNode) script.parentNode.removeChild(script);
       delete window[cbName];
-      if (errMsg) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9b1c1c;padding:14px;">Error: ' + errMsg + '</td></tr>'; return; }
+      if (errMsg) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9b1c1c;padding:14px;">Error: ' + errMsg + '</td></tr>'; return; }
       renderEntries(data || []);
     }
 
@@ -349,22 +379,71 @@ document.addEventListener("DOMContentLoaded", function () {
     var tbody = document.querySelector("#entriesTable tbody");
     tbody.innerHTML = "";
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7a8d;padding:14px;">No entries yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6b7a8d;padding:14px;">No entries yet.</td></tr>';
       return;
     }
     rows.slice(0, 30).forEach(function(r) {
       var tr = document.createElement("tr");
-      tr.innerHTML =
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:center;font-weight:700;">' + (r.type || "") + '</td>' +
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:left;">' + (r.name || "") + '</td>' +
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:center;">' + (r.dateStart || "") + '</td>' +
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:center;">' + (r.dateEnd || "") + '</td>' +
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:center;">' + (r.timeFrom || "—") + '</td>' +
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:center;">' + (r.timeTo || "—") + '</td>' +
-        '<td style="border:1px solid #d9e1ea;padding:8px;text-align:center;">' + (r.refNo || "") + '</td>';
+      function cell(value) {
+        var td = document.createElement("td");
+        td.style.cssText = "border:1px solid #d9e1ea;padding:8px;text-align:center;";
+        td.textContent = value || "—";
+        return td;
+      }
+      tr.appendChild(cell(r.type));
+      var nameCell = cell(r.name); nameCell.style.textAlign = "left"; tr.appendChild(nameCell);
+      tr.appendChild(cell(r.dateStart));
+      tr.appendChild(cell(r.dateEnd));
+      tr.appendChild(cell(r.timeFrom));
+      tr.appendChild(cell(r.timeTo));
+      tr.appendChild(cell(r.refNo));
+      var actionCell = document.createElement("td");
+      actionCell.style.cssText = "border:1px solid #d9e1ea;padding:5px;text-align:center;white-space:nowrap;";
+      var editBtn = document.createElement("button");
+      editBtn.type = "button"; editBtn.className = "action-btn btn-edit"; editBtn.textContent = "✏️ Edit";
+      editBtn.addEventListener("click", function(){ beginEdit(r); });
+      actionCell.appendChild(editBtn);
+      tr.appendChild(actionCell);
       tbody.appendChild(tr);
     });
   }
+
+  function beginEdit(r) {
+    editingEntryId = String(r.entryId || "");
+    if (!editingEntryId) {
+      showMsg("err", "This saved row has no edit ID yet. Refresh the list and try again.");
+      return;
+    }
+    typeSel.value = r.type || "";
+    updateTypeUI();
+    sel.value = String(r.code || "").padStart(2, "0");
+    document.getElementById("dateStart").value = r.dateStart || "";
+    document.getElementById("dateEnd").value = r.dateEnd || "";
+    timeFrom.value = r.timeFrom || "";
+    timeTo.value = r.timeTo || "";
+    refInput.value = String(r.refNo || "").replace(/^(OB|TO|RSO)\s*(NO\.?|#)\s*/i, "");
+    btnSubmit.textContent = "💾 Save Changes";
+    document.getElementById("editingNote").style.display = "block";
+    document.getElementById("btnCancelEdit").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    showMsg("ok", "Editing saved entry. Update the fields and click Save Changes.");
+  }
+
+  function cancelEdit() {
+    editingEntryId = "";
+    document.getElementById("f_entry_id").value = "";
+    document.querySelector('#entryForm input[name="action"]').value = "saveEntry";
+    typeSel.value = ""; sel.value = "";
+    document.getElementById("dateStart").value = "";
+    document.getElementById("dateEnd").value = "";
+    timeFrom.value = ""; timeTo.value = ""; refInput.value = "";
+    updateTypeUI();
+    btnSubmit.textContent = "💾 Save Entry";
+    document.getElementById("editingNote").style.display = "none";
+    document.getElementById("btnCancelEdit").style.display = "none";
+    statusBox.className = "";
+  }
+  document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
 
   fetchEmployees().then(function(list) {
     employees = (list && list.length) ? list : FALLBACK_EMPLOYEES.slice();
