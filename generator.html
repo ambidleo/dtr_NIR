@@ -65,233 +65,47 @@
   }
   @media (max-width:560px) { .row { grid-template-columns:1fr; } .card { padding:18px; } }
 
-  /* ═════════════════════════════════════════════════════════════════════
-     PRINT STYLES — bulletproof version
-     ═════════════════════════════════════════════════════════════════════
-     Key fixes vs. original:
-       1. @page: removed redundant "landscape" keyword (13in > 8.5in already = landscape)
-       2. Universal print-color-adjust: forces ALL browsers to print backgrounds
-       3. !important on every rule: prevents any base style from leaking through
-       4. Removed mix-blend-mode: not supported in print
-       5. Explicit color:#000 and font-family on every text element
-  */
   @media print {
-    @page {
-      size: 13in 8.5in;   /* long bond paper landscape */
-      margin: 0.3in;
+    @page { size: 13in 8.5in landscape; margin: 0.3in; }
+    body { background:#fff; margin:0; padding:0; }
+    header, .wrap, #fatal { display:none !important; }
+    #print-area { display:flex; flex-direction:row; justify-content:space-between; align-items:stretch; width:100%; gap:10px; font-family:Arial, sans-serif; color:#000; }
+    .dtr-copy { flex:1; font-size:8px; display:flex; flex-direction:column; justify-content:space-between; }
+    .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; }
+    .dtr-header h3 { margin:0; font-size:9px; font-weight:normal; }
+    .dtr-header h2 { margin:0; font-size:10px; font-weight:bold; }
+    .dtr-header h4 { margin:0; font-size:9px; font-weight:normal; }
+    .form-title { font-size:9px; margin-bottom:2px; }
+    .info-row { display:flex; margin-bottom:2px; font-size:8px; }
+    .info-col { flex:1; }
+    .dtr-table { width:100%; border-collapse:collapse; margin-top:5px; }
+    .dtr-table th, .dtr-table td { border:1px solid #000; text-align:center; padding:1px 2px; font-size:8px; }
+    .dtr-table th { font-weight:bold; }
+    .dtr-table .day-col { width:5%; }
+    .dtr-table .time-col { width:14%; }
+    .dtr-table .ut-col { width:9%; }
+    .dtr-table td.do-row { background:#FFFFFF !important; font-style:italic; font-size:7px; text-align:center; color:#222; }
+    .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
+    .dtr-table td.travel-row { background:#e8f0ff !important; font-size:7px; text-align:center; color:#0d2a5c; }
+    .dtr-table td.travel-row b { font-style:normal; letter-spacing:.3px; text-transform:uppercase; }
+    .dtr-table td.otr-row { background:#fff5d6 !important; font-size:7px; text-align:center; color:#5a3d00; font-style:italic; }
+    .dtr-table td.otr-row b { font-style:normal; letter-spacing:.35px; text-transform:uppercase; color:#3d2800; }
+    .dtr-table td.weekend-day { background:#FFFFFF !important; font-weight:bold; color:#333; }
+    .dtr-table td.weekend-row { background:#FFFFFF !important; font-size:7px; text-align:center; color:#444; letter-spacing:.45px; }
+    .dtr-table td.weekend-row b { font-style:normal; letter-spacing:.55px; color:#1b2b44; }
+    .dtr-table td.op-cell { background:#dfe3e9 !important; color:#7a8597 !important; }
+    .dtr-table td.op-label { font-size:7px; font-style:italic; letter-spacing:.4px; text-align:center; }
+    .dtr-table td.do-row, .dtr-table td.travel-row, .dtr-table td.otr-row,
+    .dtr-table td.weekend-day, .dtr-table td.weekend-row, .dtr-table td.op-cell {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
-
-    /* Force exact colors/backgrounds across ALL browsers */
-    *, *::before, *::after {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      color-adjust: exact !important;
-    }
-
-    html, body {
-      background: #fff !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      color: #000 !important;
-      font-family: Arial, Helvetica, sans-serif !important;
-    }
-
-    /* Hide everything except the print area */
-    header, .gov-header, .wrap, #fatal, #dtrStatus, .card, script {
-      display: none !important;
-    }
-
-    #print-area {
-      display: flex !important;
-      flex-direction: row !important;
-      justify-content: space-between !important;
-      align-items: stretch !important;
-      width: 100% !important;
-      gap: 10px !important;
-      font-family: Arial, Helvetica, sans-serif !important;
-      color: #000 !important;
-      background: #fff !important;
-    }
-
-    .dtr-copy {
-      flex: 1 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      font-size: 8.5px !important;
-      color: #000 !important;
-    }
-
-    .dtr-header {
-      text-align: center !important;
-      margin-bottom: 5px !important;
-      line-height: 1.1 !important;
-      padding: 0 70px !important;
-      position: relative !important;
-      min-height: 65px !important;
-      color: #000 !important;
-    }
-    .dtr-logo {
-      position: absolute !important;
-      left: 11px !important;
-      top: 0 !important;
-      width: 65px !important;
-      height: 65px !important;
-      object-fit: contain !important;
-    }
-    .dtr-header h2, .dtr-header h3, .dtr-header h4 {
-      margin: 0 !important;
-      color: #000 !important;
-    }
-    .dtr-header h2 { font-size: 10.5px !important; font-weight: bold !important; }
-    .dtr-header h3 { font-size: 9.5px !important; font-weight: normal !important; }
-    .dtr-header h4 { font-size: 9.5px !important; font-weight: normal !important; }
-
-    .form-title {
-      font-size: 12px !important;
-      margin-bottom: 2px !important;
-      color: #000 !important;
-    }
-    .info-row {
-      display: flex !important;
-      margin-bottom: 2px !important;
-      font-size: 8.5px !important;
-      color: #000 !important;
-    }
-    .info-col { flex: 1 !important; }
-
-    .dtr-table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-      margin-top: 5px !important;
-    }
-    .dtr-table th, .dtr-table td {
-      border: 1px solid #000 !important;
-      text-align: center !important;
-      padding: 2px !important;
-      font-size: 10px !important;
-      color: #000 !important;
-      background: #fff !important;
-    }
-    .dtr-table th {
-      font-weight: bold !important;
-      font-size: 9.5px !important;
-    }
-
-    .dtr-table .day-col { width: 5% !important; }
-    .dtr-table .time-col { width: 14% !important; }
-    .dtr-table .ut-col { width: 9% !important; }
-
-    /* Special rows — with explicit print-color-adjust on each */
-    .dtr-table td.do-row {
-      background: #fff !important;
-      font-style: italic !important;
-      font-size: 9px !important;
-      text-align: center !important;
-      color: #222 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .dtr-table td.do-row b {
-      font-style: normal !important;
-      letter-spacing: .3px !important;
-    }
-
-    .dtr-table td.otr-row {
-      background: #fff5d6 !important;
-      font-size: 9px !important;
-      text-align: center !important;
-      color: #5a3d00 !important;
-      font-style: italic !important;
-      font-weight: bold !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .dtr-table td.otr-row b {
-      font-style: normal !important;
-      letter-spacing: .35px !important;
-      text-transform: uppercase !important;
-      color: #3d2800 !important;
-    }
-
-    .dtr-table td.weekend-day {
-      background: #fff !important;
-      font-weight: bold !important;
-      color: #333 !important;
-    }
-    .dtr-table td.weekend-row {
-      background: #fff !important;
-      font-size: 8.5px !important;
-      text-align: center !important;
-      color: #444 !important;
-      letter-spacing: .45px !important;
-    }
-    .dtr-table td.weekend-row b {
-      font-style: normal !important;
-      letter-spacing: .55px !important;
-      color: #1b2b44 !important;
-    }
-
-    .dtr-table td.op-cell {
-      background: #dfe3e9 !important;
-      color: #7a8597 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .dtr-table td.op-label {
-      font-size: 8px !important;
-      font-style: italic !important;
-      letter-spacing: .4px !important;
-      text-align: center !important;
-    }
-
-    .dtr-footer {
-      margin-top: 10px !important;
-      font-size: 8.5px !important;
-      color: #000 !important;
-    }
-    .certify-text {
-      margin-bottom: 15px !important;
-      text-align: justify !important;
-      line-height: 1.2 !important;
-      color: #000 !important;
-    }
-    .signature-area {
-      margin-top: 10px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      text-align: center !important;
-    }
-    .signature-block {
-      text-align: center !important;
-      width: 60% !important;
-      margin-bottom: 18px !important;
-    }
-    .signature-name {
-      font-weight: bold !important;
-      text-decoration: underline !important;
-      margin-bottom: 2px !important;
-      font-size: 10px !important;
-      color: #000 !important;
-    }
-    .signature-title {
-      border-top: 1px solid #000 !important;
-      padding-top: 2px !important;
-      font-size: 9px !important;
-      color: #000 !important;
-    }
-    .verified-block {
-      text-align: center !important;
-      width: 60% !important;
-      margin-top: 6px !important;
-    }
-    .verified-line {
-      font-size: 8.5px !important;
-      font-style: italic !important;
-      margin-bottom: 4px !important;
-      color: #000 !important;
-    }
+    .dtr-footer { margin-top:10px; font-size:8px; }
+    .signature-area { margin-top:10px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+    .signature-block { text-align:center; width:60%; margin-bottom:18px; }
+    .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:8px; }
+    .signature-title { border-top:1px solid #000; padding-top:2px; font-size:8px; }
+    .verified-block { text-align:center; width:60%; }
+    .verified-line { font-size:8px; font-style:italic; margin-bottom:6px; }
   }
 </style>
 </head>
@@ -353,8 +167,11 @@
     <button type="button" class="primary" id="btn-print" disabled>🖨️ Generate &amp; Print DTR</button>
 
     <div id="dtrStatus">
-      ⚠️ <b>Note:</b> In the print dialog, tick <b>"Background graphics"</b> (Chrome/Edge) or <b>"Print backgrounds"</b> (Firefox/Safari) so the table shading and yellow OB/TO/RSO band appear on paper.<br>
-      Set Layout to <b>Landscape</b>, Paper Size to <b>Long / Legal</b> or <b>Folio (8.5 × 13 in)</b>.
+      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
+      <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
+      Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
+      <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
+      <b>Late arrivals and early departures are combined into the Mins column.</b> Lunch 12:00–1:00 excluded.
     </div>
   </div>
 </div>
@@ -409,10 +226,39 @@ function parseMins(t) {
   return h * 60 + m;
 }
 
+/* ─── Time constants (minutes from midnight) ─── */
+var AM_START     = 7 * 60;   // 07:00 — regular arrival
+var SKELETAL_FRI = 8 * 60;   // 08:00 — skeletal Friday arrival
+var AM_CUTOFF    = 12 * 60;  // AM ends at 12:00
+var PM_START     = 13 * 60;  // PM begins at 13:00 (lunch 12:00–13:00 excluded)
+
+function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
+  var inM    = parseMins(amIn);
+  var outM   = parseMins(amOut);
+  var pmInM  = parseMins(pmIn);
+  var pmOutM = parseMins(pmOut);
+  var total  = 0;
+
+  if (inM !== null && outM !== null && outM > inM) {
+    var amEnd = Math.min(outM, AM_CUTOFF);
+    if (amEnd > inM) total += (amEnd - inM);
+  }
+
+  if (pmInM !== null && pmOutM !== null && pmOutM > pmInM) {
+    var pmStart = Math.max(pmInM, PM_START);
+    if (pmOutM > pmStart) total += (pmOutM - pmStart);
+  } else if (inM === null && pmInM !== null && pmOutM !== null) {
+    var pStart = Math.max(pmInM, PM_START);
+    if (pmOutM > pStart) total += (pmOutM - pStart);
+  }
+
+  return total;
+}
+
 function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
   var inM = parseMins(amIn);
   if (inM === null) return 0;
-  var expectedStart = (isSkeletal && isFridayDay) ? 8 * 60 : 7 * 60;
+  var expectedStart = (isSkeletal && isFridayDay) ? SKELETAL_FRI : AM_START;
   return Math.max(0, inM - expectedStart);
 }
 
@@ -422,17 +268,30 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   var pmInM = parseMins(pmIn);
   var pmOutM = parseMins(pmOut);
 
-  var targetPmOut = 16 * 60;
+  /* Determine target PM out */
+  var targetPmOut = 16 * 60; // 4:00 PM (Skeletal default)
   if (isSkeletal && isFridayDay) {
-    targetPmOut = 17 * 60;
+    targetPmOut = 17 * 60; // 5:00 PM (Skeletal Friday)
   } else if (!isSkeletal) {
-    targetPmOut = 18 * 60;
+    targetPmOut = 18 * 60; // 6:00 PM (Regular)
   }
 
   var ut = 0;
-  if (outM !== null && outM < 720) ut += (720 - outM);
-  if (pmInM !== null && pmInM > 780) ut += (pmInM - 780);
-  if (pmOutM !== null && pmOutM < targetPmOut) ut += (targetPmOut - pmOutM);
+
+  /* AM Time Out earlier than 12:00 NN */
+  if (outM !== null && outM < 720) {
+    ut += (720 - outM);
+  }
+  
+  /* PM Time In later than 1:00 PM */
+  if (pmInM !== null && pmInM > 780) {
+    ut += (pmInM - 780);
+  }
+
+  /* PM Time Out earlier than target end of shift */
+  if (pmOutM !== null && pmOutM < targetPmOut) {
+    ut += (targetPmOut - pmOutM);
+  }
 
   return ut;
 }
@@ -710,7 +569,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (travel) { byDay[d] = { success: true, data: {}, travel: travel }; continue; }
 
       var entry = findEntryOn(dStr);
-      if (entry) { byDay[d] = { success: true, data: {}, entry: entry }; continue; }
+      if (entry) {
+        var dataE = await fetchDateDataJSONP(dStr);
+        byDay[d] = { success: !!(dataE && dataE.success), data: (dataE && dataE.data) || {}, entry: entry };
+        continue;
+      }
 
       var dow = cellDate.getDay();
       if (dow === 0 || dow === 6) { byDay[d] = { success: true, data: {}, weekend: true, dow: dow }; continue; }
@@ -743,26 +606,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (rec && rec.travel) {
         var to = rec.travel;
-        var travelNote = '<b>TO No. ' + escapeHtml(to.controlNo || "") + '</b>';
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row">' + travelNote + '</td></tr>';
-        continue;
-      }
-
-      if (rec && rec.entry) {
-        var entry = rec.entry;
-        var refText = String(entry.refNo || "").trim();
-        var typeTxt = String(entry.type || "").toUpperCase();
-        var label;
-        if (refText) {
-          if (/^(OB|TO|RSO|SO)\b/i.test(refText)) {
-            label = '<b>' + escapeHtml(refText) + '</b>';
-          } else {
-            label = '<b>' + escapeHtml(typeTxt) + ' No. ' + escapeHtml(refText) + '</b>';
-          }
-        } else {
-          label = '<b>' + escapeHtml(typeTxt || "ENTRY") + '</b>';
-        }
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
+        var travelNote = '<b>Travel Order No. ' + escapeHtml(to.controlNo) + '</b>';
+        if (to.destination) travelNote += ' — ' + escapeHtml(to.destination);
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="travel-row">' + travelNote + '</td></tr>';
         continue;
       }
 
@@ -773,28 +619,38 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (rec && rec.skippedFriday) {
-        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row"><b>DO No. 2026-015</b> (Compressed Workweek)</td></tr>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="do-row"><b>DO No. 2026-015</b>(Compressed Workweek)</td></tr>';
         continue;
       }
 
       var amIn = "", amOut = "", pmIn = "", pmOut = "", utH = "", utM = "";
+      var entry = rec && rec.entry;
+
       if (rec && rec.success && rec.data && rec.data[code]) {
         var dd = rec.data[code];
         amIn = dd.am_in || ""; amOut = dd.am_out || "";
         pmIn = dd.pm_in || ""; pmOut = dd.pm_out || "";
       }
 
+      if (entry) {
+        var prefix = entry.type === "RSO" ? "SO" : (entry.type || "");
+        var label = '<b>' + escapeHtml(prefix) + ' # ' + escapeHtml(entry.refNo || "") + '</b>';
+        rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
+        continue;
+      }
+
       if (amIn || amOut || pmIn || pmOut) {
         var isFridayDay = isFriday(year, month, j);
+        
         var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
         var utMin = calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
+        
         var totalMin = lateMin + utMin;
 
         utH = "0";
         utM = totalMin;
         totalUT += totalMin;
       }
-
       rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
                   '</td><td>' + pmIn + '</td><td>' + pmOut +
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
@@ -805,7 +661,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
     var period = document.getElementById("period").value.trim();
-
+    
     var totalUTH = "0";
     var totalUTM = totalUT;
 
@@ -820,7 +676,6 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div class="dtr-copy">' +
         '<div>' +
           '<div class="dtr-header">' +
-          '<img src="dhsud-logo.png" class="dtr-logo" alt="Logo">' +
             '<h3>Republic of the Philippines</h3>' +
             '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
             '<h4>Negros Island Region</h4>' +
@@ -859,7 +714,7 @@ document.addEventListener("DOMContentLoaded", function () {
               '<div class="signature-title">Employee Signature</div>' +
             '</div>' +
             '<div class="verified-block">' +
-              '<div class="verified-line">VERIFIED as to the prescribed office hours.<br><br></div>' +
+              '<div class="verified-line">VERIFIED as to the prescribed office hours.</div>' +
               '<div class="signature-name">ELENITA PAULINA R. CAÑETE</div>' +
               '<div class="signature-title">OIC-Regional Director</div>' +
             '</div>' +
@@ -867,24 +722,10 @@ document.addEventListener("DOMContentLoaded", function () {
         '</div>' +
       '</div>';
 
-    var printArea = document.getElementById("print-area");
-    printArea.innerHTML = singleCopyHTML + singleCopyHTML;
-
+    document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
     document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
     document.getElementById("dtrStatus").style.color = "#1c8a4b";
-
-    /* Preload the logo, then print — guarantees the logo & layout are ready */
-    var logo = new Image();
-    var triggered = false;
-    function fire() {
-      if (triggered) return;
-      triggered = true;
-      window.print();
-    }
-    logo.onload = function() { setTimeout(fire, 150); };
-    logo.onerror = function() { setTimeout(fire, 150); };
-    logo.src = "dhsud-logo.png";
-    setTimeout(fire, 900);  /* absolute fallback */
+    setTimeout(function() { window.print(); }, 200);
   }
 
   fetchEmployees().then(function(list) {
