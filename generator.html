@@ -65,55 +65,233 @@
   }
   @media (max-width:560px) { .row { grid-template-columns:1fr; } .card { padding:18px; } }
 
+  /* ═════════════════════════════════════════════════════════════════════
+     PRINT STYLES — bulletproof version
+     ═════════════════════════════════════════════════════════════════════
+     Key fixes vs. original:
+       1. @page: removed redundant "landscape" keyword (13in > 8.5in already = landscape)
+       2. Universal print-color-adjust: forces ALL browsers to print backgrounds
+       3. !important on every rule: prevents any base style from leaking through
+       4. Removed mix-blend-mode: not supported in print
+       5. Explicit color:#000 and font-family on every text element
+  */
   @media print {
-    @page { size: 13in 8.5in landscape; margin: 0.3in; }
-    body { background:#fff; margin:0; padding:0; }
-    header, .wrap, #fatal { display:none !important; }
-    #print-area { display:flex; flex-direction:row; justify-content:space-between; align-items:stretch; width:100%; gap:10px; font-family:Arial, sans-serif; color:#000; }
-    .dtr-copy { flex:1; font-size:8.5px; display:flex; flex-direction:column; justify-content:space-between; }
-    
-    .dtr-header { text-align:center; margin-bottom:5px; line-height:1.1; padding: 0 70px; position: relative; min-height: 65px; }
-    .dtr-logo { position: absolute; left: 11px; top: 0; width: 65px; height: 65px; object-fit: contain; mix-blend-mode: multiply; }
-    .dtr-header h3 { margin:0; font-size:9.5px; font-weight:normal; }
-    .dtr-header h2 { margin:0; font-size:10.5px; font-weight:bold; }
-    .dtr-header h4 { margin:0; font-size:9.5px; font-weight:normal; }
-    
-    .form-title { font-size:12px; margin-bottom:2px; }
-    .info-row { display:flex; margin-bottom:2px; font-size:8.5px; }
-    .info-col { flex:1; }
-    
-    .dtr-table { width:100%; border-collapse:collapse; margin-top:5px; }
-    .dtr-table th, .dtr-table td { border:1px solid #000; text-align:center; padding:2px 2px; font-size:10px; }
-    .dtr-table th { font-weight:bold; font-size:9.5px; }
-    
-    .dtr-table .day-col { width:5%; }
-    .dtr-table .time-col { width:14%; }
-    .dtr-table .ut-col { width:9%; }
-    
-    .dtr-table td.do-row { background:#FFFFFF !important; font-style:italic; font-size:9px; text-align:center; color:#222; }
-    .dtr-table td.do-row b { font-style:normal; letter-spacing:.3px; }
-    .dtr-table td.otr-row { background:#fff5d6 !important; font-size:9px; text-align:center; color:#5a3d00; font-style:italic; font-weight:bold; }
-    .dtr-table td.otr-row b { font-style:normal; letter-spacing:.35px; text-transform:uppercase; color:#3d2800; }
-    
-    .dtr-table td.weekend-day { background:#FFFFFF !important; font-weight:bold; color:#333; }
-    .dtr-table td.weekend-row { background:#FFFFFF !important; font-size:8.5px; text-align:center; color:#444; letter-spacing:.45px; }
-    .dtr-table td.weekend-row b { font-style:normal; letter-spacing:.55px; color:#1b2b44; }
-    .dtr-table td.op-cell { background:#dfe3e9 !important; color:#7a8597 !important; }
-    .dtr-table td.op-label { font-size:8px; font-style:italic; letter-spacing:.4px; text-align:center; }
-    
-    .dtr-table td.do-row, .dtr-table td.otr-row,
-    .dtr-table td.weekend-day, .dtr-table td.weekend-row, .dtr-table td.op-cell {
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    @page {
+      size: 13in 8.5in;   /* long bond paper landscape */
+      margin: 0.3in;
     }
-    
-    .dtr-footer { margin-top:10px; font-size:8.5px; }
-    .certify-text { margin-bottom:15px; text-align:justify; line-height:1.2; }
-    .signature-area { margin-top:10px; display:flex; flex-direction:column; align-items:center; text-align:center; }
-    .signature-block { text-align:center; width:60%; margin-bottom:18px; }
-    .signature-name { font-weight:bold; text-decoration:underline; margin-bottom:2px; font-size:10px; }
-    .signature-title { border-top:1px solid #000; padding-top:2px; font-size:9px; }
-    .verified-block { text-align:center; width:60%; margin-top: 6px; }
-    .verified-line { font-size:8.5px; font-style:italic; margin-bottom:4px; }
+
+    /* Force exact colors/backgrounds across ALL browsers */
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    html, body {
+      background: #fff !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      color: #000 !important;
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    /* Hide everything except the print area */
+    header, .gov-header, .wrap, #fatal, #dtrStatus, .card, script {
+      display: none !important;
+    }
+
+    #print-area {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      gap: 10px !important;
+      font-family: Arial, Helvetica, sans-serif !important;
+      color: #000 !important;
+      background: #fff !important;
+    }
+
+    .dtr-copy {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      font-size: 8.5px !important;
+      color: #000 !important;
+    }
+
+    .dtr-header {
+      text-align: center !important;
+      margin-bottom: 5px !important;
+      line-height: 1.1 !important;
+      padding: 0 70px !important;
+      position: relative !important;
+      min-height: 65px !important;
+      color: #000 !important;
+    }
+    .dtr-logo {
+      position: absolute !important;
+      left: 11px !important;
+      top: 0 !important;
+      width: 65px !important;
+      height: 65px !important;
+      object-fit: contain !important;
+    }
+    .dtr-header h2, .dtr-header h3, .dtr-header h4 {
+      margin: 0 !important;
+      color: #000 !important;
+    }
+    .dtr-header h2 { font-size: 10.5px !important; font-weight: bold !important; }
+    .dtr-header h3 { font-size: 9.5px !important; font-weight: normal !important; }
+    .dtr-header h4 { font-size: 9.5px !important; font-weight: normal !important; }
+
+    .form-title {
+      font-size: 12px !important;
+      margin-bottom: 2px !important;
+      color: #000 !important;
+    }
+    .info-row {
+      display: flex !important;
+      margin-bottom: 2px !important;
+      font-size: 8.5px !important;
+      color: #000 !important;
+    }
+    .info-col { flex: 1 !important; }
+
+    .dtr-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      margin-top: 5px !important;
+    }
+    .dtr-table th, .dtr-table td {
+      border: 1px solid #000 !important;
+      text-align: center !important;
+      padding: 2px !important;
+      font-size: 10px !important;
+      color: #000 !important;
+      background: #fff !important;
+    }
+    .dtr-table th {
+      font-weight: bold !important;
+      font-size: 9.5px !important;
+    }
+
+    .dtr-table .day-col { width: 5% !important; }
+    .dtr-table .time-col { width: 14% !important; }
+    .dtr-table .ut-col { width: 9% !important; }
+
+    /* Special rows — with explicit print-color-adjust on each */
+    .dtr-table td.do-row {
+      background: #fff !important;
+      font-style: italic !important;
+      font-size: 9px !important;
+      text-align: center !important;
+      color: #222 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .dtr-table td.do-row b {
+      font-style: normal !important;
+      letter-spacing: .3px !important;
+    }
+
+    .dtr-table td.otr-row {
+      background: #fff5d6 !important;
+      font-size: 9px !important;
+      text-align: center !important;
+      color: #5a3d00 !important;
+      font-style: italic !important;
+      font-weight: bold !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .dtr-table td.otr-row b {
+      font-style: normal !important;
+      letter-spacing: .35px !important;
+      text-transform: uppercase !important;
+      color: #3d2800 !important;
+    }
+
+    .dtr-table td.weekend-day {
+      background: #fff !important;
+      font-weight: bold !important;
+      color: #333 !important;
+    }
+    .dtr-table td.weekend-row {
+      background: #fff !important;
+      font-size: 8.5px !important;
+      text-align: center !important;
+      color: #444 !important;
+      letter-spacing: .45px !important;
+    }
+    .dtr-table td.weekend-row b {
+      font-style: normal !important;
+      letter-spacing: .55px !important;
+      color: #1b2b44 !important;
+    }
+
+    .dtr-table td.op-cell {
+      background: #dfe3e9 !important;
+      color: #7a8597 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .dtr-table td.op-label {
+      font-size: 8px !important;
+      font-style: italic !important;
+      letter-spacing: .4px !important;
+      text-align: center !important;
+    }
+
+    .dtr-footer {
+      margin-top: 10px !important;
+      font-size: 8.5px !important;
+      color: #000 !important;
+    }
+    .certify-text {
+      margin-bottom: 15px !important;
+      text-align: justify !important;
+      line-height: 1.2 !important;
+      color: #000 !important;
+    }
+    .signature-area {
+      margin-top: 10px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      text-align: center !important;
+    }
+    .signature-block {
+      text-align: center !important;
+      width: 60% !important;
+      margin-bottom: 18px !important;
+    }
+    .signature-name {
+      font-weight: bold !important;
+      text-decoration: underline !important;
+      margin-bottom: 2px !important;
+      font-size: 10px !important;
+      color: #000 !important;
+    }
+    .signature-title {
+      border-top: 1px solid #000 !important;
+      padding-top: 2px !important;
+      font-size: 9px !important;
+      color: #000 !important;
+    }
+    .verified-block {
+      text-align: center !important;
+      width: 60% !important;
+      margin-top: 6px !important;
+    }
+    .verified-line {
+      font-size: 8.5px !important;
+      font-style: italic !important;
+      margin-bottom: 4px !important;
+      color: #000 !important;
+    }
   }
 </style>
 </head>
@@ -175,10 +353,8 @@
     <button type="button" class="primary" id="btn-print" disabled>🖨️ Generate &amp; Print DTR</button>
 
     <div id="dtrStatus">
-      ⚠️ <b>Note:</b> In the print dialog, set Layout to <b>Landscape</b> and Paper Size to <b>Long / Legal</b>.<br>
-      <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
-      Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
-      <b>OB / TO / RSO</b> entries are merged across the middle columns just like DO No. 2026-015.
+      ⚠️ <b>Note:</b> In the print dialog, tick <b>"Background graphics"</b> (Chrome/Edge) or <b>"Print backgrounds"</b> (Firefox/Safari) so the table shading and yellow OB/TO/RSO band appear on paper.<br>
+      Set Layout to <b>Landscape</b>, Paper Size to <b>Long / Legal</b> or <b>Folio (8.5 × 13 in)</b>.
     </div>
   </div>
 </div>
@@ -186,7 +362,7 @@
 <div id="print-area"></div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbxtVJCwbZYsX1g7OIGVvqFT8aWAJBAYfu1D9IehLVTDZnx5LwMSQ9IodFmRrymD4SMu/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbymjpNEE_elrFaMHNT7iQtXt1zGmm6xE6OH-6CJQI7Ed6XzAiQJhezTvppAlOvxOCZ9/exec";
 var LEGACY_KEY = "dhsud_skeletal_workforce";
 
 var FALLBACK_EMPLOYEES = [
@@ -574,7 +750,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (rec && rec.entry) {
         var entry = rec.entry;
-        /* Show ONLY the reference number, e.g. "RSO No. 2026-11-040" */
         var refText = String(entry.refNo || "").trim();
         var typeTxt = String(entry.type || "").toUpperCase();
         var label;
@@ -619,7 +794,7 @@ document.addEventListener("DOMContentLoaded", function () {
         utM = totalMin;
         totalUT += totalMin;
       }
-      
+
       rowsHTML += '<tr><td>' + j + '</td><td>' + amIn + '</td><td>' + amOut +
                   '</td><td>' + pmIn + '</td><td>' + pmOut +
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
@@ -630,7 +805,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
     var period = document.getElementById("period").value.trim();
-    
+
     var totalUTH = "0";
     var totalUTM = totalUT;
 
@@ -645,7 +820,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div class="dtr-copy">' +
         '<div>' +
           '<div class="dtr-header">' +
-          '<img src="dhsud-logo.png" class="dtr-logo" alt="Logo">' + 
+          '<img src="dhsud-logo.png" class="dtr-logo" alt="Logo">' +
             '<h3>Republic of the Philippines</h3>' +
             '<h2>DEPARTMENT OF HUMAN SETTLEMENTS AND URBAN DEVELOPMENT</h2>' +
             '<h4>Negros Island Region</h4>' +
@@ -692,10 +867,24 @@ document.addEventListener("DOMContentLoaded", function () {
         '</div>' +
       '</div>';
 
-    document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
+    var printArea = document.getElementById("print-area");
+    printArea.innerHTML = singleCopyHTML + singleCopyHTML;
+
     document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
     document.getElementById("dtrStatus").style.color = "#1c8a4b";
-    setTimeout(function() { window.print(); }, 200);
+
+    /* Preload the logo, then print — guarantees the logo & layout are ready */
+    var logo = new Image();
+    var triggered = false;
+    function fire() {
+      if (triggered) return;
+      triggered = true;
+      window.print();
+    }
+    logo.onload = function() { setTimeout(fire, 150); };
+    logo.onerror = function() { setTimeout(fire, 150); };
+    logo.src = "dhsud-logo.png";
+    setTimeout(fire, 900);  /* absolute fallback */
   }
 
   fetchEmployees().then(function(list) {
