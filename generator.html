@@ -495,8 +495,13 @@ document.addEventListener("DOMContentLoaded", function () {
     var results = await Promise.all([fetchSkeletal(), fetchTravelOrders(), fetchEntries()]);
     var skeletalByWeek = results[0] || {};
     var travelOrders = results[1] || [];
-    var obToRsoEntries = includeChk.checked ? (results[2] || []) : [];
+    // Fetch entries independently of the checkbox, then honor the checkbox here.
+    var fetchedEntries = Array.isArray(results[2]) ? results[2] : [];
+    var obToRsoEntries = includeChk.checked ? fetchedEntries : [];
     var legacySet = loadSkeletalLegacy();
+    document.getElementById("dtrStatus").textContent =
+      "Loaded " + fetchedEntries.length + " OB/TO/RSO record(s) from the entry sheet" +
+      (includeChk.checked ? ". Matching records to the selected employee and dates…" : ". Entry printing is unchecked.");
     var backendHasData = Object.keys(skeletalByWeek).length > 0;
 
     function isSkeletalOn(empCode, date) {
@@ -523,15 +528,31 @@ document.addEventListener("DOMContentLoaded", function () {
       return null;
     }
 
+    function normalizeEntryDate(value) {
+      if (!value) return "";
+      var v = String(value).trim();
+      // Accept the ISO format returned by Apps Script and common sheet date formats.
+      var iso = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (iso) return iso[1] + "-" + pad2(iso[2]) + "-" + pad2(iso[3]);
+      var mdy = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (mdy) return mdy[3] + "-" + pad2(mdy[1]) + "-" + pad2(mdy[2]);
+      var parsed = new Date(v);
+      if (!isNaN(parsed.getTime())) return parsed.getFullYear() + "-" + pad2(parsed.getMonth()+1) + "-" + pad2(parsed.getDate());
+      return "";
+    }
+
     function findEntriesOn(dateStr) {
       if (!obToRsoEntries.length) return [];
       var matches = obToRsoEntries.filter(function(r) {
-        if (!r || !r.dateStart || !r.dateEnd) return false;
-        if (dateStr < r.dateStart || dateStr > r.dateEnd) return false;
-        // Match by employee code first. Name is a fallback for older rows.
-        var codeMatch = r.code && String(r.code).padStart(2,"0") === String(code).padStart(2,"0");
+        if (!r) return false;
+        var entryStart = normalizeEntryDate(r.dateStart);
+        var entryEnd = normalizeEntryDate(r.dateEnd);
+        if (!entryStart || !entryEnd || dateStr < entryStart || dateStr > entryEnd) return false;
+        var entryCode = String(r.code == null ? "" : r.code).trim().replace(/\.0$/, "");
+        var codeMatch = entryCode !== "" && entryCode.padStart(2, "0") === String(code).padStart(2, "0");
         var nameMatch = r.name && normalizeName(r.name) === empNameNorm;
-        return codeMatch || (!r.code && nameMatch);
+        // Use either identifier: older sheet rows may have a blank or differently formatted code.
+        return codeMatch || nameMatch;
       });
       return matches.sort(function(a,b) {
         return String(a.timestamp || "").localeCompare(String(b.timestamp || ""));
@@ -627,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
           var type = String(entry.type || "").toUpperCase();
           var ref = String(entry.refNo || "").trim();
           // Avoid duplicated labels when entry.html already stores "RSO No. ...".
-          ref = ref.replace(/^(OB|TO|RSO|SO)\\s*(NO\\.?|#)\\s*/i, "");
+          ref = ref.replace(/^(OB|TO|RSO|SO)\s*(NO\.?|#)\s*/i, "");
           var label = '<b>' + escapeHtml(type) + ' No. ' + escapeHtml(ref) + '</b>';
           rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
         });
@@ -657,10 +678,25 @@ document.addEventListener("DOMContentLoaded", function () {
                   '</td><td>' + utH + '</td><td>' + utM + '</td></tr>';
     }
 
-    generatePrint(emp, rowsHTML, totalUT, empIsSkeletal);
+    var matchedEntryCount = 0;
+    Object.keys(byDay).forEach(function(dayKey) {
+      var dayRec = byDay[dayKey];
+      if (dayRec && dayRec.entries) matchedEntryCount += dayRec.entries.length;
+    });
+    var entryStatus = "OB/TO/RSO printing is unchecked.";
+    if (includeChk.checked && fetchedEntries.length && matchedEntryCount === 0) {
+      entryStatus = "Loaded " + fetchedEntries.length + " entry record(s), but none matched " +
+        emp.code + " / " + emp.name + " within " + isoDate(year, month + 1, startDay) +
+        " to " + isoDate(year, month + 1, endDay) + ". Check the employee code/name and dates in OB_TO_Log.";
+    } else if (includeChk.checked && matchedEntryCount > 0) {
+      entryStatus = "Loaded " + fetchedEntries.length + " record(s); printed " + matchedEntryCount + " matching OB/TO/RSO row(s).";
+    } else if (includeChk.checked) {
+      entryStatus = "No OB/TO/RSO records were returned by the Apps Script API. Check the deployed Apps Script version and OB_TO_Log sheet.";
+    }
+    generatePrint(emp, rowsHTML, totalUT, empIsSkeletal, entryStatus);
   }
 
-  function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal) {
+  function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal, entryStatus) {
     var period = document.getElementById("period").value.trim();
     
     var totalUTH = "0";
@@ -724,8 +760,8 @@ document.addEventListener("DOMContentLoaded", function () {
       '</div>';
 
     document.getElementById("print-area").innerHTML = singleCopyHTML + singleCopyHTML;
-    document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview...";
-    document.getElementById("dtrStatus").style.color = "#1c8a4b";
+    document.getElementById("dtrStatus").textContent = "✅ Generating Print Preview. " + (entryStatus || "");
+    document.getElementById("dtrStatus").style.color = (entryStatus && entryStatus.indexOf("No OB/") === 0) || (entryStatus && entryStatus.indexOf("Loaded ") === 0 && entryStatus.indexOf("none matched") !== -1) ? "#9b1c1c" : "#1c8a4b";
     setTimeout(function() { window.print(); }, 200);
   }
 
