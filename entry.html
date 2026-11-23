@@ -284,7 +284,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var ds = document.getElementById("dateStart").value;
     var de = document.getElementById("dateEnd").value;
+
+    /* ── Normalize refNo so the DTR always shows "RSO No. 2026-11-040" ── */
     var ref = refInput.value.trim();
+    if (ref && !/^(OB|TO|RSO|SO)\b/i.test(ref)) {
+      ref = type + " No. " + ref;
+    }
 
     document.getElementById("f_type").value = type;
     document.getElementById("f_code").value = code;
