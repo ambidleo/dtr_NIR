@@ -55,6 +55,32 @@
   #fatal { display:none; background:#fde7e7; color:#9b1c1c; padding:12px; border-radius:10px; margin-bottom:14px; white-space:pre-wrap; font-family:monospace; border:1px solid #f3bcbc; font-size:13px; }
   #print-area { display: none; }
 
+  /* Secondary + modal styles */
+  .secondary { background:#fff; color:#003087; border:1.5px solid #c9d8ec; border-radius:10px;
+    padding:10px 14px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; }
+  .secondary:hover { background:#0038A8; color:#fff; border-color:#0038A8; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(14,24,37,.55); display:none;
+    align-items:flex-start; justify-content:center; z-index:100; padding:24px; overflow-y:auto; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:16px; width:100%; max-width:640px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  .modal-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px;
+    border-bottom:1px solid #dbe3ee; }
+  .modal-head h3 { margin:0; font-size:16px; color:#003087; }
+  .modal-close { background:none; border:0; font-size:18px; cursor:pointer; color:#5a6b80; }
+  .modal-body { padding:20px 22px 22px; }
+
+  .hol-list { max-height:240px; overflow-y:auto; border:1px solid #dbe3ee; border-radius:10px; }
+  .hol-item { display:flex; justify-content:space-between; align-items:center; gap:8px;
+    padding:8px 12px; border-bottom:1px solid #eef2f8; font-size:13px; }
+  .hol-item:last-child { border-bottom:0; }
+  .hol-item .hol-info { flex:1; }
+  .hol-item .hol-date { font-weight:800; color:#0038A8; }
+  .hol-item .hol-tag { display:inline-block; margin-left:6px; padding:1px 7px; border-radius:4px;
+    font-size:10.5px; font-weight:700; background:#e6eefc; color:#0038A8; text-transform:uppercase; }
+  .hol-item .hol-del { background:none; border:0; color:#9b1c1c; cursor:pointer; font-size:15px; }
+  .hol-empty { padding:14px; text-align:center; color:#5a6b80; font-size:13px; }
+
   @media (max-width:860px) {
     .gov-masthead { padding:10px 16px; gap:12px; }
     .gov-seal { width:50px; height:50px; }
@@ -68,7 +94,7 @@
   @media print {
     @page { size: 13in 8.5in landscape; margin: 0.3in; }
     body { background:#fff; margin:0; padding:0; }
-    header, .wrap, #fatal { display:none !important; }
+    header, .wrap, #fatal, .modal-overlay, #holiday-modal { display:none !important; }
     #print-area { display:flex; flex-direction:row; justify-content:space-between; align-items:stretch; width:100%; gap:10px; font-family:Arial, sans-serif; color:#000; }
     .dtr-copy { flex:1; font-size:8px; display:flex; flex-direction:column; justify-content:space-between; }
     .dtr-header { display:flex; align-items:flex-start; gap:5px; text-align:center; margin-bottom:5px; line-height:1.1; }
@@ -97,8 +123,12 @@
     .dtr-table td.weekend-row b { font-style:normal; letter-spacing:.55px; color:#1b2b44; }
     .dtr-table td.op-cell { background:#dfe3e9 !important; color:#7a8597 !important; }
     .dtr-table td.op-label { font-size:7px; font-style:italic; letter-spacing:.4px; text-align:center; }
+    .dtr-table td.holiday-day { background:#fde7e7 !important; font-weight:bold; color:#9b1c1c; }
+    .dtr-table td.holiday-row { background:#fde7e7 !important; font-size:7px; text-align:center; color:#9b1c1c; font-style:italic; }
+    .dtr-table td.holiday-row b { font-style:normal; text-transform:uppercase; letter-spacing:.35px; color:#7a1515; }
     .dtr-table td.do-row, .dtr-table td.travel-row, .dtr-table td.otr-row,
-    .dtr-table td.weekend-day, .dtr-table td.weekend-row, .dtr-table td.op-cell {
+    .dtr-table td.weekend-day, .dtr-table td.weekend-row, .dtr-table td.op-cell,
+    .dtr-table td.holiday-day, .dtr-table td.holiday-row {
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .dtr-footer { margin-top:10px; font-size:8px; }
@@ -166,6 +196,14 @@
       <label for="includeEntries">Include OB / TO / RSO entries from <b>entry.html</b> in the printed DTR</label>
     </div>
 
+    <div class="check-row" style="justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" id="includeHolidays" checked>
+        <label for="includeHolidays">Mark holidays in the printed DTR</label>
+      </div>
+      <button type="button" id="btn-holidays" class="secondary">📅 Manage Holidays</button>
+    </div>
+
     <button type="button" class="primary" id="btn-print" disabled>🖨️ Generate &amp; Print DTR</button>
 
     <div id="dtrStatus">
@@ -173,6 +211,7 @@
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
       <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
+      <b>Holidays</b> appear as <b>red highlighted rows</b> and are excluded from undertime.<br>
       <b>Late arrivals and early departures are combined into the Mins column.</b> Lunch 12:00–1:00 excluded.
     </div>
   </div>
@@ -180,9 +219,53 @@
 
 <div id="print-area"></div>
 
+<!-- HOLIDAY MODAL -->
+<div id="holiday-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Holiday Manager</h3>
+      <button type="button" class="modal-close" id="holiday-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="row">
+        <div>
+          <label for="holDate">Date</label>
+          <input type="date" id="holDate">
+        </div>
+        <div>
+          <label for="holType">Type</label>
+          <select id="holType">
+            <option value="Regular Holiday">Regular Holiday</option>
+            <option value="Local Holiday">Local Holiday</option>
+            <option value="Special (Non-Working)">Special (Non-Working)</option>
+            <option value="Special (Working)">Special (Working)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="holName">Holiday Name</label>
+        <input type="text" id="holName" placeholder="e.g. Araw ng Bacolod, Christmas Day">
+      </div>
+      <button type="button" class="primary" id="hol-add">➕ Add / Update Holiday</button>
+      <div id="hol-msg" style="margin-top:10px; font-size:13px;"></div>
+
+      <h4 style="margin:18px 0 8px; font-size:13px; color:#003087;">Saved Holidays</h4>
+      <div id="hol-list" class="hol-list"></div>
+
+      <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="secondary" id="hol-export">⬇ Export JSON</button>
+        <button type="button" class="secondary" id="hol-import-btn">⬆ Import JSON</button>
+        <input type="file" id="hol-import-file" accept=".json" style="display:none;">
+        <button type="button" class="secondary" id="hol-clear" style="color:#9b1c1c; border-color:#f3bcbc;">🗑 Clear All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbxtVJCwbZYsX1g7OIGVvqFT8aWAJBAYfu1D9IehLVTDZnx5LwMSQ9IodFmRrymD4SMu/exec";
 var LEGACY_KEY = "dhsud_skeletal_workforce";
+var HOLIDAY_KEY = "dhsud_holidays_v1";
 
 var FALLBACK_EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -284,7 +367,7 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   if (outM !== null && outM < 720) {
     ut += (720 - outM);
   }
-  
+
   /* PM Time In later than 1:00 PM */
   if (pmInM !== null && pmInM > 780) {
     ut += (pmInM - 780);
@@ -296,6 +379,24 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   }
 
   return ut;
+}
+
+/* ─── HOLIDAY STORAGE (localStorage) ─── */
+function loadHolidays() {
+  try {
+    var arr = JSON.parse(localStorage.getItem(HOLIDAY_KEY) || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+function saveHolidays(list) {
+  localStorage.setItem(HOLIDAY_KEY, JSON.stringify(list));
+}
+function findHolidayOn(dateStr) {
+  var list = loadHolidays();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].date === dateStr) return list[i];
+  }
+  return null;
 }
 
 function fetchEmployees() {
@@ -484,6 +585,111 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /* ── HOLIDAY MANAGER ── */
+  var holModal = document.getElementById("holiday-modal");
+  var holDate = document.getElementById("holDate");
+  var holType = document.getElementById("holType");
+  var holName = document.getElementById("holName");
+  var holList = document.getElementById("hol-list");
+  var holMsg = document.getElementById("hol-msg");
+
+  function renderHolidayList() {
+    var list = loadHolidays().slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+    if (!list.length) {
+      holList.innerHTML = '<div class="hol-empty">No holidays saved yet.</div>';
+      return;
+    }
+    holList.innerHTML = list.map(function(h) {
+      return '<div class="hol-item">' +
+        '<div class="hol-info">' +
+          '<span class="hol-date">' + h.date + '</span>' +
+          '<span class="hol-tag">' + escapeHtml(h.type) + '</span>' +
+          '<div>' + escapeHtml(h.name || "") + '</div>' +
+        '</div>' +
+        '<button type="button" class="hol-del" data-date="' + h.date + '" title="Delete">🗑</button>' +
+      '</div>';
+    }).join("");
+    holList.querySelectorAll(".hol-del").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var d = btn.getAttribute("data-date");
+        var list2 = loadHolidays().filter(function(h){ return h.date !== d; });
+        saveHolidays(list2);
+        renderHolidayList();
+      });
+    });
+  }
+
+  document.getElementById("btn-holidays").addEventListener("click", function() {
+    holModal.classList.add("open");
+    holMsg.textContent = "";
+    renderHolidayList();
+  });
+  document.getElementById("holiday-close").addEventListener("click", function() {
+    holModal.classList.remove("open");
+  });
+  holModal.addEventListener("click", function(e) {
+    if (e.target === holModal) holModal.classList.remove("open");
+  });
+
+  document.getElementById("hol-add").addEventListener("click", function() {
+    var d = holDate.value;
+    var t = holType.value;
+    var n = holName.value.trim();
+    if (!d) { holMsg.textContent = "⚠ Please pick a date."; holMsg.style.color = "#9b1c1c"; return; }
+    var list = loadHolidays().filter(function(h){ return h.date !== d; });
+    list.push({ date: d, type: t, name: n || t });
+    saveHolidays(list);
+    holMsg.textContent = "✅ Saved: " + d + " — " + (n || t);
+    holMsg.style.color = "#1c8a4b";
+    holName.value = "";
+    renderHolidayList();
+  });
+
+  document.getElementById("hol-clear").addEventListener("click", function() {
+    if (!confirm("Delete all saved holidays?")) return;
+    saveHolidays([]);
+    renderHolidayList();
+    holMsg.textContent = "All holidays cleared.";
+    holMsg.style.color = "#5a6b80";
+  });
+
+  document.getElementById("hol-export").addEventListener("click", function() {
+    var blob = new Blob([JSON.stringify(loadHolidays(), null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dhsud-holidays.json";
+    a.click();
+  });
+  document.getElementById("hol-import-btn").addEventListener("click", function() {
+    document.getElementById("hol-import-file").click();
+  });
+  document.getElementById("hol-import-file").addEventListener("change", function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function() {
+      try {
+        var arr = JSON.parse(reader.result);
+        if (!Array.isArray(arr)) throw new Error("Not an array");
+        var merged = loadHolidays();
+        arr.forEach(function(h) {
+          if (!h || !h.date) return;
+          merged = merged.filter(function(x){ return x.date !== h.date; });
+          merged.push({ date: h.date, type: h.type || "Local Holiday", name: h.name || "" });
+        });
+        saveHolidays(merged);
+        renderHolidayList();
+        holMsg.textContent = "✅ Imported " + arr.length + " holiday(s).";
+        holMsg.style.color = "#1c8a4b";
+      } catch (err) {
+        holMsg.textContent = "⚠ Invalid JSON file.";
+        holMsg.style.color = "#9b1c1c";
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
   async function buildDTR(code, start, end) {
     var emp = employees.find(function(e){ return e.code === code; });
     if (!emp) {
@@ -493,6 +699,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var empNameNorm = normalizeName(emp.name);
+    var includeHolidays = document.getElementById("includeHolidays").checked;
 
     var results = await Promise.all([fetchSkeletal(), fetchTravelOrders(), fetchEntries()]);
     var skeletalByWeek = results[0] || {};
@@ -587,6 +794,15 @@ document.addEventListener("DOMContentLoaded", function () {
       var cellDate = new Date(year, month, d);
       var dStr = isoDate(year, month + 1, d);
 
+      // Holiday short-circuit: no log fetch, no undertime.
+      if (includeHolidays) {
+        var hol = findHolidayOn(dStr);
+        if (hol) {
+          byDay[d] = { success: true, data: {}, holiday: hol };
+          continue;
+        }
+      }
+
       var travel = findTravelOn(dStr);
       var entries = findEntriesOn(dStr);
       if (travel || entries.length) {
@@ -622,6 +838,14 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       var rec = byDay[j];
+
+      if (rec && rec.holiday) {
+        var hh = rec.holiday;
+        rowsHTML += '<tr><td class="holiday-day">' + j + '</td>' +
+          '<td colspan="6" class="holiday-row"><b>' + escapeHtml(hh.type) + '</b>' +
+          (hh.name ? ' — ' + escapeHtml(hh.name) : '') + '</td></tr>';
+        continue;
+      }
 
       if (rec && rec.travel) {
         var to = rec.travel;
@@ -665,10 +889,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (amIn || amOut || pmIn || pmOut) {
         var isFridayDay = isFriday(year, month, j);
-        
+
         var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
         var utMin = calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
-        
+
         var totalMin = lateMin + utMin;
 
         utH = "0";
@@ -700,7 +924,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function generatePrint(emp, rowsHTML, totalUT, empIsSkeletal, entryStatus) {
     var period = document.getElementById("period").value.trim();
-    
+
     var totalUTH = "0";
     var totalUTM = totalUT;
 
