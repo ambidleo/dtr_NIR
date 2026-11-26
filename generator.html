@@ -211,7 +211,7 @@
       <b>Saturday</b> and <b>Sunday</b> rows are shown as <b>REST DAY (No Work)</b>.<br>
       Days <b>outside the selected cut-off</b> are shaded grey. <b>Non‑skeletal</b> employees show <b>DO No. 2026‑015</b> on Fridays.<br>
       <b>OB / TO / RSO</b> entries from the entry form appear as <b>highlighted rows</b> (e.g. <i>SO # 2026-11-230</i>).<br>
-      <b>Holidays</b> appear as <b>red highlighted rows</b> and are excluded from undertime.<br>
+      <b>Holidays</b> are saved in Google Sheets and appear as <b>red highlighted rows</b> on every laptop.<br>
       <b>Late arrivals and early departures are combined into the Mins column.</b> Lunch 12:00–1:00 excluded.
     </div>
   </div>
@@ -223,7 +223,7 @@
 <div id="holiday-modal" class="modal-overlay" aria-hidden="true">
   <div class="modal">
     <div class="modal-head">
-      <h3>Holiday Manager</h3>
+      <h3>Holiday Manager (saved in Google Sheets)</h3>
       <button type="button" class="modal-close" id="holiday-close">✕</button>
     </div>
     <div class="modal-body">
@@ -250,12 +250,10 @@
       <div id="hol-msg" style="margin-top:10px; font-size:13px;"></div>
 
       <h4 style="margin:18px 0 8px; font-size:13px; color:#003087;">Saved Holidays</h4>
-      <div id="hol-list" class="hol-list"></div>
+      <div id="hol-list" class="hol-list"><div class="hol-empty">Loading holidays…</div></div>
 
       <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
-        <button type="button" class="secondary" id="hol-export">⬇ Export JSON</button>
-        <button type="button" class="secondary" id="hol-import-btn">⬆ Import JSON</button>
-        <input type="file" id="hol-import-file" accept=".json" style="display:none;">
+        <button type="button" class="secondary" id="hol-refresh">🔄 Refresh from Sheet</button>
         <button type="button" class="secondary" id="hol-clear" style="color:#9b1c1c; border-color:#f3bcbc;">🗑 Clear All</button>
       </div>
     </div>
@@ -263,9 +261,8 @@
 </div>
 
 <script>
-var API_URL = "https://script.google.com/macros/s/AKfycbxtVJCwbZYsX1g7OIGVvqFT8aWAJBAYfu1D9IehLVTDZnx5LwMSQ9IodFmRrymD4SMu/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbxJyvK3rNzoEmfpHeLcGt5olcRTgWbryjd90rqbm-U0iu5P9i8z0ULzM1TJfSQQMqoO/exec";
 var LEGACY_KEY = "dhsud_skeletal_workforce";
-var HOLIDAY_KEY = "dhsud_holidays_v1";
 
 var FALLBACK_EMPLOYEES = [
   { code:"01", name:"Elenita Paulina R. Cañete" }, { code:"02", name:"Brechelle Grace P. Benotapa" },
@@ -283,6 +280,9 @@ var FALLBACK_EMPLOYEES = [
 ];
 
 var employees = FALLBACK_EMPLOYEES.slice();
+
+/* Holiday cache (loaded from Google Sheets) */
+var HOLIDAYS_CACHE = [];
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 function escapeHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
@@ -317,29 +317,6 @@ var SKELETAL_FRI = 8 * 60;   // 08:00 — skeletal Friday arrival
 var AM_CUTOFF    = 12 * 60;  // AM ends at 12:00
 var PM_START     = 13 * 60;  // PM begins at 13:00 (lunch 12:00–13:00 excluded)
 
-function calculateWorkedMinutes(amIn, amOut, pmIn, pmOut) {
-  var inM    = parseMins(amIn);
-  var outM   = parseMins(amOut);
-  var pmInM  = parseMins(pmIn);
-  var pmOutM = parseMins(pmOut);
-  var total  = 0;
-
-  if (inM !== null && outM !== null && outM > inM) {
-    var amEnd = Math.min(outM, AM_CUTOFF);
-    if (amEnd > inM) total += (amEnd - inM);
-  }
-
-  if (pmInM !== null && pmOutM !== null && pmOutM > pmInM) {
-    var pmStart = Math.max(pmInM, PM_START);
-    if (pmOutM > pmStart) total += (pmOutM - pmStart);
-  } else if (inM === null && pmInM !== null && pmOutM !== null) {
-    var pStart = Math.max(pmInM, PM_START);
-    if (pmOutM > pStart) total += (pmOutM - pStart);
-  }
-
-  return total;
-}
-
 function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
   var inM = parseMins(amIn);
   if (inM === null) return 0;
@@ -348,12 +325,10 @@ function calculateLateMinutes(amIn, isSkeletal, isFridayDay) {
 }
 
 function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFridayDay) {
-  var inM = parseMins(amIn);
   var outM = parseMins(amOut);
   var pmInM = parseMins(pmIn);
   var pmOutM = parseMins(pmOut);
 
-  /* Determine target PM out */
   var targetPmOut = 16 * 60; // 4:00 PM (Skeletal default)
   if (isSkeletal && isFridayDay) {
     targetPmOut = 17 * 60; // 5:00 PM (Skeletal Friday)
@@ -362,43 +337,82 @@ function calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, isSkeletal, isFrid
   }
 
   var ut = 0;
-
-  /* AM Time Out earlier than 12:00 NN */
-  if (outM !== null && outM < 720) {
-    ut += (720 - outM);
-  }
-
-  /* PM Time In later than 1:00 PM */
-  if (pmInM !== null && pmInM > 780) {
-    ut += (pmInM - 780);
-  }
-
-  /* PM Time Out earlier than target end of shift */
-  if (pmOutM !== null && pmOutM < targetPmOut) {
-    ut += (targetPmOut - pmOutM);
-  }
-
+  if (outM !== null && outM < 720) ut += (720 - outM);
+  if (pmInM !== null && pmInM > 780) ut += (pmInM - 780);
+  if (pmOutM !== null && pmOutM < targetPmOut) ut += (targetPmOut - pmOutM);
   return ut;
 }
 
-/* ─── HOLIDAY STORAGE (localStorage) ─── */
-function loadHolidays() {
-  try {
-    var arr = JSON.parse(localStorage.getItem(HOLIDAY_KEY) || "[]");
-    return Array.isArray(arr) ? arr : [];
-  } catch (e) { return []; }
+/* ─── HOLIDAYS (from Google Sheets) ─── */
+function fetchHolidays() {
+  return new Promise(function(resolve) {
+    var cbName = "jsonp_hol_" + Math.random().toString(36).slice(2);
+    var script = document.createElement("script");
+    var done = false;
+    function finish(r) {
+      if (done) return; done = true; clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[cbName];
+      resolve(r || []);
+    }
+    window[cbName] = function(data) {
+      if (data && data.success && Array.isArray(data.data)) finish(data.data);
+      else finish([]);
+    };
+    script.onerror = function() { finish([]); };
+    var timer = setTimeout(function() { finish([]); }, 12000);
+    script.src = API_URL + "?action=getHolidays&callback=" + cbName;
+    document.body.appendChild(script);
+  });
 }
-function saveHolidays(list) {
-  localStorage.setItem(HOLIDAY_KEY, JSON.stringify(list));
-}
+
 function findHolidayOn(dateStr) {
-  var list = loadHolidays();
-  for (var i = 0; i < list.length; i++) {
-    if (list[i].date === dateStr) return list[i];
+  for (var i = 0; i < HOLIDAYS_CACHE.length; i++) {
+    if (HOLIDAYS_CACHE[i].date === dateStr) return HOLIDAYS_CACHE[i];
   }
   return null;
 }
 
+/* Fire-and-forget POST via hidden iframe (bypasses CORS) */
+function postToSheet_(action, params, onDone) {
+  var iframeName = "post_" + Math.random().toString(36).slice(2);
+  var iframe = document.createElement("iframe");
+  iframe.name = iframeName;
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+
+  var form = document.createElement("form");
+  form.method = "POST";
+  form.action = API_URL;
+  form.target = iframeName;
+  form.style.display = "none";
+
+  var pAction = document.createElement("input");
+  pAction.type = "hidden"; pAction.name = "action"; pAction.value = action;
+  form.appendChild(pAction);
+
+  Object.keys(params || {}).forEach(function(k){
+    var inp = document.createElement("input");
+    inp.type = "hidden"; inp.name = k; inp.value = params[k];
+    form.appendChild(inp);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+
+  setTimeout(function(){
+    if (form.parentNode) form.parentNode.removeChild(form);
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    if (typeof onDone === "function") onDone();
+  }, 2500);
+}
+
+function saveHolidaysRemote(list, onDone) {
+  HOLIDAYS_CACHE = list.slice();
+  postToSheet_("saveHolidays", { payload: JSON.stringify(list) }, onDone);
+}
+
+/* ─── Other fetchers ─── */
 function fetchEmployees() {
   return new Promise(function(resolve) {
     var cbName = "jsonp_gen_emp_" + Math.random().toString(36).slice(2);
@@ -499,9 +513,6 @@ function loadSkeletalLegacy() {
   } catch(e) { return {}; }
 }
 function isFriday(y, m, d) { return new Date(y, m, d).getDay() === 5; }
-function isSaturday(y, m, d) { return new Date(y, m, d).getDay() === 6; }
-function isSunday(y, m, d) { return new Date(y, m, d).getDay() === 0; }
-function isWeekend(y, m, d) { var dow = new Date(y, m, d).getDay(); return dow === 0 || dow === 6; }
 
 function getLastDayOfMonth(year, monthIndex) { return new Date(year, monthIndex + 1, 0).getDate(); }
 function applyCutoff(cutoff, refDate) {
@@ -525,7 +536,6 @@ document.addEventListener("DOMContentLoaded", function () {
   var cutoffSel = document.getElementById("cutoff");
   var startInput = document.getElementById("startDate");
   var endInput = document.getElementById("endDate");
-  var periodInput = document.getElementById("period");
   var includeChk = document.getElementById("includeEntries");
 
   cutoffSel.addEventListener("change", function() {
@@ -561,7 +571,7 @@ document.addEventListener("DOMContentLoaded", function () {
       msg.innerHTML = "⚠ <b>Period must be within a single calendar month.</b>";
       msg.style.color = "#9b1c1c"; return;
     }
-    msg.textContent = "⏳ Fetching skeletal, travel & OB/TO/RSO data…";
+    msg.textContent = "⏳ Fetching skeletal, travel, holidays & OB/TO/RSO data…";
     msg.style.color = "#003087";
     buildDTR(code, start, end);
   });
@@ -594,7 +604,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var holMsg = document.getElementById("hol-msg");
 
   function renderHolidayList() {
-    var list = loadHolidays().slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var list = HOLIDAYS_CACHE.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
     if (!list.length) {
       holList.innerHTML = '<div class="hol-empty">No holidays saved yet.</div>';
       return;
@@ -612,17 +622,31 @@ document.addEventListener("DOMContentLoaded", function () {
     holList.querySelectorAll(".hol-del").forEach(function(btn) {
       btn.addEventListener("click", function() {
         var d = btn.getAttribute("data-date");
-        var list2 = loadHolidays().filter(function(h){ return h.date !== d; });
-        saveHolidays(list2);
+        var next = HOLIDAYS_CACHE.filter(function(h){ return h.date !== d; });
+        saveHolidaysRemote(next);
         renderHolidayList();
+        holMsg.textContent = "🗑 Deleted " + d + " (saving to Sheet…)";
+        holMsg.style.color = "#5a6b80";
       });
+    });
+  }
+
+  function refreshHolidaysFromSheet(showMsg) {
+    return fetchHolidays().then(function(list){
+      HOLIDAYS_CACHE = list;
+      renderHolidayList();
+      if (showMsg) {
+        holMsg.textContent = "✅ Loaded " + list.length + " holiday(s) from Google Sheets.";
+        holMsg.style.color = "#1c8a4b";
+      }
     });
   }
 
   document.getElementById("btn-holidays").addEventListener("click", function() {
     holModal.classList.add("open");
-    holMsg.textContent = "";
-    renderHolidayList();
+    holMsg.textContent = "⏳ Loading holidays from Google Sheets…";
+    holMsg.style.color = "#003087";
+    refreshHolidaysFromSheet(true);
   });
   document.getElementById("holiday-close").addEventListener("click", function() {
     holModal.classList.remove("open");
@@ -630,64 +654,33 @@ document.addEventListener("DOMContentLoaded", function () {
   holModal.addEventListener("click", function(e) {
     if (e.target === holModal) holModal.classList.remove("open");
   });
+  document.getElementById("hol-refresh").addEventListener("click", function() {
+    holMsg.textContent = "⏳ Refreshing…";
+    holMsg.style.color = "#003087";
+    refreshHolidaysFromSheet(true);
+  });
 
   document.getElementById("hol-add").addEventListener("click", function() {
     var d = holDate.value;
     var t = holType.value;
     var n = holName.value.trim();
     if (!d) { holMsg.textContent = "⚠ Please pick a date."; holMsg.style.color = "#9b1c1c"; return; }
-    var list = loadHolidays().filter(function(h){ return h.date !== d; });
-    list.push({ date: d, type: t, name: n || t });
-    saveHolidays(list);
-    holMsg.textContent = "✅ Saved: " + d + " — " + (n || t);
+    var next = HOLIDAYS_CACHE.filter(function(h){ return h.date !== d; });
+    next.push({ date: d, type: t, name: n || t });
+    saveHolidaysRemote(next);
+    holMsg.textContent = "✅ Saved to Google Sheets: " + d + " — " + (n || t);
     holMsg.style.color = "#1c8a4b";
     holName.value = "";
     renderHolidayList();
   });
 
   document.getElementById("hol-clear").addEventListener("click", function() {
-    if (!confirm("Delete all saved holidays?")) return;
-    saveHolidays([]);
+    if (!confirm("Delete all saved holidays from Google Sheets?")) return;
+    saveHolidaysRemote([], function(){
+      holMsg.textContent = "All holidays cleared from Google Sheets.";
+      holMsg.style.color = "#5a6b80";
+    });
     renderHolidayList();
-    holMsg.textContent = "All holidays cleared.";
-    holMsg.style.color = "#5a6b80";
-  });
-
-  document.getElementById("hol-export").addEventListener("click", function() {
-    var blob = new Blob([JSON.stringify(loadHolidays(), null, 2)], {type:"application/json"});
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "dhsud-holidays.json";
-    a.click();
-  });
-  document.getElementById("hol-import-btn").addEventListener("click", function() {
-    document.getElementById("hol-import-file").click();
-  });
-  document.getElementById("hol-import-file").addEventListener("change", function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function() {
-      try {
-        var arr = JSON.parse(reader.result);
-        if (!Array.isArray(arr)) throw new Error("Not an array");
-        var merged = loadHolidays();
-        arr.forEach(function(h) {
-          if (!h || !h.date) return;
-          merged = merged.filter(function(x){ return x.date !== h.date; });
-          merged.push({ date: h.date, type: h.type || "Local Holiday", name: h.name || "" });
-        });
-        saveHolidays(merged);
-        renderHolidayList();
-        holMsg.textContent = "✅ Imported " + arr.length + " holiday(s).";
-        holMsg.style.color = "#1c8a4b";
-      } catch (err) {
-        holMsg.textContent = "⚠ Invalid JSON file.";
-        holMsg.style.color = "#9b1c1c";
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
   });
 
   async function buildDTR(code, start, end) {
@@ -701,16 +694,20 @@ document.addEventListener("DOMContentLoaded", function () {
     var empNameNorm = normalizeName(emp.name);
     var includeHolidays = document.getElementById("includeHolidays").checked;
 
-    var results = await Promise.all([fetchSkeletal(), fetchTravelOrders(), fetchEntries()]);
+    // Always refresh holidays from Sheets so any laptop sees the latest list.
+    var results = await Promise.all([fetchSkeletal(), fetchTravelOrders(), fetchEntries(), fetchHolidays()]);
     var skeletalByWeek = results[0] || {};
     var travelOrders = results[1] || [];
-    // Fetch entries independently of the checkbox, then honor the checkbox here.
     var fetchedEntries = Array.isArray(results[2]) ? results[2] : [];
+    HOLIDAYS_CACHE = Array.isArray(results[3]) ? results[3] : [];
     var obToRsoEntries = includeChk.checked ? fetchedEntries : [];
     var legacySet = loadSkeletalLegacy();
+
     document.getElementById("dtrStatus").textContent =
-      "Loaded " + fetchedEntries.length + " OB/TO/RSO record(s) from the entry sheet" +
+      "Loaded " + fetchedEntries.length + " OB/TO/RSO record(s) and " +
+      HOLIDAYS_CACHE.length + " holiday(s) from Google Sheets" +
       (includeChk.checked ? ". Matching records to the selected employee and dates…" : ". Entry printing is unchecked.");
+
     var backendHasData = Object.keys(skeletalByWeek).length > 0;
 
     function isSkeletalOn(empCode, date) {
@@ -740,7 +737,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function normalizeEntryDate(value) {
       if (!value) return "";
       var v = String(value).trim();
-      // Accept the ISO format returned by Apps Script and common sheet date formats.
       var iso = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
       if (iso) return iso[1] + "-" + pad2(iso[2]) + "-" + pad2(iso[3]);
       var mdy = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -760,7 +756,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var entryCode = String(r.code == null ? "" : r.code).trim().replace(/\.0$/, "");
         var codeMatch = entryCode !== "" && entryCode.padStart(2, "0") === String(code).padStart(2, "0");
         var nameMatch = r.name && normalizeName(r.name) === empNameNorm;
-        // Use either identifier: older sheet rows may have a blank or differently formatted code.
         return codeMatch || nameMatch;
       });
       return matches.sort(function(a,b) {
@@ -873,7 +868,6 @@ document.addEventListener("DOMContentLoaded", function () {
         dayEntries.forEach(function(entry) {
           var type = String(entry.type || "").toUpperCase();
           var ref = String(entry.refNo || "").trim();
-          // Avoid duplicated labels when entry.html already stores "RSO No. ...".
           ref = ref.replace(/^(OB|TO|RSO|SO)\s*(NO\.?|#)\s*/i, "");
           var label = '<b>' + escapeHtml(type) + ' No. ' + escapeHtml(ref) + '</b>';
           rowsHTML += '<tr><td>' + j + '</td><td colspan="6" class="otr-row">' + label + '</td></tr>';
@@ -889,12 +883,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (amIn || amOut || pmIn || pmOut) {
         var isFridayDay = isFriday(year, month, j);
-
         var lateMin = calculateLateMinutes(amIn, empIsSkeletal, isFridayDay);
         var utMin = calculateScheduleUndertime(amIn, amOut, pmIn, pmOut, empIsSkeletal, isFridayDay);
-
         var totalMin = lateMin + utMin;
-
         utH = "0";
         utM = totalMin;
         totalUT += totalMin;
@@ -994,11 +985,14 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(function() { window.print(); }, 200);
   }
 
+  // Initial load
   fetchEmployees().then(function(list) {
     employees = (list && list.length) ? list : FALLBACK_EMPLOYEES.slice();
     populateDropdown();
     printBtn.disabled = false;
   });
+  // Warm the holiday cache so the first print is fast
+  fetchHolidays().then(function(list){ HOLIDAYS_CACHE = list; });
 });
 </script>
 </body>
